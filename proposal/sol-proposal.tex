@@ -1,0 +1,211 @@
+\documentclass[letterpaper,12pt]{article}
+
+%% Use the option review to obtain double line spacing
+%% \documentclass[preprint,review,12pt]{elsarticle}
+
+%enumitem to itemize nicely
+\usepackage{enumitem}
+
+%source code highlighting
+\usepackage{listings}
+
+\begin{document}
+
+%% Title, authors and addresses
+
+\title{{\small better call} {\Huge \textbf{SOL}}\\
+    \begin{center}{SHAPE ORIENTED LANGUAGE}\end{center}
+}
+
+
+\author{Aditya Naraynamoorthy\\
+    \texttt{an2753}
+    \and
+    Erik Dyer\\
+    \texttt{ead2174}
+    \and
+    Gergana Alteva\\
+    \texttt{gla2112}
+    \and
+    Kunal Baweja\\
+    \texttt{kb2896}}
+
+\maketitle
+
+\section*{Introduction}
+%% Text of abstract
+SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. 2D animations can aid programmers, engineers, and scientists in modelling algorithms, problems, and data. As an object-oriented language, SOL will allow unlimited design opportunities and ease the burden of animation. In addition, SOL’s simplicity will save programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. SOL has syntax similar to C++.
+\par
+
+
+\section*{Example SOL Programs}
+
+SOL will commonly be used to model various types of scientific data, but it can also be applicable in other domains, such as entertainment.
+
+\begin{itemize}
+\itemsep0em 
+\item Environmental engineer modeling groundwater percolation in the refilling of aquifers.
+\item Bored college student making funny meme gifs.
+\item Enhanced data visualization
+\item The creation of any two dimensional turn-based game
+\end{itemize}
+
+\section*{Parts Of The Language}
+
+\subsection*{Data Types (Primitives)}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{int} - Integer
+\item \texttt{float} - Floating point number
+\item \texttt{char} - ASCII character
+\item \texttt{array} - ordered collection of objects
+\end{enumerate}
+
+\subsection*{Basic Data Types}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{point} - A single pixel at a location specified by coordinates in 2-D vector space
+\item \texttt{curve} - Defined by three points to form Bezier curve
+\end{enumerate}
+
+
+\subsection*{Grouped Types}
+\begin{enumerate}
+\item \texttt{shape} - Similar to a class in C++; this implements a draw function that specifies how the shapes are statically rendered.
+\item \texttt{motiongroup} -Similar to a class; this type groups shapes together and performs one or more animation commands on all the grouped shapes.
+\end{enumerate}
+
+\subsection*{Keywords}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{for} - Allows for quick iteration over an array of values
+\item \texttt{if} - Allows for code execution if a condition is met 
+\item \texttt{while} - Allows for constant execution of a code block as long as condition is meant 
+\item \texttt{print} - Display in standard output
+\item \texttt{func} - Declare a new function
+\item \texttt{const} - Declare a constructor 
+\item \texttt{main} - Declares mandatory function in which to define sequences of animations
+\end{enumerate}
+
+\subsection*{Arithmetic Operators}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{+} \space addition
+\item \texttt{-} \space subtraction
+\item \texttt{*} \space multiplication
+\item \texttt{/} \space division
+\item \texttt{\%} \space modulo
+\end{enumerate}
+
+\subsection*{Boolean Operators}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{\&\&}  AND
+\item \texttt{||}   OR
+\item \texttt{!}    NOT
+\end{enumerate}
+
+\subsection*{Comments}
+\begin{itemize}
+\item /* This is a comment */
+\end{itemize}
+
+\subsection*{Rendering commands}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{draw} - Implemented for each shape to specify how the shape is drawn.
+\textit{Arguments}: None
+\item \texttt{drawpoint} - Render a single pixel at a location, specified by coordinates.
+\textit{Arguments}: x (point)
+\item \texttt{drawcurve} - Render a Bézier curve defined by three different coordinates. 
+\textit{Arguments}: x (point), y (point), z (point)
+\item \texttt{drawtext} - Print out a string at a particular location.
+\textit{Arguments}: s (char[]), x (point)
+\end{enumerate}
+
+\subsection*{Motion Commands}
+\begin{enumerate}
+\itemsep0em
+\item \texttt{framerate} - Defined once at the start of the program, to specify the frames rendered per second.
+\textit{Arguments}: rate (float)
+\item \texttt{translate} - Move shape from one coordinate to another over a specified time period.
+\textit{Arguments}: src (point), dest (point), time (float)
+\item \texttt{rotate} - Rotate a shape around an axis point by a specified number of degrees over a time period.
+\textit{Arguments}: axis (point), angle (float), time (float)
+\item \texttt{render} - Describe the set of motions to be rendered. This function can be defined for shapes that need to move, or can be left undefined for non-moving shapes. Within this function, various rotate/translate calls can be made to move and shape.
+\textit{Arguments}: None
+\item \texttt{wait} - Pauses animation for a specified amount of time.
+\textit{Arguments}: time (float)
+\end{enumerate}
+
+\section*{Sample Interesting Program}
+The following program displays four triangles in a two dimensional plane. The triangles revolve around a common center point in clockwise direction and then two of the triangles revolve in anti-clockwise direction.
+
+\begin{lstlisting}
+/* Make a group of rotating triangles */
+framerate(24);
+
+shape Triangle {
+point a;
+point b;
+point c;
+const triangle(point a_init, point b_init, point c_init) {
+    a = a_init;
+    b = b_init;
+    c = c_init;
+}
+func draw() {
+    /* Draw lines between the three vertices of the triangle */
+    drawcurve(a, (a + b)/2, b);
+    drawcurve(b, (b + c)/2, c);
+drawcurve(c, (c + a)/2, a);
+}
+}
+/* Create 4 triangles*/
+Triangle triangle1((100, 50), (110, 70), (90, 70));
+Triangle triangle2((160, 110), (140, 120), (140, 100));
+Triangle triangle3((100, 170), (90, 150), (110, 150));
+Triangle triangle4((40, 110), (60, 100), (60, 120));
+
+/* Create a common point about which to rotate them */
+point center(100, 110);
+
+motiongroup trianglegroup1 {
+/* Group all 4 triangles together */
+    triangle1;
+triangle2;
+triangle3;
+triangle4;
+func render() {
+    /* Rotate each triangle about the center point */
+    rotate(center, 360, 3);
+}
+}
+
+motiongroup trianglegroup2 {
+/* Group two of the triangles together */
+    triangle1;
+triangle3;
+func render() {
+    /* Rotate each triangle about the center point */
+    rotate(center, -90, 1.5);
+}
+}
+
+func main() {
+    /* Render the triangles statically first */
+    triangle1;
+    triangle2;
+    triangle3;
+    triangle4;
+    /* Start the animation sequences */
+trianglegroup1;
+wait(1);
+trianglegroup2;
+}
+\end{lstlisting}
+
+\end{document}
+
+%%
+%% End of file `elsarticle-template-1-num.tex'.
