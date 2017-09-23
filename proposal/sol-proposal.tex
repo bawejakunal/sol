@@ -44,8 +44,8 @@ SOL will commonly be used to model various types of scientific data, but it can 
 
 \begin{itemize}
 \itemsep0em 
-\item Environmental engineer modeling groundwater percolation in the refilling of aquifers.
-\item Bored college student making funny meme gifs.
+\item Environmental engineer modeling groundwater percolation in the refilling of aquifers
+\item Bored college student making funny meme gifs
 \item Enhanced data visualization
 \item The creation of any two dimensional turn-based game
 \end{itemize}
@@ -65,14 +65,14 @@ SOL will commonly be used to model various types of scientific data, but it can 
 \begin{enumerate}
 \itemsep0em
 \item \texttt{point} - A single pixel at a location specified by coordinates in 2-D vector space
-\item \texttt{curve} - Defined by three points to form Bezier curve
+\item \texttt{curve} - Defined by three points to form B\'ezier curve
 \end{enumerate}
 
 
 \subsection*{Grouped Types}
 \begin{enumerate}
-\item \texttt{shape} - Similar to a class in C++; this implements a draw function that specifies how the shapes are statically rendered.
-\item \texttt{motiongroup} -Similar to a class; this type groups shapes together and performs one or more animation commands on all the grouped shapes.
+\item \texttt{shape} - Similar to a class in C++; this implements a draw function that specifies how the shapes are statically rendered
+\item \texttt{motiongroup} -Similar to a class; this type groups shapes together and performs one or more animation commands on all the grouped shapes
 \end{enumerate}
 
 \subsection*{Keywords}
@@ -83,7 +83,7 @@ SOL will commonly be used to model various types of scientific data, but it can 
 \item \texttt{while} - Allows for constant execution of a code block as long as condition is meant 
 \item \texttt{print} - Display in standard output
 \item \texttt{func} - Declare a new function
-\item \texttt{const} - Declare a constructor 
+\item \texttt{construct} - Declare a constructor 
 \item \texttt{main} - Declares mandatory function in which to define sequences of animations
 \end{enumerate}
 
@@ -117,7 +117,7 @@ SOL will commonly be used to model various types of scientific data, but it can 
 \textit{Arguments}: None
 \item \texttt{drawpoint} - Render a single pixel at a location, specified by coordinates.
 \textit{Arguments}: x (point)
-\item \texttt{drawcurve} - Render a Bézier curve defined by three different coordinates. 
+\item \texttt{drawcurve} - Render a B\'ezier curve defined by three different coordinates. 
 \textit{Arguments}: x (point), y (point), z (point)
 \item \texttt{drawtext} - Print out a string at a particular location.
 \textit{Arguments}: s (char[]), x (point)
@@ -146,20 +146,20 @@ The following program displays four triangles in a two dimensional plane. The tr
 framerate(24);
 
 shape Triangle {
-point a;
-point b;
-point c;
-const triangle(point a_init, point b_init, point c_init) {
-    a = a_init;
-    b = b_init;
-    c = c_init;
-}
-func draw() {
-    /* Draw lines between the three vertices of the triangle */
-    drawcurve(a, (a + b)/2, b);
-    drawcurve(b, (b + c)/2, c);
-drawcurve(c, (c + a)/2, a);
-}
+	point a;
+	point b;
+	point c;
+	construct triangle(point a_init, point b_init, point c_init) {
+	    a = a_init;
+	    b = b_init;
+	    c = c_init;
+	}
+	func draw() {
+	    /* Draw lines between the three vertices of the triangle */
+	    drawcurve(a, (a + b)/2, b);
+	    drawcurve(b, (b + c)/2, c);
+		drawcurve(c, (c + a)/2, a);
+	}
 }
 /* Create 4 triangles*/
 Triangle triangle1((100, 50), (110, 70), (90, 70));
@@ -173,23 +173,23 @@ point center(100, 110);
 motiongroup trianglegroup1 {
 /* Group all 4 triangles together */
     triangle1;
-triangle2;
-triangle3;
-triangle4;
-func render() {
-    /* Rotate each triangle about the center point */
-    rotate(center, 360, 3);
-}
+	triangle2;
+	triangle3;
+	triangle4;
+	func render() {
+	    /* Rotate each triangle about the center point */
+	    rotate(center, 360, 3);
+	}
 }
 
 motiongroup trianglegroup2 {
 /* Group two of the triangles together */
     triangle1;
-triangle3;
-func render() {
-    /* Rotate each triangle about the center point */
-    rotate(center, -90, 1.5);
-}
+	triangle3;
+	func render() {
+	    /* Rotate each triangle about the center point */
+	    rotate(center, -90, 1.5);
+	}
 }
 
 func main() {
@@ -199,9 +199,9 @@ func main() {
     triangle3;
     triangle4;
     /* Start the animation sequences */
-trianglegroup1;
-wait(1);
-trianglegroup2;
+	trianglegroup1;
+	wait(1);
+	trianglegroup2;
 }
 \end{lstlisting}
 
