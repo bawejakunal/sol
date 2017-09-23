@@ -150,14 +150,14 @@ shape Triangle {
 	point b;
 	point c;
 	construct triangle(point a_init, point b_init, point c_init) {
-	    a = a_init;
-	    b = b_init;
-	    c = c_init;
+		a = a_init;
+		b = b_init;
+		c = c_init;
 	}
 	func draw() {
-	    /* Draw lines between the three vertices of the triangle */
-	    drawcurve(a, (a + b)/2, b);
-	    drawcurve(b, (b + c)/2, c);
+		/* Draw lines between the three vertices of the triangle */
+		drawcurve(a, (a + b)/2, b);
+		drawcurve(b, (b + c)/2, c);
 		drawcurve(c, (c + a)/2, a);
 	}
 }
@@ -171,34 +171,34 @@ Triangle triangle4((40, 110), (60, 100), (60, 120));
 point center(100, 110);
 
 motiongroup trianglegroup1 {
-/* Group all 4 triangles together */
-    triangle1;
+	/* Group all 4 triangles together */
+	triangle1;
 	triangle2;
 	triangle3;
 	triangle4;
 	func render() {
-	    /* Rotate each triangle about the center point */
-	    rotate(center, 360, 3);
+		/* Rotate each triangle about the center point */
+		rotate(center, 360, 3);
 	}
 }
 
 motiongroup trianglegroup2 {
-/* Group two of the triangles together */
-    triangle1;
+	/* Group two of the triangles together */
+	triangle1;
 	triangle3;
 	func render() {
-	    /* Rotate each triangle about the center point */
-	    rotate(center, -90, 1.5);
+		/* Rotate each triangle about the center point */
+		rotate(center, -90, 1.5);
 	}
 }
 
 func main() {
-    /* Render the triangles statically first */
-    triangle1;
-    triangle2;
-    triangle3;
-    triangle4;
-    /* Start the animation sequences */
+	/* Render the triangles statically first */
+	triangle1;
+	triangle2;
+	triangle3;
+	triangle4;
+	/* Start the animation sequences */
 	trianglegroup1;
 	wait(1);
 	trianglegroup2;
