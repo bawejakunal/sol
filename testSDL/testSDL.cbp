@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="testSDL" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/testSDL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="cleanup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="game.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="game.h" />
+		<Unit filename="includes.h" />
+		<Unit filename="loadcontent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="onevent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="oninit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="onloop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="onrender.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
