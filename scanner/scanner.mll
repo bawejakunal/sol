@@ -36,29 +36,28 @@ rule token = parse
 | "int"    { INT }
 | "float"  { FLOAT }
 | "char"   { CHAR }
-| "array"  { ARRAY }
-| "point"  { POINT }
-| "curve"  { CURVE }
+| "string"  { STRING }
 | "shape"  { SHAPE }
-| "motiongroup"  { MOTIONGROUP }
+| "parent"  { PARENT }
+| "extends"  { EXTENDS }
 | "func"   { FUNC }
 | "construct"  { CONSTRUCT }
 | "main"   { MAIN }
-| "print"  { PRINT }
+| "consolePrint"  { CONSOLEPRINT }
 | "draw"   { DRAW }
 | "drawpoint"  { DRAWPOINT }
 | "drawcurve"  { DRAWCURVE }
-| "drawtext"  { DRAWTEXT }
-| "framerate"  { FRAMERATE }
+| "print"  { PRINT }
+| "setFramerate"  { SETFRAMERATE }
 | "translate"  { TRANSLATE }
 | "rotate"  { ROTATE }
 | "render"  { RENDER }
 | "wait"  { WAIT }
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
-| '''[^ '\' ''' '"']?''' as lxm { CHAR(lxm) }
-| ''''\'[''' '"' 'b' 't' 'n']''' as lxm { CHAR(lxm) }
-| '"'[_]*'"' as lxm { STRING(lxm) }
+| '''[^ '\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm) }
+| ''''\'[''' '"' 'b' 't' 'n']''' as lxm { CHAR_LITERAL(lxm) }
+| '"'[_]*'"' as lxm { STRING_LITERAL(lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
