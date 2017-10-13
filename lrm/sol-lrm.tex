@@ -121,8 +121,8 @@ This section describes the complete lexical conventions followed for a syntactic
     A SOL \textit{string} is a series of \textit{characters} within double quotation marks. Its type is an array (defined in ) of characters. The compiler places a null byte (\texttt{\textbackslash0}) at the end of a string literal to mark its end.\\
     Eg: \texttt{“cat”}
 
-    \subsection{\textit{Operators}}
-    SOL has mainly three categories of operators defined below:
+	\subsection{\textit{Operators}}
+    SOL has mainly four categories of operators defined below:
 
         \subsubsection{\textit{Assignment Operator}}
         An \textit{assignment operator} is denoted by the \texttt{=} symbol having a variable identifier to its left and a valid expression on its right. The \textit{assignment operator} of the expression on the right to the variable on the left.
@@ -133,7 +133,7 @@ This section describes the complete lexical conventions followed for a syntactic
             \begin{center}
                 \begin{tabular}{ |c|c| }
                 \hline
-                    \textbf{Operator} & \textbf{Definition}
+                    \textbf{Operator} & \textbf{Definition} \\
                     \hline
                     +   &   Addition\\
                     -   &   Subtraction\\
@@ -149,7 +149,7 @@ This section describes the complete lexical conventions followed for a syntactic
             \begin{center}
                 \begin{tabular}{ |c|c| }
                 \hline
-                    \textbf{Operator} & \textbf{Definition}
+                    \textbf{Operator} & \textbf{Definition} \\
                     \hline
                     ==  & Equality \\
                     !=  & Not Equals \\
@@ -159,9 +159,72 @@ This section describes the complete lexical conventions followed for a syntactic
                     >=  & Greter than or equals \\
                 \hline
                 \end{tabular}
-            \end{center} 
+            \end{center}
+        
+        \subsubsection{\textit{Logical Operators}}
+        The logical operators evaluate boolean expressions and return an integer as the result - with 0 as False and 1 as True. The AND (\&\&) and OR ($||$) operators are binary, while the NOT (!) operator is unary.
+	        \begin{center}
+	        	\begin{tabular}{ |c|c| }
+	        		\hline
+	        		\textbf{Operator} & \textbf{Definition} \\
+	        		\hline
+	        		\&\&  & AND \\
+	        		$||$  & OR \\
+	        		!  & NOT \\
+	        		\hline
+	        	\end{tabular}
+	        \end{center}
 
-        \subsection{\textit{Array}} \label{array}
+	\subsection{\textit{Punctuators}}
+	The following symbols are used for semantic organization in SOL:
+	     \begin{center}
+	     	\begin{tabular}{ |p{0.25\hsize}|p{0.75\hsize}| }
+	     		\hline
+	     		\textbf{Punctuator} & \textbf{Usage} \\
+	     		\hline
+	     		\{\}			& Used to denote a block of code. Must be present as a pair. \\
+	     		()				& Specifies conditions for statements before the subsequent code, or denotes the arguments of a function. Must be present as a pair. \\
+	     		\lbrack\rbrack	& Indicates an array. Must be present as a pair. \\
+	     		;				& Signals the end of a line of code. \\
+	     		,				& Used to separate arguments for a function, or elements in an array definition. \\
+	     		\hline
+	     	\end{tabular}
+	     \end{center}
+	
+\section{Identifier Scope}
+	\subsection{\textit{Block Scope}}
+	Identifier scope is a specific area of code wherein an identifier exists. A scope of an identifier is from its declaration until the end of the code block within which it is declared.
+	
+	\subsection{\textit{File Scope}}
+	Any identifier (such as a variable or a function) that is defined outside a code block has file scope i.e. it exists throughout the file.
+	
+	If an identifier with file scope has the same name as an identifier with block scope, the block-scope identifier gets precedence.
+
+\section{Expressions and Operators}
+	\subsection{\textit{Typecasting}}
+	A typecast is the conversion a variable from one type to another. SOL supports explicit casting of ints to floats and floats to ints. To cast a variable to a different type, place the desired type in parentheses in front of the variable. \\
+	Eg: \texttt{(int) myFloat}
+	
+	\subsection{\textit{Precedence and Associativity}}
+	SOL expressions are evaluated with the following rules:
+	\begin{itemize}
+		\item Expressions are evaluated from left to right
+		\item Multiplication, division and modulo operations take precedence over addition and subtraction
+		\item Parentheses override all precedence rules
+		\item Logical NOT has precedence over logical AND, which has precedence over logical OR
+	\end{itemize}
+	
+	\subsection{\textit{Dot Accessor}}
+	To access members of a declared \texttt{shape} (further described in section \ref{classes}), use the dot accessor ‘.’. \\
+	Eg: \texttt{shape\_object.point1 /* This accesses the variable point1 within the object shape\_object */}
+
+
+\section{Declarations}
+
+	\subsection{\textit{Array}} \label{array}
+
+\section{Classes} \label{classes}
+        
 \end{document}
 
 %%
