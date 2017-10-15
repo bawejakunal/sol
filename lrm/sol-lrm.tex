@@ -343,7 +343,7 @@ Displays text onto the render screen at the coordinates specified by the user, i
 
 
 
-\section{Animation Functions}
+\section{Animation Functions} \label{animation}
 The following functions are used to animate the objects drawn in an SOL program.
 
 \subsection{\textit{translate}}
@@ -363,6 +363,98 @@ Pauses animation for a specified amount of time (in seconds). To be called in th
 \underline{Arguments}: \texttt{time (float)}
 
 
+\section{Classes}
+SOL follows an object-oriented paradigm for defining objects (drawings) which can be further animated using the animation functions described in \ref{animation}.
+
+\subsection{\textit{shape}}
+Similar to a class in C++; a shape defines a particular 2-D shape as part of the drawing on screen. Every \texttt{shape} has a user defined \texttt{draw} function that specifies how shapes are statically rendered, using multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} commands. This is the base class in SOL, and all classes created by the programmer extend this class. The class may contain multiple member variables that could be used to draw the shape. These member variables are defined in a constructor, specified by the keyword \texttt{construct}. It is also possible to declare member functions for a shape. When member variables are accessed within a member function, it is implied that the member variables belong to the current object that calls the function.\\
+Once a shape object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, '.'.\\
+Eg: \begin{lstlisting}[aboveskip=-13pt]
+        shape Triangle {
+            int[2] a;
+            int[2] b;
+            int[2] c;
+            construct Triangle(int[] a_init, int[] b_init, int[] c_init) {
+                a = a_init;
+                b = b_init;
+                c = c_init;
+            }
+        
+            func int[] findCentre(int[] x, int []y) {
+                if(length(a) != length(b)) {
+                    consolePrint("Arrays size mismatch. Abort");
+                    return int[0];
+                }
+            
+                int i = 0;
+                int c[length(a)];
+                while(i < length(x)) {
+                    c[i] = a[i] + b[i] / 2;
+                }
+                return c;
+            }
+
+            func draw() {
+                /* Draw lines between the three vertices of the triangle */
+                drawcurve(a, findCentre(a, b), b, [0, 0, 0]);
+                drawcurve(b, findCentre(b, c), c, [0, 0, 0]);
+                drawcurve(c, findCentre(c, a), a, [255, 255, 255]);
+            }
+        }
+    \end{lstlisting}
+
+\subsection{\textit{Inheritance}}
+SOL allows single class inheritance for shapes i.e given a shape, such as \texttt{Line}, one may create a sub-shape of \texttt{Line}, called \texttt{LineBottom}, and inherit all of its fields from the super-shape, \texttt{Line}, using the keyword \texttt{extends}.\\
+
+Eg: \begin{lstlisting}[aboveskip=-13pt]
+        shape Line {
+            int[2] a;
+            int[2] b;
+            
+            construct Line(int[] a_init, int[] b_init) {
+                a = a_init;
+                b = b_init;
+            }
+    
+            func int[] findCentre(int[] x, int[] y) {
+                if(length(a) != length(b)) {
+                    consolePrint("Arrays size mismatch! Abort !");
+                    return int[0];
+                }
+        
+                int i = 0;
+                int c[length(a)];
+                while(i < length(x)) {
+                    c[i] = a[i] + b[i] / 2;
+                }
+                return c;
+            }
+            
+            func draw() {
+                drawcurve(a, findCentre(a, b), b, [0, 0, 0]);
+            }
+        }
+
+        /* Subclass of Line */
+        shape LineBottom extends Line {
+            int[2] c;
+            int[2] d;
+    
+            construct LineBottom(int[] a_init, int[] b_init, int[] c_init) {
+                parent(a_init, b_init);
+                c = c_init;
+                d = b;
+            }
+    
+            func draw() {
+                parent();
+                drawcurve(c, findCentre(c, d), d, [0, 0, 0]);
+            }
+        }
+    \end{lstlisting}
+
+    \subsubsection{\textit{parent (keyword)}}
+    The super-shape's functions can be accessed through the keyword \texttt{parent} followed by a \texttt{dot operator} and the member function name. This invokes the implementation of the member function defined in the super-shape. In constructors, the \texttt{parent()} calls the constructor for the super-shape.
 
 \end{document}
 
