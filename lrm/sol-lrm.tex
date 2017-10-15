@@ -221,10 +221,149 @@ This section describes the complete lexical conventions followed for a syntactic
 
 \section{Declarations}
 
-	\subsection{\textit{Array}} \label{array}
+    Declarations determine how an identifier should be interpreted by the compiler. A declaration should include the identifier type and the given name
 
-\section{Classes} \label{classes}
-        
+    \subsection{\textit{Type Specifiers}} \label{type}
+    SOL provides four type specifiers for data types:
+    \begin{itemize}
+        \itemsep0em
+        \item \texttt{int} - integer number
+        \item \texttt{float} - floating point number
+        \item \texttt{char} - a single character
+        \item \texttt{string} - string (ordered sequence of characters)
+    \end{itemize}
+
+	\subsection{\textit{Array Declarators}} \label{array}
+    An array may be formed from any of the primitive types and shapes, but each array may only contain one type of primitive or shape. At declaration, the type specifier and the size of the array must be indicated. In a function signature, the size of the array should not be specified. Arrays are most commonly used in SOL to specify coordinates with two integers.\\
+    Eg: \texttt{int[2] coor; /* Array of two integers */}
+
+    \subsection{\textit{Function Declarators and Definition}}
+    Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically returns nothing. Functions are given a name (which is a valid identifier) followed by function arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
+    Eg: \begin{lstlisting}[aboveskip=-13pt]
+        func example(int a, int b){
+            /* a function named ‘example’ that takes two arguments that are both of type int */
+        }
+    \end{lstlisting}
+
+    \subsection{\textit{Constructor Declarators}}
+    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to a function definition with two additional constraints: 
+    \begin{enumerate}
+        \itemsep0em
+        \item Constructors are defined inside the class definition.
+        \item Constructors are given the same name as the class and followed by arguments, within parenthesisas a comma-separated list of variable declarations, similar to function definitions.
+    \end{enumerate}
+    Eg: \begin{lstlisting}[aboveskip=-13pt]
+        construct Triangle(int[] a_init, int[] b_init, int[] c_init) {
+            a = a_init;
+            b = b_init;
+            c = c_init;
+        }
+    \end{lstlisting}
+
+    \subsection{\textit{Definitions}}
+    A definition of an object or type includes a value, assigned by the assignment operator \texttt{=}.\\
+    Eg: \begin{lstlisting}[aboveskip=-13pt]
+            int x = a;    /* declaration & definition*/
+            char y;       /* declaration */
+            y = 'b';      /* definition */
+            float z = 3.4;
+            int[3] w = [5, 2, 0];
+            string f = "cats";
+        \end{lstlisting}
+
+\section{Statements} \label{classes}
+A statement in SOL refers to a complete instruction for a SOL program. All statements are executed in order of sequence. The four types of statements are described in detail below:\\
+
+\subsection{\textit{Expression Statement}}
+Expression statements are the statements which get evaluated and product a result. This can be as simple as an assignment or a function call.
+Eg: \texttt{int x = 5; /* assign 5 to variable x */}
+
+\subsection{\textit{If Statement}}
+An \textit{if statement} is a conditional statement. Given a condition for \textit{if statement}, if it evaluates to non-zero value then it is considered valid and the code block associated with \textit{if statment} is executed.\\
+Eg: \begin{lstlisting}[aboveskip=-13pt]
+        int x = 1;
+        if (x == 1) {
+            /* This code gets executed */
+        }
+    \end{lstlisting}
+
+\subsection{\textit{While Statement}}
+A \textit{while statement} specifies the looping construct in SOL. It starts with \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration. \\
+Eg: \begin{lstlisting}[aboveskip=-13pt]
+        int x = 5;
+        while (x > 0) {
+            /* This code gets executed 5 times */
+            x = x - 1;
+        }
+    \end{lstlisting}
+
+\subsection{\textit{Return statement}}
+Stops execution of a function and returns to where the function was called originally in the code.  Potentially returns a value; however, the function must specify a return type, otherwise this will result in a syntax error.\\
+Eg: \begin{lstlisting}[aboveskip=-13pt]
+        func int sum(int x, int y) {
+            /* return sum of two integers */
+            return x + y;
+        }
+    \end{lstlisting}
+
+\section{Internal Functions}
+SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
+
+\subsection{\textit{main}}
+Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input. The \texttt{main} function does not allow for member variables of shape objects to be changed.\\
+\underline{Arguments}: None
+
+\subsection{\textit{length}}
+Returns the number of elements in an \texttt{array}.\\
+\underline{Arguments}: Array of elements with same \texttt{type}
+
+\subsection{\texttt{setFramerate}}
+Defined once at the start of the program, to specify the frames rendered per second. May only be defined once.\\
+\underline{Arguments}: \texttt{rate (float)}
+
+\subsection{\texttt{consolePrint}}
+Prints a string to the console. Commonly used to print error messages to the console.\\
+\underline{Arguments}: \texttt{text (string)}
+
+
+\section{Drawing Functions}
+The following set of functions are also a category of internal/required functions, which describe the drawing aspects for objects defined in an SOL program.
+
+\subsection{\textit{drawPoint}}
+Draws a point at a specified coordinate in the specified color.\\
+\underline{Arguments}: \texttt{pt (int[2]), color (int[3])}
+
+\subsection{\textit{drawCurve}}
+Draws a Bezier curve in the specified color defined by three coordinates, which are the three control points.\\
+\underline{Arguments}: \texttt{pt1 (int[2]), pt2 (int[2]), pt3 (int[2]), color (int[3])}
+
+\subsection{\textit{print}}
+Displays text onto the render screen at the coordinates specified by the user, in the specified color.\\
+\underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
+
+
+
+\section{Animation Functions}
+The following functions are used to animate the objects drawn in an SOL program.
+
+\subsection{\textit{translate}}
+Displaces a shape by specifying a two element array integers, where the first element is the number of pixels along the horizontal axis and the second element along the vertical axis, over a specified time period in seconds.\\
+\underline{Arguments}: \texttt{displace (int[2]) /* horizontal, vertical */}
+
+\subsection{\textit{rotate}}
+Rotate a shape around an axis point by a specified number of degrees over a time period in seconds.\\
+\underline{Arguments}: \texttt{axis (int[2]), angle (float), time (float)}
+
+\subsection{\textit{render}}
+Specify the set of motions to be animated using SDL. This code-block can be defined for shapes that need to move or can be left undefined for non-moving shapes. Within this function, various \texttt{rotate} and \texttt{translate} calls can be made to move the shape. This should be specified in the \texttt{main} function\\
+\underline{Arguments:} None
+
+\subsection{\textit{wait}}
+Pauses animation for a specified amount of time (in seconds). To be called in the \texttt{render} function.\\
+\underline{Arguments}: \texttt{time (float)}
+
+
+
 \end{document}
 
 %%
