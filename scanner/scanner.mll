@@ -52,8 +52,9 @@ rule token = parse
 | "rotate"  { ROTATE }
 | "render"  { RENDER }
 | "wait"  { WAIT }
-| ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
+| ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
+| '.'      { DOT }
 | '''[^ '\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm) }
 | ''''\'[''' '"' '\' 't' 'n' '0']''' as lxm { CHAR_LITERAL(lxm) }
 | '"' (('\'[''' '"' '\' 't' 'n' '0'])+ | [^ '\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) }
