@@ -15,14 +15,14 @@ type bind_local =
 	| typ * int * string
 
 type expr = 
-	| Literal of int 
-	| Number of float
-	| String of string 
+	| Int_literal of int 
+	| Float_literal of float
+	| Char of char 
+	| Array of expr list * typ 	(* TODO: Resolve whether to place this here or in type *)
 	| Binop of expr * op * expr 
 	| Unop of unary_op * expr 
 	| Noexpr	
 	| Assign of string * expr 
-	| Array of expr list * typ 	(* TODO: Resolve whether to place this here or in type *)
 	| Call of string * expr list
 
 type stmt = 
