@@ -1,6 +1,6 @@
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod
 
-type unary_op = Not
+type unary_op = Not | Neg
 
 type typ = 
 	| Float

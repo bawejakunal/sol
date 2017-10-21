@@ -29,8 +29,6 @@ rule token = parse
 | "||"     { OR }
 | "!"      { NOT }
 | "if"     { IF }
-| "else"   { ELSE }
-| "for"    { FOR }
 | "while"  { WHILE }
 | "return" { RETURN }
 | "int"    { INT }
@@ -48,6 +46,7 @@ rule token = parse
 | "drawpoint"  { DRAWPOINT }
 | "drawcurve"  { DRAWCURVE }
 | "print"  { PRINT }
+| "length"  { LENGTH }
 | "setFramerate"  { SETFRAMERATE }
 | "translate"  { TRANSLATE }
 | "rotate"  { ROTATE }
@@ -56,9 +55,9 @@ rule token = parse
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
 | '''[^ '\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm) }
-| ''''\'[''' '"' '\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm) }
-| '"'[_]*'"' as lxm { STRING_LITERAL(lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ''''\'[''' '"' '\' 't' 'n' '0']''' as lxm { CHAR_LITERAL(lxm) }
+| '"' (('\'[''' '"' '\' 't' 'n' '0'])+ | [^ '\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) }
+| ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
