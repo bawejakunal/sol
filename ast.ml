@@ -1,25 +1,28 @@
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod | Dot
 
 type unary_op = Not | Neg
 
 type typ = 
 	| Float
 	| Int
-	| Str 
-	| Void
+	| Char
 
-type bind = typ * string
+type bind_formal = 
+	| typ * string
+
+type bind_local = 
+	| typ * string
+	| typ * int * string
 
 type expr = 
-	| Literal of int 
-	| Number of float
-	| String of string 
+	| Int_literal of int 
+	| Float_literal of float
+	| Char of char 
+	| Array of expr list * typ 	(* TODO: Resolve whether to place this here or in type *)
 	| Binop of expr * op * expr 
 	| Unop of unary_op * expr 
 	| Noexpr	
 	| Assign of string * expr 
-	| Array of expr list * typ
-	| Construct of string * expr
 	| Call of string * expr list
 
 type stmt = 
@@ -32,12 +35,35 @@ type stmt =
 type func_dec = {
 	fname	:	string;
 	ftype	: 	type;
-	formal	:	bind list;
-	locals	:	bind list;
+	formal	:	bind_formal list;
+	locals	:	bind_local list;
 	body	:	stmt list;
 }
 
-type program = bind list * func_dec list
+type draw_dec = {
+	locals	:	bind_local list;
+	body	:	stmt list;
+}
+
+type construct_dec = {
+	formal	:	bind_formal list;
+	locals	:	bind_local list;
+	body	:	stmt list;
+}
+
+type shape_body = 
+	| ShapeConstruct of construct_dec
+	| ShapeVar of bind_local
+	| ShapeFunc of func_dec
+
+type shape_dec = {
+	sname	:	string;
+	pname	: 	string;
+	draw	:	draw_dec;
+	body	:	shape_body list;
+}
+
+type program = bind list * func_dec list * shape_dec list
 
 
 
