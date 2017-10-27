@@ -1,9 +1,11 @@
 language: c
 sudo: required
 install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh
-script:
-  - bash -ex .travis-ocaml.sh
-env:
-  - OCAML_VERSION=4.02
 os:
   - linux
+env:
+  - OCAML_VERSION=4.02
+script:
+  - bash -ex .travis-ocaml.sh
+notifications:
+  email: false
