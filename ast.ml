@@ -3,22 +3,20 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | An
 type unary_op = Not | Neg
 
 type typ = 
+	  Int
 	| Float
-	| Int
 	| Char
+	| Void (* For internal use *)
+	| Array of int * typ (*first int is the size of the array*)
+	(* Add in array types/shapes *)
 
-type bind_formal = 
-	| typ * string
-
-type bind_local = 
-	| typ * string
-	| typ * int * string
+type bind = typ * string
 
 type expr = 
 	| Int_literal of int 
 	| Float_literal of float
-	| Char of char 
-	| Array of expr list * typ 	(* TODO: Resolve whether to place this here or in type *)
+	| Char_literal of char 
+	| Array_literal of typ * expr list
 	| Binop of expr * op * expr 
 	| Unop of unary_op * expr 
 	| Noexpr	
@@ -34,13 +32,13 @@ type stmt =
 
 type func_dec = {
 	fname	:	string;
-	ftype	: 	type;
-	formal	:	bind_formal list;
-	locals	:	bind_local list;
+	typ		: 	typ;
+	formals	:	bind list;
+	locals	:	bind list;
 	body	:	stmt list;
 }
 
-type draw_dec = {
+(*type draw_dec = {
 	locals	:	bind_local list;
 	body	:	stmt list;
 }
@@ -61,9 +59,9 @@ type shape_dec = {
 	pname	: 	string;
 	draw	:	draw_dec;
 	body	:	shape_body list;
-}
+}*)
 
-type program = bind list * func_dec list * shape_dec list
+type program = bind list * func_dec list(* * shape_dec list*)
 
 
 
