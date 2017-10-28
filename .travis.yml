@@ -9,5 +9,6 @@ script:
   - bash -ex .travis-ocaml.sh
   - make clean
   - make scanner.ml
+  - make parser.ml
 notifications:
   email: false
