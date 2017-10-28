@@ -293,7 +293,7 @@ Expression statements are those statements that get evaluated and produce a resu
 Eg: \texttt{int x = 5; /* assign 5 to variable x */}
 
 \subsection{\textit{If Statement}}
-An \textit{if} statement is a conditional statement. Given a condition for the \textit{if} statement, if it evaluates to non-zero value then it is considered valid and the code block associated with the \textit{if} statement is executed.\\
+An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
 Eg: \begin{lstlisting}[aboveskip=-13pt]
         int x = 1;
         if (x == 1) {
@@ -302,7 +302,7 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
     \end{lstlisting}
 
 \subsection{\textit{While Statement}}
-A \textit{while} statement specifies the looping construct in SOL. It starts with the \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; this is followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration. \\
+A \textit{while} statement specifies the looping construct in SOL. It starts with the \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; this is followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration and the code within \texttt{while} block executes if the condition evaluates to a non-zero \textit{integer}. \\
 Eg: \begin{lstlisting}[aboveskip=-13pt]
         int x = 5;
         while (x > 0) {
