@@ -6,14 +6,18 @@
 
 all : sol.native
 
-sol.native :
+sol.native: dep
 	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
 		sol.native
 
 # "make clean" removes all generated files
 
-.PHONY : clean
-clean :
+.PHONY : clean dep
+
+dep:
+	./install-llvm.sh
+
+clean:
 	ocamlbuild -clean
 	rm -rf testall.log *.diff sol scanner.ml parser.ml parser.mli
 	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe
@@ -79,6 +83,6 @@ parser.cmi : ast.cmo
 # 	semant.ml testall.sh printbig.c arcade-font.pbm font2c \
 # 	$(TESTFILES:%=tests/%) 
 
-# sol-llvm.tar.gz : $(TARFILES)
-# 	cd .. && tar czf sol-llvm/sol-llvm.tar.gz \
-# 		$(TARFILES:%=sol-llvm/%)
+sol-llvm.tar.gz : $(TARFILES)
+	cd .. && tar czf sol-llvm/sol-llvm.tar.gz \
+		$(TARFILES:%=sol-llvm/%)
