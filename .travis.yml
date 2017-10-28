@@ -7,5 +7,7 @@ env:
   - OCAML_VERSION=4.02
 script:
   - bash -ex .travis-ocaml.sh
+  - make clean
+  - make scanner.ml
 notifications:
   email: false

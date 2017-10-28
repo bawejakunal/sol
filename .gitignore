@@ -240,3 +240,6 @@ TSWLatexianTemp*
 
 # expex forward references with \gathertags
 *-tags.tex
+
+# ignore build files
+scanner.ml      # generated from ocamllex scanner.mll
