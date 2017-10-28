@@ -130,8 +130,8 @@ This section describes the complete lexical conventions followed for a syntactic
         \end{center}
 
     \subsection{\textit{String constants}}
-    A SOL \textit{string} is a series of \textit{characters} within double quotation marks. Its type is an array (defined in Section \ref{array}) of characters. The compiler places a null byte (\texttt{\textbackslash0}) at the end of a string literal to mark its end.\\
-    Eg: \texttt{“cat”}
+    A SOL \textit{string} is a sequence of zero or more \textit{characters} within double quotation marks.\\
+    Eg: \texttt{"cat"}
 
 	\subsection{\textit{Operators}}
     SOL has mainly four categories of operators defined below:
@@ -209,12 +209,12 @@ This section describes the complete lexical conventions followed for a syntactic
 	
 	\subsection{\textit{File Scope}}
 	Any identifier (such as a variable or a function) that is defined outside a code block has file scope i.e. it exists throughout the file.
-	
+
 	If an identifier with file scope has the same name as an identifier with block scope, the block-scope identifier gets precedence.
 
 \section{Expressions and Operators}
 	\subsection{\textit{Typecasting}}
-	A typecast is the conversion a variable from one type to another. SOL supports explicit casting of \textit{int}s to \textit{float}s and \textit{float}s to \textit{int}s. To cast a variable to a different type, place the desired type in parentheses in front of the variable. \\
+	A typecast is the conversion of an expression from one type to another. SOL supports explicit casting of \textit{int} to \textit{float} \textit{float} to \textit{int}, and \textit{int}, \textit{float} and \textit{char} to \textit{string}. To cast a expression to a different type, place the desired type in parentheses in front of the expression. \\
 	Eg: \texttt{(int) myFloat /* Returns the integer value of myFloat */}
 	
 	\subsection{\textit{Precedence and Associativity}}
@@ -318,25 +318,25 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
             /* return sum of two integers */
             return x + y;
         }
-    \end{lstlisting}
-
-\section{Internal Functions} \label{internal}
-SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
-
-\subsection{\textit{main}}
-Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input. The \texttt{main} function does not allow for member variables of \texttt{shape} objects to be changed.\\
-\underline{Arguments}: None
-
-\subsection{\textit{length}}
-Returns the number of elements in an \texttt{array}.\\
-\underline{Arguments}: Array of elements
-
-\subsection{\texttt{setFramerate}}
-Defined once at the start of the program, to specify the frames rendered per second. May only be defined once.\\
-\underline{Arguments}: \texttt{rate (float)}
-
-\subsection{\texttt{consolePrint}}
-Prints a string to the console. Commonly used to print error messages.\\
+    \end{lstlisting}[
+    
+    \section{Internal Functions} \label{internal}
+    SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
+    
+    \subsection{\textit{main}}
+    Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input. The \texttt{main} function does not allow for member variables of \texttt{shape} objects to be changed.\\
+    \underline{Arguments}: None
+    
+    \subsection{\textit{length}}
+    Returns the number of elements in an \texttt{array}.\\
+    \underline{Arguments}: Array of elements
+    
+    \subsection{\texttt{setFramerate}}
+    Defined once at the start of the program, to specify the frames rendered per second. May only be defined once.\\
+    \underline{Arguments}: \texttt{rate (float)}
+    
+    \subsection{\texttt{consolePrint}}
+    Prints a string to the console. Com]monly used to print error messages.\\
 \underline{Arguments}: \texttt{text (string)}
 
 
@@ -354,8 +354,6 @@ Draws a B\'ezier curve in the specified color defined by three coordinates, whic
 \subsection{\textit{print}}
 Displays text onto the render screen at the coordinates specified by the user, in the specified color.\\
 \underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
-
-
 
 \section{Animation Functions} \label{animation}
 The following functions are used to animate the objects drawn in a SOL program.
