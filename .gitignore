@@ -243,3 +243,5 @@ TSWLatexianTemp*
 
 # ignore build files
 scanner.ml      # generated from ocamllex scanner.mll
+parser.mli
+parser.ml
