@@ -1,0 +1,6 @@
+1. Focus on integration testing, not unit testing
+2. Write 1-2 tests based on accepted behavior, 1-2 fail tests on unexpected behavior
+3. For fail tests, comment the line that it fails in.
+
+
+Some testing might be manual. SDL
