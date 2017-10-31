@@ -29,7 +29,7 @@ let check (globals, functions) =
   (* Raise an exception of the given rvalue type cannot be assigned to
      the given lvalue type *)
   let check_assign lvaluet rvaluet err =
-     if lvaluet == rvaluet then lvaluet else raise err (* Discuss promotion/casting for inheritance *)
+     if lvaluet == rvaluet then lvaluet else raise err
   in
    
   (**** Checking Global Variables ****)
@@ -43,9 +43,6 @@ let check (globals, functions) =
   if List.mem "consolePrint" (List.map (fun fd -> fd.fname) functions)
   then raise (Failure ("function consolePrint may not be defined")) else ();
 
-  if List.mem "toString" (List.map (fun fd -> fd.fname) functions)
-  then raise (Failure ("function toString may not be defined")) else ();
-
   if List.mem "setFramerate" (List.map (fun fd -> fd.fname) functions)
   then raise (Failure ("function setFramerate may not be defined")) else ();
 
@@ -58,15 +55,21 @@ let check (globals, functions) =
   (* Function declaration for a named function *)
   let built_in_decls =  StringMap.add "consolePrint"
      { typ = Void; fname = "consolePrint"; formals = [(String, "x")];
+       locals = []; body = [] } (StringMap.add "intToFloat"
+     { typ = Float; fname = "intToFloat"; formals = [(Int, "x")];
+       locals = []; body = [] } (StringMap.add "floatToInt"
+     { typ = Int; fname = "floatToInt"; formals = [(Float, "x")];
+       locals = []; body = [] } (StringMap.add "intToString"
+     { typ = String; fname = "intToString"; formals = [(Int, "x")];
+       locals = []; body = [] } (StringMap.add "floatToString"
+     { typ = String; fname = "floatToString"; formals = [(Float, "x")];
+       locals = []; body = [] } (StringMap.add "charToString"
+     { typ = String; fname = "charToString"; formals = [(Char, "x")];
        locals = []; body = [] } (StringMap.add "length"
-     { typ = Void; fname = "length"; formals = [(Array, "x")];
-       locals = []; body = [] } (StringMap.add "toString"
-     { typ = Void; fname = "toString"; formals = [(Int, "x")];
-       locals = []; body = [] } (StringMap.add "toString"
-     { typ = Void; fname = "toString"; formals = [(Float, "x")];
+     { typ = Int; fname = "length"; formals = [(Array(0, Void), "x")];
        locals = []; body = [] } (StringMap.singleton "setFramerate"
      { typ = Void; fname = "setFramerate"; formals = [(Float, "x")];
-       locals = []; body = [] }))))
+       locals = []; body = [] })))))))
   in
      
   let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
@@ -105,15 +108,29 @@ let check (globals, functions) =
 
     (* Return the type of an expression or throw an exception *)
     let rec expr = function
-	Int_literal _ -> Int
+	      Int_literal _ -> Int
       | Float_literal _ -> Float
       | Char_literal _ -> Char
-      | Array_literal s -> List.fold_left (fun c e -> let t1 = expr c and t2 = expr e )  s (* TODO Finish this!!*)
+      | String_literal _ -> String
+      | Array_literal(l, s) -> let prim_type = List.fold_left (fun t1 e -> let t2 = expr e in 
+          if t1 == t2 then t1 
+          else raise (Failure("Elements of differing types found in array " ^ string_of_expr (Array_literal(l, s)) ^ ": " ^ 
+            string_of_typ t1 ^ ", " ^ string_of_typ t2))) 
+        (expr (List.hd (s))) (List.tl s) in 
+        Array(List.length s, prim_type)
       | Id s -> type_of_identifier s
+      | Access(id, idx) -> let t = type_of_identifier id and t_ix = expr idx in 
+          let eval_type = function
+            Array(l, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
+              then a_t
+              else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
+                string_of_expr idx))
+            | _ -> raise (Failure(id ^ "is not an array type"))
+          in eval_type t
       | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
 	(match op with
-    Add | Sub | Mult | Div | Modulo when t1 = Int && t2 = Int -> Int
-  | Add | Sub | Mult | Div | Modulo when t1 = Float && t2 = Float -> Float
+    Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> Int
+  | Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float
 	| Equal | Neq when t1 = t2 -> Int
 	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Int
   | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int
@@ -140,7 +157,7 @@ let check (globals, functions) =
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
-         else
+         else (* TODO: Add special case for checking type of actual array vs formal array *)
            List.iter2 (fun (ft, _) e -> let et = expr e in
               ignore (check_assign ft et
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^

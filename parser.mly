@@ -4,7 +4,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LSQAURE RSQUARE COMMA
+%token SEMI LPAREN RPAREN LBRACE RBRACE LSQUARE RSQUARE COMMA
 %token PLUS MINUS TIMES DIVIDE MODULO ASSIGN NOT
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token RETURN IF WHILE INT FLOAT CHAR STRING FUNC
@@ -61,16 +61,15 @@ formals_opt:
 
 formal_list:
     typ ID                   { [($1,$2)] }
-  | typ LSQUARE RSQUARE ID   { [($3,$6)] }
   | formal_list COMMA typ ID { ($3,$4) :: $1 }
-  | formal_list COMMA typ LSQUARE RSQUARE ID { ($3,$6) :: $1 } (*TODO*)
-
 
 typ:
     INT { Int }
   | FLOAT { Float }
   | CHAR { Char }
-  | typ LSQUARE INT RSQUARE { Array ($3, $1)}
+  | STRING { String }
+  | typ LSQUARE expr RSQUARE { Array ($3, $1)}
+  | typ LSQUARE RSQUARE { Array(Void, $1) }
   /* Not adding in Void here*/
 
 vdecl_list:
@@ -105,14 +104,15 @@ expr:
     INT_LITERAL          { Int_literal($1) }
   | FLOAT_LITERAL          { Float_literal($1) }
   | CHAR_LITERAL          { Char_literal($1) }
-  | STRING_LITERAL          { Array_literal(Char, $1) }
+  | STRING_LITERAL          { String_literal($1) }
   | LSQUARE array_expr RSQUARE        { Array_literal(Void, List.rev $2) }
   | ID               { Id($1) }
+  | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }
   | expr DIVIDE expr { Binop($1, Div,   $3) }
-  | expr MODULO expr { Binop($1, Modulo,   $3) }
+  | expr MODULO expr { Binop($1, Mod,   $3) }
   | expr EQ     expr { Binop($1, Equal, $3) }
   | expr NEQ    expr { Binop($1, Neq,   $3) }
   | expr LT     expr { Binop($1, Less,  $3) }

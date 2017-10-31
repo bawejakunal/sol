@@ -56,8 +56,8 @@ rule token = parse
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
 | '.'      { DOT }
 | '''[^ '\\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm.[1]) }
-| ''''\\'[''' '"' '\\' 't' 'n' '0']''' as lxm { CHAR_LITERAL(lxm.[1]) }
-| '"' (('\\'[''' '"' '\\' 't' 'n' '0'])+ | [^ '\\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) } (* TODO: Remove double quotes, convert to list of chars*)
+| ''''\\'[''' '"' '\\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm.[1]) }
+| '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) } (* TODO: Remove double quotes*)
 | ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
