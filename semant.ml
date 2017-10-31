@@ -28,8 +28,12 @@ let check (globals, functions) =
   
   (* Raise an exception of the given rvalue type cannot be assigned to
      the given lvalue type *)
-  let check_assign lvaluet rvaluet err =
-     if lvaluet == rvaluet then lvaluet else raise err
+  let check_assign lvaluet rvaluet context err =
+     match context with
+       "Call" -> (let types = (lvaluet, rvaluet) in match types with
+         | (Array(_, t1), Array(l, t2)) -> if t1 == t2 then lvaluet else raise err
+         | _ -> if lvaluet == rvaluet then lvaluet else raise err)
+       | _ -> if lvaluet == rvaluet then lvaluet else raise err
   in
    
   (**** Checking Global Variables ****)
@@ -150,7 +154,7 @@ let check (globals, functions) =
       | Noexpr -> Void
       | Assign(var, e) as ex -> let lt = type_of_identifier var
                                 and rt = expr e in
-        check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
+        check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
 				     " = " ^ string_of_typ rt ^ " in " ^ 
 				     string_of_expr ex))
       | Call(fname, actuals) as call -> let fd = function_decl fname in
@@ -159,7 +163,7 @@ let check (globals, functions) =
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
          else (* TODO: Add special case for checking type of actual array vs formal array *)
            List.iter2 (fun (ft, _) e -> let et = expr e in
-              ignore (check_assign ft et
+              ignore (check_assign ft et "Call"
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
              fd.formals actuals;

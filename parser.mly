@@ -60,8 +60,15 @@ formals_opt:
   | formal_list   { List.rev $1 }
 
 formal_list:
-    typ ID                   { [($1,$2)] }
-  | formal_list COMMA typ ID { ($3,$4) :: $1 }
+    formal_typ ID                   { [($1,$2)] }
+  | formal_list COMMA formal_typ ID { ($3,$4) :: $1 }
+
+formal_typ:
+    INT { Int }
+  | FLOAT { Float }
+  | CHAR { Char }
+  | STRING { String }
+  | typ LSQUARE RSQUARE { Array(Void, $1) }
 
 typ:
     INT { Int }
@@ -69,7 +76,6 @@ typ:
   | CHAR { Char }
   | STRING { String }
   | typ LSQUARE expr RSQUARE { Array ($3, $1)}
-  | typ LSQUARE RSQUARE { Array(Void, $1) }
   /* Not adding in Void here*/
 
 vdecl_list:
