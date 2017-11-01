@@ -1,12 +1,22 @@
 language: c
+
 sudo: required
+
 install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh
+
 os:
   - linux
+
 env:
   - OCAML_VERSION=4.02
-script:
+
+before_script:
   - bash -ex .travis-ocaml.sh
+  - bash -ex install-script.sh
+  - eval `opam config env` 
+
+script:
   - make clean scanner.ml parser.ml sol
+
 notifications:
   email: false
