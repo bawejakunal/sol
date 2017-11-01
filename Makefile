@@ -24,9 +24,9 @@ clean:
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
 
-OBJS = ast.cmx codegen.cmx parser.cmx scanner.cmx semant.cmx sol.cmx
+OBJS = dep ast.cmx codegen.cmx parser.cmx scanner.cmx semant.cmx sol.cmx
 
-sol : $(OBJS)
+sol: $(OBJS)
 	ocamlfind ocamlopt -linkpkg -package llvm -package llvm.analysis $(OBJS) -o sol
 
 scanner.ml : scanner.mll

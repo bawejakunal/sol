@@ -7,6 +7,6 @@ env:
   - OCAML_VERSION=4.02
 script:
   - bash -ex .travis-ocaml.sh
-  - make clean dep scanner.ml parser.ml
+  - make clean scanner.ml parser.ml sol
 notifications:
   email: false
