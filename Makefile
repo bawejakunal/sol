@@ -6,16 +6,13 @@
 
 all : sol.native
 
-sol.native: dep
+sol.native:
 	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
 		sol.native
 
 # "make clean" removes all generated files
 
-.PHONY : clean dep
-
-dep:
-	./install-llvm.sh
+.PHONY : clean
 
 clean:
 	ocamlbuild -clean
@@ -26,7 +23,7 @@ clean:
 
 OBJS = ast.cmx codegen.cmx parser.cmx scanner.cmx semant.cmx sol.cmx
 
-sol : $(OBJS)
+sol: $(OBJS)
 	ocamlfind ocamlopt -linkpkg -package llvm -package llvm.analysis $(OBJS) -o sol
 
 scanner.ml : scanner.mll
