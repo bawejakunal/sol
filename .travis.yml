@@ -12,7 +12,7 @@ env:
 
 before_script:
   - bash -ex .travis-ocaml.sh
-  - bash -ex install-script.sh
+  - bash -ex install-llvm.sh
   - eval `opam config env` 
 
 script:
