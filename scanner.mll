@@ -35,12 +35,12 @@ rule token = parse
 | "float"  { FLOAT }
 | "char"   { CHAR }
 | "string"  { STRING }
-| "shape"  { SHAPE }
+(*| "shape"  { SHAPE }
 | "parent"  { PARENT }
 | "extends"  { EXTENDS }
 | "func"   { FUNC }
 | "construct"  { CONSTRUCT }
-| "main"   { MAIN }
+| "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
 | "consolePrint"  { CONSOLEPRINT }
 | "draw"   { DRAW }
 | "drawpoint"  { DRAWPOINT }
@@ -51,10 +51,10 @@ rule token = parse
 | "translate"  { TRANSLATE }
 | "rotate"  { ROTATE }
 | "render"  { RENDER }
-| "wait"  { WAIT }
+| "wait"  { WAIT }*)
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
-| '.'      { DOT }
+(*| '.'      { DOT }*)
 | '''[^ '\\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | ''''\\'[''' '"' '\\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) } (* TODO: Remove double quotes*)

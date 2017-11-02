@@ -8,13 +8,11 @@ type typ =
 	| Char
 	| String
 	| Void (* For internal use *)
-	| Array of int * typ (*first int is the size of the array*)
+	| Array of expr * typ (*first expr is the size of the array*)
 	(* Add in shapes *)
-
-type bind = typ * string
-
-type expr = 
-	| Int_literal of int 
+and
+   expr = 
+	  Int_literal of int 
 	| Float_literal of float
 	| Char_literal of char 
 	| String_literal of string
@@ -27,8 +25,10 @@ type expr =
 	| Call of string * expr list 
 	| Access of string * expr
 
+type bind = typ * string
+
 type stmt = 
-	| Block of stmt list
+	  Block of stmt list
 	| Expr of expr
 	| Return of expr
 	| If of expr * stmt
@@ -113,7 +113,7 @@ string_of_typ = function
   | Char -> "char"
   | Void -> "void"
   | String -> "string"
-  | Array(s,t) -> string_of_typ t ^ " [" ^ string_of_int s ^ "]"
+  | Array(s,t) -> string_of_typ t ^ " [" ^ string_of_expr s ^ "]"
 
 let rec string_of_stmt = function
     Block(stmts) ->
