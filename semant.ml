@@ -33,6 +33,9 @@ let check (globals, functions) =
        "Call" -> (let types = (lvaluet, rvaluet) in match types with
          | (Array(_, t1), Array(l, t2)) -> if t1 == t2 then lvaluet else raise err
          | _ -> if lvaluet == rvaluet then lvaluet else raise err)
+       | "Assign" -> (let types = (lvaluet, rvaluet) in match types with
+         | (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
+         | _ -> if lvaluet == rvaluet then lvaluet else raise err)
        | _ -> if lvaluet == rvaluet then lvaluet else raise err
   in
    
@@ -70,7 +73,7 @@ let check (globals, functions) =
        locals = []; body = [] } (StringMap.add "charToString"
      { typ = String; fname = "charToString"; formals = [(Char, "x")];
        locals = []; body = [] } (StringMap.add "length"
-     { typ = Int; fname = "length"; formals = [(Array(0, Void), "x")];
+     { typ = Int; fname = "length"; formals = [(Array(Int_literal(0), Void), "x")];
        locals = []; body = [] } (StringMap.singleton "setFramerate"
      { typ = Void; fname = "setFramerate"; formals = [(Float, "x")];
        locals = []; body = [] })))))))
@@ -121,8 +124,11 @@ let check (globals, functions) =
           else raise (Failure("Elements of differing types found in array " ^ string_of_expr (Array_literal(l, s)) ^ ": " ^ 
             string_of_typ t1 ^ ", " ^ string_of_typ t2))) 
         (expr (List.hd (s))) (List.tl s) in 
-        Array(List.length s, prim_type)
-      | Id s -> type_of_identifier s
+        Array(Int_literal(List.length s), prim_type)
+      | Id s -> let t = type_of_identifier s in 
+        (match t with
+          Array(l, t) -> if expr l == Int then t else raise(Failure("Array size should be an integer expression"))
+        | _ -> t)
       | Access(id, idx) -> let t = type_of_identifier id and t_ix = expr idx in 
           let eval_type = function
             Array(l, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
@@ -154,9 +160,16 @@ let check (globals, functions) =
       | Noexpr -> Void
       | Assign(var, e) as ex -> let lt = type_of_identifier var
                                 and rt = expr e in
-        check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
-				     " = " ^ string_of_typ rt ^ " in " ^ 
-				     string_of_expr ex))
+        (match lt with 
+        (* Check that the array size is specified by an integer-type expression *)
+            Array(l, t) -> if expr l == Int then
+                check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+				         " = " ^ string_of_typ rt ^ " in " ^ 
+				         string_of_expr ex))
+              else raise(Failure("Array size should be an integer expression"))
+          | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+            " = " ^ string_of_typ rt ^ " in " ^ 
+            string_of_expr ex)))
       | Call(fname, actuals) as call -> let fd = function_decl fname in
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int

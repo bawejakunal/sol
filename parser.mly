@@ -37,8 +37,8 @@ program:
 
 decls:
    /* nothing */ { [], [](*, [] *)}
- | decls vdecl { let (v, f, s) = $1 in ($2 :: v), f(*, s *)}
- | decls fdecl { let (v, f, s) = $1 in v, ($2 :: f)(*, s *)}
+ | decls vdecl { let (v, f(*, s*)) = $1 in ($2 :: v), f(*, s *)}
+ | decls fdecl { let (v, f(*, s*)) = $1 in v, ($2 :: f)(*, s *)}
  /*| decls sdecl { let (v, f, s) = $1 in v, f, ($2 :: s) }*/
 
 fdecl:
@@ -68,7 +68,7 @@ formal_typ:
   | FLOAT { Float }
   | CHAR { Char }
   | STRING { String }
-  | typ LSQUARE RSQUARE { Array(Void, $1) }
+  | typ LSQUARE RSQUARE { Array(Int_literal(0), $1) }
 
 typ:
     INT { Int }
