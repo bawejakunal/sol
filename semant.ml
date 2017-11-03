@@ -31,7 +31,7 @@ let check (globals, functions) =
   let check_assign lvaluet rvaluet context err =
      match context with
        "Call" -> (let types = (lvaluet, rvaluet) in match types with
-         | (Array(_, t1), Array(l, t2)) -> if t1 == t2 then lvaluet else raise err
+         | (Array(_, t1), Array(_, t2)) -> if t1 == t2 then lvaluet else raise err
          | _ -> if lvaluet == rvaluet then lvaluet else raise err)
        | "Assign" -> (let types = (lvaluet, rvaluet) in match types with
          | (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
@@ -131,7 +131,7 @@ let check (globals, functions) =
         | _ -> t)
       | Access(id, idx) -> let t = type_of_identifier id and t_ix = expr idx in 
           let eval_type = function
-            Array(l, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
+            Array(_, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
               then a_t
               else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
                 string_of_expr idx))
@@ -162,7 +162,7 @@ let check (globals, functions) =
                                 and rt = expr e in
         (match lt with 
         (* Check that the array size is specified by an integer-type expression *)
-            Array(l, t) -> if expr l == Int then
+            Array(l, _) -> if expr l == Int then
                 check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
 				         " = " ^ string_of_typ rt ^ " in " ^ 
 				         string_of_expr ex))

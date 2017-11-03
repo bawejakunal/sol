@@ -23,15 +23,15 @@ let translate (globals, functions) =
   and i32_t  = L.i32_type   context
   and f32_t  = L.float_type context
   and i8_t   = L.i8_type    context
-  and i1_t   = L.i1_type    context
   and void_t = L.void_type  context in
 
-  let ltype_of_typ = function
+  let rec ltype_of_typ = function
       A.Int -> i32_t
     | A.Float -> f32_t
     | A.Char -> i8_t
     | A.String -> L.pointer_type i8_t
-    | A.Void -> void_t in
+    | A.Void -> void_t
+    | A.Array(_, t) -> L.struct_type context [|L.pointer_type (ltype_of_typ t); i32_t|] in
 
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
@@ -40,13 +40,35 @@ let translate (globals, functions) =
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
-  (* Declare printf(), which the print built-in function will call *)
-  let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func = L.declare_function "printf" printf_t the_module in
+  (* Declare the built-in consolePrint() function *)
+  let consolePrint_t = L.function_type void_t [| L.pointer_type i8_t |] in
+  let consolePrint_func = L.declare_function "consolePrint" consolePrint_t the_module in
 
-  (* Declare the built-in printbig() function *)
-  let printbig_t = L.function_type i32_t [| i32_t |] in
-  let printbig_func = L.declare_function "printbig" printbig_t the_module in
+  (* Declare the built-in intToFloat() function *)
+  let intToFloat_t = L.function_type f32_t [|i32_t|] in
+  let intToFloat_func = L.declare_function "intToFloat" intToFloat_t the_module in
+
+  (* Declare the built-in floatToInt() function *)
+  let floatToInt_t = L.function_type i32_t [|f32_t|] in
+  let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in
+
+  (* Declare the built-in intToString() function *)
+  let intToString_t = L.function_type (L.pointer_type i8_t) [|i32_t|] in
+  let intToString_func = L.declare_function "intToString" intToString_t the_module in
+  (* Declare the built-in floatToString() function *)
+  let floatToString_t = L.function_type (L.pointer_type i8_t) [|f32_t|] in
+  let floatToString_func = L.declare_function "floatToString" floatToString_t the_module in
+  (* Declare the built-in charToString() function *)
+  let charToString_t = L.function_type (L.pointer_type i8_t) [|i8_t|] in
+  let charToString_func = L.declare_function "charToString" charToString_t the_module in
+
+  (* Declare the built-in length() function *)
+  let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type void_t; i32_t|]|] in
+  let length_func = L.declare_function "length" length_t the_module in
+
+  (* Declare the built-in setFramerate() function *)
+  let setFramerate_t = L.function_type void_t [|f32_t|] in
+  let setFramerate_func = L.declare_function "setFramerate" setFramerate_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
@@ -62,8 +84,6 @@ let translate (globals, functions) =
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
     
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -89,39 +109,62 @@ let translate (globals, functions) =
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
-	A.Literal i -> L.const_int i32_t i
-      | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
+	      A.Int_literal i -> L.const_int i32_t i
+      | A.Float_literal f -> L.const_float f32_t f
+      | A.Char_literal c -> L.const_int i8_t (Char.code c)
+      | A.String_literal s -> L.const_string context s
       | A.Noexpr -> L.const_int i32_t 0
+      | A.Array_literal(_, s) -> L.const_struct context [|L.const_int i32_t (List.length s)|] 
+      (* TODO: Check how to allocate a constant pointer to a list of elements *)
       | A.Id s -> L.build_load (lookup s) s builder
+      | A.Access(id, idx) -> 
+      (* TODO: Check how to access elements pointed to by pointer *)
+      (*let id' = lookup id 
+      and idx' = expr builder idx in
+      if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
+      else L.const_int i32_t idx'*)
+      lookup id
       | A.Binop (e1, op, e2) ->
-	  let e1' = expr builder e1
-	  and e2' = expr builder e2 in
-	  (match op with
-	    A.Add     -> L.build_add
-	  | A.Sub     -> L.build_sub
-	  | A.Mult    -> L.build_mul
-          | A.Div     -> L.build_sdiv
-	  | A.And     -> L.build_and
-	  | A.Or      -> L.build_or
-	  | A.Equal   -> L.build_icmp L.Icmp.Eq
-	  | A.Neq     -> L.build_icmp L.Icmp.Ne
-	  | A.Less    -> L.build_icmp L.Icmp.Slt
-	  | A.Leq     -> L.build_icmp L.Icmp.Sle
-	  | A.Greater -> L.build_icmp L.Icmp.Sgt
-	  | A.Geq     -> L.build_icmp L.Icmp.Sge
-	  ) e1' e2' "tmp" builder
+	    let e1' = expr builder e1
+	    and e2' = expr builder e2 in
+	      (match op with
+	        A.Add     -> L.build_add
+	      | A.Sub     -> L.build_sub
+	      | A.Mult    -> L.build_mul
+        | A.Div     -> L.build_sdiv
+        | A.Mod     -> L.build_srem
+	      | A.And     -> L.build_and
+	      | A.Or      -> L.build_or
+	      | A.Equal   -> L.build_icmp L.Icmp.Eq
+	      | A.Neq     -> L.build_icmp L.Icmp.Ne
+	      | A.Less    -> L.build_icmp L.Icmp.Slt
+	      | A.Leq     -> L.build_icmp L.Icmp.Sle
+	      | A.Greater -> L.build_icmp L.Icmp.Sgt
+	      | A.Geq     -> L.build_icmp L.Icmp.Sge
+	      ) e1' e2' "tmp" builder
       | A.Unop(op, e) ->
-	  let e' = expr builder e in
-	  (match op with
-	    A.Neg     -> L.build_neg
-          | A.Not     -> L.build_not) e' "tmp" builder
+	    let e' = expr builder e in
+	      (match op with
+	        A.Neg     -> L.build_neg
+        | A.Not     -> L.build_not) e' "tmp" builder
       | A.Assign (s, e) -> let e' = expr builder e in
 	                   ignore (L.build_store e' (lookup s) builder); e'
-      | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
-	  L.build_call printf_func [| int_format_str ; (expr builder e) |]
-	    "printf" builder
-      | A.Call ("printbig", [e]) ->
-	  L.build_call printbig_func [| (expr builder e) |] "printbig" builder
+      | A.Call ("consolePrint", [e]) ->
+	    L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder
+      | A.Call ("intToFloat", [e]) ->
+      L.build_call intToFloat_func [| (expr builder e) |] "intToFloat" builder
+      | A.Call ("floatToInt", [e]) ->
+      L.build_call floatToInt_func [| (expr builder e) |] "floatToInt" builder
+      | A.Call ("intToString", [e]) ->
+      L.build_call intToString_func [| (expr builder e) |] "intToString" builder
+      | A.Call ("floatToString", [e]) ->
+      L.build_call floatToString_func [| (expr builder e) |] "floatToString" builder
+      | A.Call ("charToString", [e]) ->
+      L.build_call charToString_func [| (expr builder e) |] "charToString" builder
+      | A.Call ("length", [e]) ->
+      L.build_call length_func [| (expr builder e) |] "length" builder
+      | A.Call ("setFramerate", [e]) ->
+      L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
 	 let actuals = List.rev (List.map (expr builder) (List.rev act)) in
@@ -145,7 +188,7 @@ let translate (globals, functions) =
       | A.Return e -> ignore (match fdecl.A.typ with
 	  A.Void -> L.build_ret_void builder
 	| _ -> L.build_ret (expr builder e) builder); builder
-      | A.If (predicate, then_stmt, else_stmt) ->
+      | A.If (predicate, then_stmt) ->
          let bool_val = expr builder predicate in
 	 let merge_bb = L.append_block context "merge" the_function in
 
@@ -153,11 +196,7 @@ let translate (globals, functions) =
 	 add_terminal (stmt (L.builder_at_end context then_bb) then_stmt)
 	   (L.build_br merge_bb);
 
-	 let else_bb = L.append_block context "else" the_function in
-	 add_terminal (stmt (L.builder_at_end context else_bb) else_stmt)
-	   (L.build_br merge_bb);
-
-	 ignore (L.build_cond_br bool_val then_bb else_bb builder);
+	 ignore (L.build_cond_br bool_val then_bb merge_bb builder);
 	 L.builder_at_end context merge_bb
 
       | A.While (predicate, body) ->
@@ -175,8 +214,6 @@ let translate (globals, functions) =
 	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
 	  L.builder_at_end context merge_bb
 
-      | A.For (e1, e2, e3, body) -> stmt builder
-	    ( A.Block [A.Expr e1 ; A.While (e2, A.Block [body ; A.Expr e3]) ] )
     in
 
     (* Build the code for each statement in the function *)
