@@ -17,6 +17,7 @@ before_script:
 
 script:
   - make clean scanner.ml parser.ml sol
+  - ./testall.sh
 
 notifications:
   email: false
