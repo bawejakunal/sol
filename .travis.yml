@@ -19,12 +19,8 @@ before_script:
   - eval `opam config env` 
 
 script:
-<<<<<<< HEAD
   - make clean all
-=======
-  - make clean scanner.ml parser.ml sol
   - ./testall.sh
->>>>>>> master
 
 notifications:
   email: false
