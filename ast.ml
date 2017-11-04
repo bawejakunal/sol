@@ -1,4 +1,4 @@
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod | Dot
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod (*| Dot*)
 
 type unary_op = Not | Neg
 
@@ -83,7 +83,7 @@ let string_of_op = function
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
-  | Dot -> "."
+  (*| Dot -> "."*)
 
 let string_of_uop = function
     Neg -> "-"
