@@ -1,3 +1,4 @@
-func main() {
-	consolePrint("Hello World");
+func int main() {
+    consolePrint("Hello World");
+    return 0;
 }

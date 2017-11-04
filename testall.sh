@@ -17,8 +17,9 @@ CC="cc"
 
 # Path to the sol compiler.  Usually "./sol.native"
 # Try "_build/sol.native" if ocamlbuild was unable to create a symbolic link.
-sol="./sol.native"
-#sol="_build/sol.native"
+
+SOL="./sol.native"
+#MICROC="_build/microc.native"
 
 # Set time limit for all operations
 ulimit -t 30
@@ -92,10 +93,10 @@ Check() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.exe ${basename}.out" &&
-    Run "$sol" "$1" ">" "${basename}.ll" &&
+    Run "$SOL" "$1" ">" "${basename}.ll" &&
     Run "$LLC" "${basename}.ll" ">" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "bindings.o" &&
-    Run "./${basename}.exe" > "${basename}.out" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" &&
+    Run "./${basename}.exe" ">" "${basename}.out" &&
     Compare ${basename}.out ${reffile}.gold ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -127,7 +128,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$sol" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -165,18 +166,19 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
-if [ ! -f bindings.o ]
-then
-    echo "Could not find bindings.o"
-    echo "Try \"make bindings.o\""
-    exit 1
-fi
+# if [ ! -f printbig.o ]
+# then
+#     echo "Could not find printbig.o"
+#     echo "Try \"make printbig.o\""
+#     exit 1
+# fi
 
 if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/test-*.sol tests/fail-*.sol"
+    # files="tests/test-*.sol tests/fail-*.sol"
+    files="tests/test-*.sol"
 fi
 
 for file in $files
