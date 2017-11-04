@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Regression testing script for MicroC
+# Regression testing script for sol
 # Step through a list of files
 #  Compile, run, and check the output of each expected-to-work test
 #  Compile and check the error of each expected-to-fail test
@@ -15,8 +15,9 @@ LLC="llc"
 # Path to the C compiler
 CC="cc"
 
-# Path to the microc compiler.  Usually "./microc.native"
-# Try "_build/microc.native" if ocamlbuild was unable to create a symbolic link.
+# Path to the sol compiler.  Usually "./sol.native"
+# Try "_build/sol.native" if ocamlbuild was unable to create a symbolic link.
+
 SOL="./sol.native"
 #MICROC="_build/microc.native"
 
