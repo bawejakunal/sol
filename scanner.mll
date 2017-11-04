@@ -59,8 +59,8 @@ rule token = parse
 | ''''\\'[''' '"' '\\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+)* '"' as lxm 
   { let str = String.sub (lxm) 1 ((String.length lxm) - 2) in
-  	let escaped_str = String.escaped str in 
-  	STRING_LITERAL(escaped_str) }
+  	let unescaped_str = Scanf.unescaped str in 
+  	STRING_LITERAL(unescaped_str) }
 | ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
