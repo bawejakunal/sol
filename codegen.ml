@@ -40,11 +40,14 @@ let translate (globals, functions) =
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
-  (* Declare the built-in consolePrint() function *)
-  let consolePrint_t = L.function_type void_t [| L.pointer_type i8_t |] in
-  let consolePrint_func = L.declare_function "consolePrint" consolePrint_t the_module in
+  (* Declare printf(), which the consolePrint built-in function will call *)
+  let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+  let printf_func = L.declare_function "printf" printf_t the_module in
 
-  (* Declare the built-in intToFloat() function *)
+  (* let consolePrint_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+  let consolePrint_func = L.declare_function "consolePrint" consolePrint_t the_module in *)
+
+  (* (* Declare the built-in intToFloat() function *)
   let intToFloat_t = L.function_type f32_t [|i32_t|] in
   let intToFloat_func = L.declare_function "intToFloat" intToFloat_t the_module in
 
@@ -63,12 +66,12 @@ let translate (globals, functions) =
   let charToString_func = L.declare_function "charToString" charToString_t the_module in
 
   (* Declare the built-in length() function *)
-  let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type void_t; i32_t|]|] in
+  let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type i32_t; i32_t|]|] in
   let length_func = L.declare_function "length" length_t the_module in
 
   (* Declare the built-in setFramerate() function *)
   let setFramerate_t = L.function_type void_t [|f32_t|] in
-  let setFramerate_func = L.declare_function "setFramerate" setFramerate_t the_module in
+  let setFramerate_func = L.declare_function "setFramerate" setFramerate_t the_module in *)
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
@@ -85,6 +88,7 @@ let translate (globals, functions) =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
     
+    let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
@@ -112,7 +116,7 @@ let translate (globals, functions) =
 	      A.Int_literal i -> L.const_int i32_t i
       | A.Float_literal f -> L.const_float f32_t f
       | A.Char_literal c -> L.const_int i8_t (Char.code c)
-      | A.String_literal s -> L.const_string context s
+      | A.String_literal s -> L.build_global_stringptr s "" builder
       | A.Noexpr -> L.const_int i32_t 0
       | A.Array_literal(_, s) -> L.const_struct context [|L.const_int i32_t (List.length s)|] 
       (* TODO: Check how to allocate a constant pointer to a list of elements *)
@@ -150,8 +154,9 @@ let translate (globals, functions) =
       | A.Assign (s, e) -> let e' = expr builder e in
 	                   ignore (L.build_store e' (lookup s) builder); e'
       | A.Call ("consolePrint", [e]) ->
-	    L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder
-      | A.Call ("intToFloat", [e]) ->
+	    L.build_call printf_func [| string_format_str ; (expr builder e) |] "printf" builder
+      (* L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder *)
+      (* | A.Call ("intToFloat", [e]) ->
       L.build_call intToFloat_func [| (expr builder e) |] "intToFloat" builder
       | A.Call ("floatToInt", [e]) ->
       L.build_call floatToInt_func [| (expr builder e) |] "floatToInt" builder
@@ -164,7 +169,7 @@ let translate (globals, functions) =
       | A.Call ("length", [e]) ->
       L.build_call length_func [| (expr builder e) |] "length" builder
       | A.Call ("setFramerate", [e]) ->
-      L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder
+      L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder *)
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
 	 let actuals = List.rev (List.map (expr builder) (List.rev act)) in

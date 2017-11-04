@@ -35,10 +35,10 @@ rule token = parse
 | "float"  { FLOAT }
 | "char"   { CHAR }
 | "string"  { STRING }
+| "func"   { FUNC }
 (*| "shape"  { SHAPE }
 | "parent"  { PARENT }
 | "extends"  { EXTENDS }
-| "func"   { FUNC }
 | "construct"  { CONSTRUCT }
 | "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
 | "consolePrint"  { CONSOLEPRINT }
@@ -57,7 +57,7 @@ rule token = parse
 (*| '.'      { DOT }*)
 | '''[^ '\\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | ''''\\'[''' '"' '\\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm.[1]) }
-| '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+) '"' as lxm { STRING_LITERAL(lxm) } (* TODO: Remove double quotes*)
+| '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+)* '"' as lxm { STRING_LITERAL(lxm) } (* TODO: Remove double quotes*)
 | ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
