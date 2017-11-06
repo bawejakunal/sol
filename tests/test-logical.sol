@@ -5,7 +5,7 @@ func int main() {
     if (1 == 1 || 1 == 0) {
         consolePrint("OR");
     }
-    if (!1 == 0) {
+    if (!(1 == 0)) {
         consolePrint("NOT");
     }
     return 0;
