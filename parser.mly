@@ -41,19 +41,22 @@ decls:
  | decls fdecl { let (v, f(*, s*)) = $1 in v, ($2 :: f)(*, s *)}
  /*| decls sdecl { let (v, f, s) = $1 in v, f, ($2 :: s) }*/
 
+ vdecl:
+   typ ID SEMI { ($1, $2) }
+
 fdecl:
-   FUNC typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+   FUNC typ ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
      { { typ = $2;
 	 fname = $3;
 	 formals = $5;
-	 locals = List.rev $8;
-	 body = List.rev $9 } }
- | FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE /* Handling case for empty return type */
+   locals = [];
+	 body = List.rev $8 } }
+ | FUNC ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE /* Handling case for empty return type */
      { { typ = Void;
    fname = $2;
    formals = $4;
-   locals = List.rev $7;
-   body = List.rev $8 } }
+   locals = [];
+   body = List.rev $7 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -78,19 +81,14 @@ typ:
   | typ LSQUARE expr RSQUARE { Array ($3, $1)}
   /* Not adding in Void here*/
 
-vdecl_list:
-    /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
-
-vdecl:
-   typ ID SEMI { ($1, $2) }
-
 stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
     expr SEMI { Expr $1 }
+  | typ ID SEMI { VDecl(($1, $2), Noexpr) }
+  | typ ID ASSIGN expr SEMI { VDecl(($1, $2), $4) }
   | RETURN SEMI { Return Noexpr }
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }

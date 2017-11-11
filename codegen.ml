@@ -17,6 +17,12 @@ module A = Ast
 
 module StringMap = Map.Make(String)
 
+module StringHash = Hashtbl.Make(struct
+    type t = string
+    let equal x y = x = y
+    let hash = Hashtbl.hash
+end)
+
 let translate (globals, functions) =
   let context = L.global_context () in
   let the_module = L.create_module context "MicroC"
@@ -92,22 +98,24 @@ let translate (globals, functions) =
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
-    let local_vars =
-      let add_formal m (t, n) p = L.set_value_name n p;
+    let local_vars = StringHash.create 50 in
+      let add_formal (t, n) p = L.set_value_name n p;
 	let local = L.build_alloca (ltype_of_typ t) n builder in
 	ignore (L.build_store p local builder);
-	StringMap.add n local m in
-
-      let add_local m (t, n) =
-	let local_var = L.build_alloca (ltype_of_typ t) n builder
-	in StringMap.add n local_var m in
-
-      let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
+	StringHash.add local_vars n local in
+      (* let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
           (Array.to_list (L.params the_function)) in
-      List.fold_left add_local formals fdecl.A.locals in
+      List.fold_left add_local formals fdecl.A.locals in *)
+      List.iter2 add_formal fdecl.A.formals
+          (Array.to_list (L.params the_function)) in
+
+    let add_local (t, n) =
+  let local_var = L.build_alloca (ltype_of_typ t) n builder
+  in StringHash.add local_vars n local_var in
+
 
     (* Return the value for a variable or formal argument *)
-    let lookup n = try StringMap.find n local_vars
+    let lookup n = try StringHash.find local_vars n
                    with Not_found -> StringMap.find n global_vars
     in
 
@@ -190,6 +198,10 @@ let translate (globals, functions) =
     let rec stmt builder = function
 	A.Block sl -> List.fold_left stmt builder sl
       | A.Expr e -> ignore (expr builder e); builder
+      | A.VDecl((t, id), val) -> ignore(add_local (t, id)); 
+          let val' = expr builder val in 
+          ignore (L.build_store val' (lookup id) builder);
+          builder
       | A.Return e -> ignore (match fdecl.A.typ with
 	  A.Void -> L.build_ret_void builder
 	| _ -> L.build_ret (expr builder e) builder); builder

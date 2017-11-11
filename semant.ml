@@ -4,6 +4,12 @@ open Ast
 
 module StringMap = Map.Make(String)
 
+module StringHash = Hashtbl.Make(struct
+    type t = string
+    let equal x y = x = y
+    let hash = Hashtbl.hash
+end)
+
 (* Semantic checking of a program. Returns void if successful,
    throws an exception if something is wrong.
 
@@ -97,19 +103,20 @@ let check (globals, functions) =
     report_duplicate (fun n -> "duplicate formal " ^ n ^ " in " ^ func.fname)
       (List.map snd func.formals);
 
-    List.iter (check_not_void (fun n -> "illegal void local " ^ n ^
+    (* List.iter (check_not_void (fun n -> "illegal void local " ^ n ^
       " in " ^ func.fname)) func.locals;
 
     report_duplicate (fun n -> "duplicate local " ^ n ^ " in " ^ func.fname)
-      (List.map snd func.locals);
+      (List.map snd func.locals); *)
 
     (* Type of each variable (global, formal, or local *)
-    let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
-	StringMap.empty (globals @ func.formals @ func.locals )
+    let symbols = StringHash.create 50 in
+    List.iter (fun (t, n) -> StringHash.add symbols n t)
+	(globals @ func.formals(* @ func.locals*) )
     in
 
     let type_of_identifier s =
-      try StringMap.find s symbols
+      try StringHash.find symbols s
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
@@ -125,7 +132,7 @@ let check (globals, functions) =
             string_of_typ t1 ^ ", " ^ string_of_typ t2))) 
         (expr (List.hd (s))) (List.tl s) in 
         Array(Int_literal(List.length s), prim_type)
-      | Id s -> let t = type_of_identifier s in 
+      | Id s -> let t = print_endline "Id"; type_of_identifier s in 
         (match t with
           Array(l, t) -> if expr l == Int then t else raise(Failure("Array size should be an integer expression"))
         | _ -> t)
@@ -160,16 +167,19 @@ let check (globals, functions) =
       | Noexpr -> Void
       | Assign(var, e) as ex -> let lt = type_of_identifier var
                                 and rt = expr e in
-        (match lt with 
+        (* (match lt with 
         (* Check that the array size is specified by an integer-type expression *)
-            Array(l, _) -> if expr l == Int then
+            Array(l, arr_typ) -> if expr l == Int then
                 check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
 				         " = " ^ string_of_typ rt ^ " in " ^ 
 				         string_of_expr ex))
               else raise(Failure("Array size should be an integer expression"))
           | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
             " = " ^ string_of_typ rt ^ " in " ^ 
-            string_of_expr ex)))
+            string_of_expr ex))) *)
+        check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+                 " = " ^ string_of_typ rt ^ " in " ^ 
+                 string_of_expr ex))
       | Call(fname, actuals) as call -> let fd = function_decl fname in
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
@@ -197,6 +207,29 @@ let check (globals, functions) =
          | [] -> ()
         in check_block sl
       | Expr e -> ignore (expr e)
+      | VDecl((lt, id), val) -> let tup = (lt, id) in 
+          check_not_void (fun n -> "illegal void local " ^ n ^
+          " in " ^ func.fname) tup;
+          (* Check that the array size is specified by an integer-type expression *)
+          (match lt with 
+              Array(l, arr_typ) -> if expr l != Int then 
+                raise(Failure("Array size should be an integer expression"))
+                else ()
+              | _ -> ())
+          (* Add into function locals, check for duplicates *)
+          (* TODO: Check on local variables not being persisted later *)
+          ignore(func.locals = tup :: func.locals);
+          ignore(report_duplicate (fun n -> "duplicate local " ^ n ^ " in " ^ func.fname)
+          (List.map snd func.locals));
+          (* Add into variable symbol table *)
+          StringHash.add symbols id t in 
+            let rt = expr val in
+              (match rt with
+                Void -> ()
+                | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+                      " = " ^ string_of_typ rt ^ " in " ^ 
+                      string_of_expr val))
+              )
       | Return e -> let t = expr e in if t = func.typ then () else
          raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                          string_of_typ func.typ ^ " in " ^ string_of_expr e))

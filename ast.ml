@@ -30,6 +30,7 @@ type bind = typ * string
 type stmt = 
 	  Block of stmt list
 	| Expr of expr
+	| VDecl of bind * expr
 	| Return of expr
 	| If of expr * stmt
 	| While of expr * stmt
@@ -37,8 +38,8 @@ type stmt =
 type func_dec = {
 	fname	:	string;
 	typ		: 	typ;
-	formals	:	bind list;
 	locals	:	bind list;
+	formals	:	bind list;
 	body	:	stmt list;
 }
 
@@ -115,21 +116,21 @@ string_of_typ = function
   | String -> "string"
   | Array(s,t) -> string_of_typ t ^ " [" ^ string_of_expr s ^ "]"
 
+let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+
 let rec string_of_stmt = function
     Block(stmts) ->
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
+  | VDecl(b, v) -> string_of_vdecl b ^ " = " ^ string_of_expr v;
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
 let string_of_fdecl fdecl =
   string_of_typ fdecl.typ ^ " " ^
   fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
   ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
