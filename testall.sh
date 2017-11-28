@@ -19,7 +19,10 @@ CC="cc"
 # Try "_build/sol.native" if ocamlbuild was unable to create a symbolic link.
 
 SOL="./sol.native"
-#MICROC="_build/microc.native"
+
+LIB="predefined.o"
+
+SDL_FLAGS="`sdl2-config --cflags --libs`"
 
 # Set time limit for all operations
 ulimit -t 30
@@ -95,7 +98,7 @@ Check() {
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.exe ${basename}.out" &&
     Run "$SOL" "$1" ">" "${basename}.ll" &&
     Run "$LLC" "${basename}.ll" ">" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS"&&
     Run "./${basename}.exe" ">" "${basename}.out" &&
     Compare ${basename}.out ${reffile}.gold ${basename}.diff
 
@@ -177,8 +180,8 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    # files="tests/test-*.sol tests/fail-*.sol"
-    files="tests/test-*.sol"
+    files="tests/test-*.sol tests/fail-*.sol"
+    # files="tests/test-*.sol"
 fi
 
 for file in $files
