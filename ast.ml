@@ -8,7 +8,7 @@ type typ =
 	| Char
 	| String
 	| Void (* For internal use *)
-	| Array of expr * typ (*first expr is the size of the array*)
+	| Array of int * typ (*first expr is the size of the array*)
 	(* Add in shapes *)
 and
    expr = 
@@ -16,7 +16,7 @@ and
 	| Float_literal of float
 	| Char_literal of char 
 	| String_literal of string
-	| Array_literal of typ * expr list
+	| Array_literal of int * expr list
 	| Id of string
 	| Binop of expr * op * expr 
 	| Unop of unary_op * expr 
@@ -30,13 +30,14 @@ type bind = typ * string
 type stmt = 
 	  Block of stmt list
 	| Expr of expr
+	(* | VDecl of bind * expr *)
 	| Return of expr
 	| If of expr * stmt
 	| While of expr * stmt
 
 type func_dec = {
 	fname	:	string;
-	typ		: 	typ;
+	ftype	: 	typ;
 	formals	:	bind list;
 	locals	:	bind list;
 	body	:	stmt list;
@@ -94,7 +95,7 @@ let rec string_of_expr = function
   | Float_literal(l) -> string_of_float l
   | Char_literal(l) -> Char.escaped l
   | String_literal(l) -> l
-  | Array_literal(t, l) -> string_of_typ t ^ ": [" ^ String.concat ", " (List.map string_of_expr l) ^ "]"
+  | Array_literal(len, l) -> string_of_int len ^ ": [" ^ String.concat ", " (List.map string_of_expr l) ^ "]"
   | Id(s) -> s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
@@ -113,12 +114,13 @@ string_of_typ = function
   | Char -> "char"
   | Void -> "void"
   | String -> "string"
-  | Array(s,t) -> string_of_typ t ^ " [" ^ string_of_expr s ^ "]"
+  | Array(l,t) -> string_of_typ t ^ " [" ^ string_of_int l ^ "]"
 
 let rec string_of_stmt = function
     Block(stmts) ->
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
+  (* | VDecl(id, expr) -> string_of_typ (fst id) ^ " " ^ snd id ^ ": " ^ string_of_expr expr *)
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
@@ -126,7 +128,7 @@ let rec string_of_stmt = function
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
 let string_of_fdecl fdecl =
-  string_of_typ fdecl.typ ^ " " ^
+  string_of_typ fdecl.ftype ^ " " ^
   fdecl.fname ^ "(" ^ String.concat ", " (List.map snd fdecl.formals) ^
   ")\n{\n" ^
   String.concat "" (List.map string_of_vdecl fdecl.locals) ^

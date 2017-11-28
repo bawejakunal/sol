@@ -42,18 +42,19 @@ decls:
  /*| decls sdecl { let (v, f, s) = $1 in v, f, ($2 :: s) }*/
 
 fdecl:
-   FUNC typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { typ = $2;
-	 fname = $3;
-	 formals = $5;
-	 locals = List.rev $8;
-	 body = List.rev $9 } }
- | FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE /* Handling case for empty return type */
-     { { typ = Void;
+   FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE /* Handling case for empty return type */
+     { { ftype = Void;
    fname = $2;
    formals = $4;
    locals = List.rev $7;
    body = List.rev $8 } }
+
+ | FUNC typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { { ftype = $2;
+	 fname = $3;
+	 formals = $5;
+	 locals = List.rev $8;
+	 body = List.rev $9 } } 
 
 formals_opt:
     /* nothing */ { [] }
@@ -63,19 +64,19 @@ formal_list:
     formal_typ ID                   { [($1,$2)] }
   | formal_list COMMA formal_typ ID { ($3,$4) :: $1 }
 
-formal_typ:
-    INT { Int }
-  | FLOAT { Float }
-  | CHAR { Char }
-  | STRING { String }
-  | typ LSQUARE RSQUARE { Array(Int_literal(0), $1) }
-
 typ:
     INT { Int }
   | FLOAT { Float }
   | CHAR { Char }
   | STRING { String }
-  | typ LSQUARE expr RSQUARE { Array ($3, $1)}
+
+formal_typ:
+    typ {$1}
+  | formal_typ LSQUARE RSQUARE { Array(0, $1) }
+
+local_typ:
+    typ {$1}
+  | local_typ LSQUARE INT_LITERAL RSQUARE { Array ($3, $1)}
   /* Not adding in Void here*/
 
 vdecl_list:
@@ -83,7 +84,7 @@ vdecl_list:
   | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
-   typ ID SEMI { ($1, $2) }
+   local_typ ID SEMI { ($1, $2) }
 
 stmt_list:
     /* nothing */  { [] }
@@ -92,6 +93,8 @@ stmt_list:
 stmt:
     expr SEMI { Expr $1 }
   | RETURN SEMI { Return Noexpr }
+  /*| vdecl { VDecl($1, Noexpr) }
+  | local_typ ID ASSIGN expr SEMI { VDecl(($1, $2), $4) }*/
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt { If($3, $5) }
@@ -111,7 +114,7 @@ expr:
   | FLOAT_LITERAL          { Float_literal($1) }
   | CHAR_LITERAL          { Char_literal($1) }
   | STRING_LITERAL          { String_literal($1) }
-  | LSQUARE array_expr RSQUARE        { Array_literal(Void, List.rev $2) }
+  | LSQUARE array_expr RSQUARE        { Array_literal(List.length $2, List.rev $2) }
   | ID               { Id($1) }
   | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
   | expr PLUS   expr { Binop($1, Add,   $3) }

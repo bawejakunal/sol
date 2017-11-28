@@ -14,12 +14,13 @@ http://llvm.moe/ocaml/
 
 module L = Llvm
 module A = Ast
+module S = Sast
 
 module StringMap = Map.Make(String)
 
 let translate (globals, functions) =
   let context = L.global_context () in
-  let the_module = L.create_module context "MicroC"
+  let the_module = L.create_module context "SOL"
   and i32_t  = L.i32_type   context
   and f32_t  = L.float_type context
   and i8_t   = L.i8_type    context
@@ -31,7 +32,7 @@ let translate (globals, functions) =
     | A.Char -> i8_t
     | A.String -> L.pointer_type i8_t
     | A.Void -> void_t
-    | A.Array(_, t) -> L.struct_type context [|L.pointer_type (ltype_of_typ t); i32_t|] in
+    | A.Array(l, t) -> L.array_type (ltype_of_typ t) l in
 
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
@@ -80,26 +81,27 @@ let translate (globals, functions) =
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
-    let function_decl m fdecl =
-      let name = fdecl.A.fname
+    let function_decl m sfdecl =
+      let name = sfdecl.S.sfname
       and formal_types =
-	Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals)
-      in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
-      StringMap.add name (L.define_function name ftype the_module, fdecl) m in
+	Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) sfdecl.S.sformals)
+      in let ftype = L.function_type (ltype_of_typ sfdecl.S.styp) formal_types in
+      StringMap.add name (L.define_function name ftype the_module, sfdecl) m in
     List.fold_left function_decl StringMap.empty functions in
   
   (* Fill in the body of the given function *)
-  let build_function_body fdecl =
-    let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
+  let build_function_body sfdecl =
+    let (the_function, _) = StringMap.find sfdecl.S.sfname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     (* SPECIAL CASE: For the main(), add in a call to the initalization of the SDL window *)
-    let _ = match fdecl.A.fname with
+    let _ = match sfdecl.S.sfname with
         "main" -> ignore(L.build_call startSDL_func [|  |] "startSDL" builder) 
       | _ -> () in
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
     
     let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+    let const_zero = L.const_int i32_t 0 in
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
@@ -113,9 +115,9 @@ let translate (globals, functions) =
 	let local_var = L.build_alloca (ltype_of_typ t) n builder
 	in StringMap.add n local_var m in
 
-      let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
+      let formals = List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
           (Array.to_list (L.params the_function)) in
-      List.fold_left add_local formals fdecl.A.locals in
+      List.fold_left add_local formals sfdecl.S.slocals in
 
     (* Return the value for a variable or formal argument *)
     let lookup n = try StringMap.find n local_vars
@@ -124,48 +126,61 @@ let translate (globals, functions) =
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
-	      A.Int_literal i -> L.const_int i32_t i
-      | A.Float_literal f -> L.const_float f32_t f
-      | A.Char_literal c -> L.const_int i8_t (Char.code c)
-      | A.String_literal s -> L.build_global_stringptr s "" builder
-      | A.Noexpr -> L.const_int i32_t 0
-      | A.Array_literal(_, s) -> L.const_struct context [|L.const_int i32_t (List.length s)|] 
-      (* TODO: Check how to allocate a constant pointer to a list of elements *)
-      | A.Id s -> L.build_load (lookup s) s builder
-      | A.Access(id, idx) -> 
-      (* TODO: Check how to access elements pointed to by pointer *)
+	      S.SInt_literal(i), _ -> L.const_int i32_t i
+      | S.SFloat_literal(f), _ -> L.const_float f32_t f
+      | S.SChar_literal(c), _ -> L.const_int i8_t (Char.code c)
+      | S.SString_literal(s), _ -> L.build_global_stringptr s "tmp" builder
+      | S.SNoexpr, _ -> const_zero
+      | S.SArray_literal(_, s), A.Array(_, prim_typ) -> 
+          L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder e) s))
+      | S.SArray_literal(_, _), _ -> raise(Failure("Invalid Array literal being created!"))
+      | S.SId(s), _ -> L.build_load (lookup s) s builder
+      | S.SAccess(id, idx), el_typ -> 
+        let arr = lookup id in
+        let idx' = expr builder idx in
+        let arr_len = L.array_length (ltype_of_typ el_typ)
+        in if (idx' < const_zero || idx' > (L.const_int i32_t arr_len)) 
+          then raise(Failure("Attempted access out of array bounds"))
+          else L.build_gep arr [| idx' |] "tmp" builder (* TODO: How do we specify array index *)
       (*let id' = lookup id 
       and idx' = expr builder idx in
       if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
       else L.const_int i32_t idx'*)
-      lookup id
-      | A.Binop (e1, op, e2) ->
+      | S.SBinop (e1, op, e2), _ ->
 	    let e1' = expr builder e1
 	    and e2' = expr builder e2 in
-	      (match op with
-	        A.Add     -> L.build_add
-	      | A.Sub     -> L.build_sub
-	      | A.Mult    -> L.build_mul
-        | A.Div     -> L.build_sdiv
-        | A.Mod     -> L.build_srem
-	      | A.And     -> L.build_and
-	      | A.Or      -> L.build_or
-	      | A.Equal   -> L.build_icmp L.Icmp.Eq
-	      | A.Neq     -> L.build_icmp L.Icmp.Ne
-	      | A.Less    -> L.build_icmp L.Icmp.Slt
-	      | A.Leq     -> L.build_icmp L.Icmp.Sle
-	      | A.Greater -> L.build_icmp L.Icmp.Sgt
-	      | A.Geq     -> L.build_icmp L.Icmp.Sge
-	      ) e1' e2' "tmp" builder
-      | A.Unop(op, e) ->
+        (match op with
+          S.IAnd -> L.build_and 
+            (L.build_icmp L.Icmp.Ne e1' const_zero "tmp" builder) 
+            (L.build_icmp L.Icmp.Ne e2' const_zero "tmp" builder) 
+            "tmp" builder
+        | S.IOr -> L.build_or 
+          (L.build_icmp L.Icmp.Ne e1' const_zero "tmp" builder) 
+          (L.build_icmp L.Icmp.Ne e2' const_zero"tmp" builder) 
+          "tmp" builder
+        | _ ->  (match op with
+            S.IAdd    -> L.build_add
+          | S.ISub    -> L.build_sub
+          | S.IMult   -> L.build_mul
+          | S.IDiv    -> L.build_sdiv
+          | S.IMod    -> L.build_srem
+          | S.IEqual  -> L.build_icmp L.Icmp.Eq
+          | S.INeq    -> L.build_icmp L.Icmp.Ne
+          | S.ILess   -> L.build_icmp L.Icmp.Slt
+          | S.ILeq    -> L.build_icmp L.Icmp.Sle
+          | S.IGreater-> L.build_icmp L.Icmp.Sgt
+          | S.IGeq    -> L.build_icmp L.Icmp.Sge
+          | _ -> raise(Failure("Found some binary operator that isn't handled!"))
+          ) e1' e2' "tmp" builder
+        )
+	      
+      | S.SUnop(op, e), _ ->
 	    let e' = expr builder e in
 	      (match op with
-	        A.Neg     -> L.build_neg
-        | A.Not     -> L.build_not) e' "tmp" builder
-      | A.Assign (s, e) -> let e' = expr builder e in
-	                   ignore (L.build_store e' (lookup s) builder); e'
-      | A.Call ("consolePrint", [e]) ->
-	    L.build_call printf_func [| string_format_str ; (expr builder e) |] "printf" builder
+	        S.INeg    -> L.build_neg e' "tmp" builder
+        | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder)
+      | S.SAssign (var, s_e), _ -> let e' = expr builder s_e in
+	                   ignore (L.build_store e' (lookup var) builder); e'
       (* L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder *)
       (* | A.Call ("intToFloat", [e]) ->
       L.build_call intToFloat_func [| (expr builder e) |] "intToFloat" builder
@@ -181,12 +196,14 @@ let translate (globals, functions) =
       L.build_call length_func [| (expr builder e) |] "length" builder
       | A.Call ("setFramerate", [e]) ->
       L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder *)
-      | A.Call (f, act) ->
-         let (fdef, fdecl) = StringMap.find f function_decls in
-	 let actuals = List.rev (List.map (expr builder) (List.rev act)) in
-	 let result = (match fdecl.A.typ with A.Void -> ""
-                                            | _ -> f ^ "_result") in
-         L.build_call fdef (Array.of_list actuals) result builder
+      | S.SCall (s_f, act), _ -> let f_name = s_f.S.sfname in 
+      let actuals = List.rev (List.map (expr builder) (List.rev act)) in (* Why reverse twice? *)
+      (match f_name with
+          "consolePrint" -> L.build_call printf_func (Array.of_list (string_format_str :: actuals)) "printf" builder
+        | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
+	        let result = (match fdecl.S.styp with A.Void -> ""
+                                            | _ -> f_name ^ "_result") in
+          L.build_call fdef (Array.of_list actuals) result builder)
     in
 
     (* Invoke "f builder" if the current block doesn't already
@@ -199,52 +216,55 @@ let translate (globals, functions) =
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
     let rec stmt builder = function
-	A.Block sl -> List.fold_left stmt builder sl
-      | A.Expr e -> ignore (expr builder e); builder
-      | A.Return e -> ignore (match fdecl.A.typ with
-	  A.Void -> L.build_ret_void builder
-	| _ -> L.build_ret (expr builder e) builder); builder
-      | A.If (predicate, then_stmt) ->
-         let bool_val = expr builder predicate in
-	 let merge_bb = L.append_block context "merge" the_function in
+	      S.SBlock sl -> List.fold_left stmt builder sl
+      | S.SExpr e -> ignore (expr builder e); builder
+      (* | S.SVDecl ((t, n), e) -> let var = L.build_alloca (ltype_of_typ t) n builder in
+          let e' = expr builder e in
+          ignore(L.build_store e' var builder); builder *)
+      | S.SReturn e -> ignore (match sfdecl.S.styp with
+	        A.Void -> L.build_ret_void builder
+	      | _ -> L.build_ret (expr builder e) builder); builder
+      | S.SIf (predicate, then_stmt) ->
+          let bool_val = (L.build_icmp L.Icmp.Ne (expr builder predicate) const_zero "tmp" builder) in
+        	let merge_bb = L.append_block context "merge" the_function in
 
-	 let then_bb = L.append_block context "then" the_function in
-	 add_terminal (stmt (L.builder_at_end context then_bb) then_stmt)
-	   (L.build_br merge_bb);
+        	let then_bb = L.append_block context "then" the_function in
+        	add_terminal (stmt (L.builder_at_end context then_bb) then_stmt)
+        	  (L.build_br merge_bb);
 
-	 ignore (L.build_cond_br bool_val then_bb merge_bb builder);
-	 L.builder_at_end context merge_bb
+          ignore (L.build_cond_br bool_val then_bb merge_bb builder);
+          L.builder_at_end context merge_bb
 
-      | A.While (predicate, body) ->
-	  let pred_bb = L.append_block context "while" the_function in
-	  ignore (L.build_br pred_bb builder);
+      | S.SWhile (predicate, body) ->
+          let pred_bb = L.append_block context "while" the_function in
+      	  ignore (L.build_br pred_bb builder);
 
-	  let body_bb = L.append_block context "while_body" the_function in
-	  add_terminal (stmt (L.builder_at_end context body_bb) body)
-	    (L.build_br pred_bb);
+      	  let body_bb = L.append_block context "while_body" the_function in
+      	  add_terminal (stmt (L.builder_at_end context body_bb) body)
+      	    (L.build_br pred_bb);
 
-	  let pred_builder = L.builder_at_end context pred_bb in
-	  let bool_val = expr pred_builder predicate in
+      	  let pred_builder = L.builder_at_end context pred_bb in
+      	  let bool_val = (L.build_icmp L.Icmp.Ne (expr builder predicate) const_zero "tmp" builder) in
 
-	  let merge_bb = L.append_block context "merge" the_function in
-	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
-	  L.builder_at_end context merge_bb
+      	  let merge_bb = L.append_block context "merge" the_function in
+      	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
+      	  L.builder_at_end context merge_bb
 
     in
 
     (* Build the code for each statement in the function *)
-    let builder = stmt builder (A.Block fdecl.A.body) in
+    let builder = stmt builder (S.SBlock sfdecl.S.sbody) in
 
     (* SPECIAL CASE: For the main(), add in a call to the main rendering of the SDL window *)
-    let _ = match fdecl.A.fname with
+    let _ = match sfdecl.S.sfname with
         "main" -> ignore(L.build_call runSDL_func [|  |] "runSDL" builder) 
       | _ -> () in
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
 
     (* Add a return if the last block falls off the end *)
-    add_terminal builder (match fdecl.A.typ with
+    add_terminal builder (match sfdecl.S.styp with
         A.Void -> L.build_ret_void
-      | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
+      | _ -> raise(Failure("Shouldn't be possible to not return a value here!"))(* L.build_ret (L.const_int (ltype_of_typ t) 0) *))
   in
 
   List.iter build_function_body functions;

@@ -1,8 +1,33 @@
 (* Semantic checking for the SOL compiler *)
 
 open Ast
+open Sast
 
 module StringMap = Map.Make(String)
+
+type symbol_table = {
+  parent: symbol_table option;
+  mutable
+  variables: bind list
+}
+
+type translation_environment = {
+  scope: symbol_table;
+}
+
+let rec find_variable (scope: symbol_table) name = 
+  try
+    List.find (fun (_, s) -> s = name) scope.variables
+  with Not_found -> 
+    match scope.parent with
+    | Some(p) -> find_variable p name
+    | _ -> raise Not_found
+
+let find_local (scope: symbol_table) name = 
+  try
+    let _ = List.find (fun (_, s) -> s = name) scope.variables in
+      raise(Failure("Local variable already declared with name " ^ name))
+  with Not_found -> ()
 
 (* Semantic checking of a program. Returns void if successful,
    throws an exception if something is wrong.
@@ -61,21 +86,21 @@ let check (globals, functions) =
 
   (* Function declaration for a named function *)
   let built_in_decls =  StringMap.add "consolePrint"
-     { typ = Void; fname = "consolePrint"; formals = [(String, "x")];
+     { ftype = Void; fname = "consolePrint"; formals = [(String, "x")];
        locals = []; body = [] } (StringMap.add "intToFloat"
-     { typ = Float; fname = "intToFloat"; formals = [(Int, "x")];
+     { ftype = Float; fname = "intToFloat"; formals = [(Int, "x")];
        locals = []; body = [] } (StringMap.add "floatToInt"
-     { typ = Int; fname = "floatToInt"; formals = [(Float, "x")];
+     { ftype = Int; fname = "floatToInt"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "intToString"
-     { typ = String; fname = "intToString"; formals = [(Int, "x")];
+     { ftype = String; fname = "intToString"; formals = [(Int, "x")];
        locals = []; body = [] } (StringMap.add "floatToString"
-     { typ = String; fname = "floatToString"; formals = [(Float, "x")];
+     { ftype = String; fname = "floatToString"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "charToString"
-     { typ = String; fname = "charToString"; formals = [(Char, "x")];
+     { ftype = String; fname = "charToString"; formals = [(Char, "x")];
        locals = []; body = [] } (StringMap.add "length"
-     { typ = Int; fname = "length"; formals = [(Array(Int_literal(0), Void), "x")];
+     { ftype = Int; fname = "length"; formals = [(Array(0, Void), "x")];
        locals = []; body = [] } (StringMap.singleton "setFramerate"
-     { typ = Void; fname = "setFramerate"; formals = [(Float, "x")];
+     { ftype = Void; fname = "setFramerate"; formals = [(Float, "x")];
        locals = []; body = [] })))))))
   in
      
@@ -89,7 +114,7 @@ let check (globals, functions) =
 
   let _ = function_decl "main" in (* Ensure "main" is defined *)
 
-  let check_function func =
+  let check_function g_env func =
 
     List.iter (check_not_void (fun n -> "illegal void formal " ^ n ^
       " in " ^ func.fname)) func.formals;
@@ -104,108 +129,162 @@ let check (globals, functions) =
       (List.map snd func.locals);
 
     (* Type of each variable (global, formal, or local *)
-    let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
+    (* let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
 	StringMap.empty (globals @ func.formals @ func.locals )
     in
 
     let type_of_identifier s =
       try StringMap.find s symbols
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-    in
+    in *)
+    let map_op tup = match tup with
+        (Add, Int) -> IAdd
+      | (Sub, Int) -> ISub
+      | (Mult, Int) -> IMult
+      | (Div, Int) -> IDiv
+      | (Equal, Int) -> IEqual
+      | (Neq, Int) -> INeq
+      | (Less, Int) -> ILess
+      | (Leq, Int) -> ILeq
+      | (Greater, Int) -> IGreater
+      | (Geq, Int) -> IGeq
+      | (And, Int) -> IAnd
+      | (Or, Int) -> IOr
+      | (Mod, Int) -> IMod
+      | (_, _) -> raise(Failure("Invalid operation " ^ (string_of_op (fst tup)) ^ " for type " ^ (string_of_typ (snd tup)))) in
 
     (* Return the type of an expression or throw an exception *)
-    let rec expr = function
-	      Int_literal _ -> Int
-      | Float_literal _ -> Float
-      | Char_literal _ -> Char
-      | String_literal _ -> String
-      | Array_literal(l, s) -> let prim_type = List.fold_left (fun t1 e -> let t2 = expr e in 
+    let rec expr env = function
+	      Int_literal i -> SInt_literal(i), Int
+      | Float_literal f -> SFloat_literal(f), Float
+      | Char_literal c -> SChar_literal(c), Char
+      | String_literal s -> SString_literal(s), String
+      | Array_literal(l, s) as a -> let prim_type = List.fold_left (fun t1 e -> let t2 = snd (expr env e) in 
           if t1 == t2 then t1 
-          else raise (Failure("Elements of differing types found in array " ^ string_of_expr (Array_literal(l, s)) ^ ": " ^ 
+          else raise (Failure("Elements of differing types found in array " ^ string_of_expr (a) ^ ": " ^ 
             string_of_typ t1 ^ ", " ^ string_of_typ t2))) 
-        (expr (List.hd (s))) (List.tl s) in 
-        Array(Int_literal(List.length s), prim_type)
-      | Id s -> let t = type_of_identifier s in 
-        (match t with
-          Array(l, t) -> if expr l == Int then t else raise(Failure("Array size should be an integer expression"))
-        | _ -> t)
-      | Access(id, idx) -> let t = type_of_identifier id and t_ix = expr idx in 
+        (snd (expr env (List.hd (s)))) (List.tl s) in 
+        (if l == List.length s then
+          let s_s = List.map (fun e -> expr env e) s in
+          SArray_literal(l, s_s), Array(l, prim_type)
+        else raise(Failure("Something wrong with auto-assigning length to array literal " ^ string_of_expr a)))
+      | Id s -> (try
+            let (t, _) = find_variable env.scope s 
+            in SId(s), t
+        with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
+      | Access(id, idx) -> (try 
+            let (t, _) = find_variable env.scope id 
+        and (idx', t_ix) = expr env idx in 
           let eval_type = function
             Array(_, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
               then a_t
               else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
                 string_of_expr idx))
             | _ -> raise (Failure(id ^ "is not an array type"))
-          in eval_type t
-      | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
+          in SAccess(id, (idx', t_ix)), eval_type t
+        with Not_found -> raise(Failure("Undeclared identifier " ^ id))) 
+      | Binop(e1, op, e2) as e -> 
+          let ta = expr env e1 and tb = expr env e2 
+          in let _, t1 = ta and _, t2 = tb in
 	(match op with
-    Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> Int
-  | Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float
-	| Equal | Neq when t1 = t2 -> Int
-	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Int
-  | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int
-	| And | Or when t1 = Int && t2 = Int -> Int
+    Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+  (*| Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float *)
+	| Equal | Neq when t1 = t2 && t1 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+ (* | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int*)
+	| And | Or when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
   | _ -> raise (Failure ("illegal binary operator " ^
               string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
               string_of_typ t2 ^ " in " ^ string_of_expr e))
         )
-      | Unop(op, e) as ex -> let t = expr e in
+      | Unop(op, e) as ex -> 
+          let t1 = expr env e 
+          in let _, t = t1 in
 	 (match op with
-	   Neg when t = Int -> Int
-   | Neg when t = Float -> Float
-	 | Not when t = Int -> Int
+	   Neg when t = Int -> SUnop(INeg, t1), Int
+   (*| Neg when t = Float -> Float *)
+	 | Not when t = Int -> SUnop(INot, t1), Int
    | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
 	  		   string_of_typ t ^ " in " ^ string_of_expr ex))
         )
-      | Noexpr -> Void
-      | Assign(var, e) as ex -> let lt = type_of_identifier var
-                                and rt = expr e in
-        (match lt with 
-        (* Check that the array size is specified by an integer-type expression *)
-            Array(l, _) -> if expr l == Int then
-                check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
-				         " = " ^ string_of_typ rt ^ " in " ^ 
-				         string_of_expr ex))
-              else raise(Failure("Array size should be an integer expression"))
-          | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+      | Noexpr -> SNoexpr, Void
+      | Assign(var, e) as ex -> 
+          let (lt, _) = find_variable env.scope var and (rexpr, rt) = expr env e in          
+        ignore(check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
             " = " ^ string_of_typ rt ^ " in " ^ 
-            string_of_expr ex)))
+            string_of_expr ex))); 
+        SAssign(var, (rexpr, rt)), lt
       | Call(fname, actuals) as call -> let fd = function_decl fname in
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
          else (* TODO: Add special case for checking type of actual array vs formal array *)
-           List.iter2 (fun (ft, _) e -> let et = expr e in
+           List.iter2 (fun (ft, _) e -> let _, et = expr env e in
               ignore (check_assign ft et "Call"
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
              fd.formals actuals;
-           fd.typ
-    in
-
-    let check_bool_expr e = if expr e != Int
+           let sactuals = List.map (fun a -> expr env a) actuals in
+           let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
+             sbody = []} in 
+             (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
+             and also because this detail is not needed when making a function call *)
+           SCall(s_fd, sactuals), fd.ftype
+    
+    and check_bool_expr env e = (let (e', t) = (expr env e) in if t != Int (* This is not supposed to be recursive! *)
      then raise (Failure ("expected Int expression (that evaluates to 0 or 1) in " ^ string_of_expr e))
-     else () in
+     else (e', t))
 
     (* Verify a statement or throw an exception *)
-    let rec stmt = function
-	Block sl -> let rec check_block = function
-           [Return _ as s] -> stmt s
+    and stmt env = function
+	Block sl -> let rec check_block env = function
+           [Return _ as s] -> [stmt env s]
          | Return _ :: _ -> raise (Failure "nothing may follow a return")
-         | Block sl :: ss -> check_block (sl @ ss)
-         | s :: ss -> stmt s ; check_block ss
-         | [] -> ()
-        in check_block sl
-      | Expr e -> ignore (expr e)
-      | Return e -> let t = expr e in if t = func.typ then () else
+         (* | Block sl :: ss -> (check_block env sl) @ check_block env ss *) (* What were you thinking, Edwards? *)
+         | s :: ss -> stmt env s :: check_block env ss
+         | [] -> []
+        in let scope' = {parent = Some(env.scope); variables = []}
+        in let env' = {scope = scope'}
+        in let sl = check_block env' sl in
+        scope'.variables <- List.rev scope'.variables;
+        SBlock(sl)
+      | Expr e -> SExpr(expr env e)
+      (* | VDecl(b, e) -> let _ = find_local env.scope (snd b) in 
+          env.scope.variables <- b :: env.scope.variables;
+          (* Check that the expression type is compatible with the type of the variable 
+            EXCEPT when the expression is a Noexpr
+          *)
+          let lt = fst b in
+          let e' = expr env e in
+          let rt = snd (e') in let _ = (match rt with
+          | Void -> lt
+          | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+              " = " ^ string_of_typ rt ^ " in " ^ 
+              string_of_expr e))) in
+          SVDecl(b, e') *)
+      | Return e -> let e', t = expr env e in if t = func.ftype then SReturn((e', t)) else
          raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
-                         string_of_typ func.typ ^ " in " ^ string_of_expr e))
+                         string_of_typ func.ftype ^ " in " ^ string_of_expr e))
            
-      | If(p, b1) -> check_bool_expr p; stmt b1
-      | While(p, s) -> check_bool_expr p; stmt s
+      | If(p, b1) -> let e' = check_bool_expr env p in SIf(e', stmt env b1)
+      | While(p, s) -> let e' = check_bool_expr env p in SWhile(e', stmt env s)
     in
 
-    stmt (Block func.body)
+    let l_scope = {parent = Some(g_env.scope); variables = func.locals} in
+    let l_env = {scope = l_scope} in
+
+    {sfname = func.fname; styp = func.ftype; sformals = func.formals; slocals = func.locals; 
+             sbody = let sbl = stmt l_env (Block func.body) in match sbl with
+             | SBlock(sl) -> sl
+             | _ -> raise(Failure("This isn't supposed to happen!"))}
+             
    
   in
-  List.iter check_function functions
+  let g_scope = {parent = None; variables = globals} in
+  let g_env = {scope = g_scope} in
+  (globals, List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
+    | Void -> s_f
+    | _ -> let last_s = List.hd (List.rev s_f.sbody) in (match last_s with
+      | SReturn(_) -> s_f
+      | _ -> raise(Failure("Function must have return statement of type " ^ string_of_typ s_f.styp)))
+    ) functions)
