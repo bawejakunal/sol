@@ -212,7 +212,7 @@ let check (globals, functions) =
           let (lt, _) = find_variable env.scope var and (rexpr, rt) = expr env e in          
         ignore(check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
             " = " ^ string_of_typ rt ^ " in " ^ 
-            string_of_expr ex))); 
+            string_of_expr ex)));
         SAssign(var, (rexpr, rt)), lt
       | Call(fname, actuals) as call -> let fd = function_decl fname in
          if List.length actuals != List.length fd.formals then

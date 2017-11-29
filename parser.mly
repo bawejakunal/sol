@@ -26,6 +26,7 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
 %right NOT NEG /* Have to add in parentheses */
+%left LPAREN RPAREN LSQUARE RSQUARE
 
 %start program
 %type <Ast.program> program
