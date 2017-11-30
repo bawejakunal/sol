@@ -226,7 +226,14 @@ let translate (globals, functions) =
 	        A.Void -> L.build_ret_void builder
 	      | _ -> L.build_ret (expr builder e) builder); builder
       | S.SIf (predicate, then_stmt) ->
-          let bool_val = (L.build_icmp L.Icmp.Ne (expr builder predicate) const_zero "tmp" builder) in
+          let pred' = expr builder predicate in 
+          let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
+          let bool_val = 
+            (match llty_str with
+                "i32" -> (L.build_icmp L.Icmp.Ne pred' const_zero "tmp" builder)
+              | "i1" -> pred'
+              | _ -> raise(Failure("Type of predicate is wrong!"))) in
+
         	let merge_bb = L.append_block context "merge" the_function in
 
         	let then_bb = L.append_block context "then" the_function in
@@ -245,8 +252,14 @@ let translate (globals, functions) =
       	    (L.build_br pred_bb);
 
       	  let pred_builder = L.builder_at_end context pred_bb in
-      	  let bool_val = (L.build_icmp L.Icmp.Ne (expr builder predicate) const_zero "tmp" builder) in
-
+          let pred' = expr pred_builder predicate in 
+          let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
+          let bool_val = 
+            (match llty_str with
+                "i32" -> (L.build_icmp L.Icmp.Ne pred' const_zero "tmp" pred_builder)
+              | "i1" -> pred'
+              | _ -> raise(Failure("Type of predicate is wrong!"))) in
+          
       	  let merge_bb = L.append_block context "merge" the_function in
       	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
       	  L.builder_at_end context merge_bb
