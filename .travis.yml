@@ -13,9 +13,9 @@ before_install:
   - wget http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-1.0.3.tar.gz
 
 install:
-  - bash -ex install-sdl-gfx.sh
   - bash -ex .travis-ocaml.sh
   - bash -ex install-llvm.sh
+  - bash -ex install-sdl-gfx.sh
 
 before_script:
   - eval `opam config env` 
