@@ -10,6 +10,10 @@ sol.native:
 	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
 		sol.native
 
+sol.d.byte:
+	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
+		sol.d.byte
+
 # "make clean" removes all generated files
 
 .PHONY : clean

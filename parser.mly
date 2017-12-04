@@ -62,8 +62,8 @@ formals_opt:
   | formal_list   { List.rev $1 }
 
 formal_list:
-    formal_typ ID                   { [($1,$2)] }
-  | formal_list COMMA formal_typ ID { ($3,$4) :: $1 }
+    local_typ ID                   { [($1,$2)] }
+  | formal_list COMMA local_typ ID { ($3,$4) :: $1 }
 
 typ:
     INT { Int }
@@ -71,9 +71,10 @@ typ:
   | CHAR { Char }
   | STRING { String }
 
-formal_typ:
+/*formal_typ:
     typ {$1}
-  | formal_typ LSQUARE RSQUARE { Array(0, $1) }
+  | formal_typ LSQUARE RSQUARE { Array(0, $1) }*/
+/* Removing because we do not need variable length arrays as function formal parameters */
 
 local_typ:
     typ {$1}

@@ -32,7 +32,8 @@ let translate (globals, functions) =
     | A.Char -> i8_t
     | A.String -> L.pointer_type i8_t
     | A.Void -> void_t
-    | A.Array(l, t) -> L.array_type (ltype_of_typ t) l in
+    | A.Array(l, t) -> L.array_type (ltype_of_typ t) l 
+    in
 
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
@@ -91,6 +92,7 @@ let translate (globals, functions) =
   
   (* Fill in the body of the given function *)
   let build_function_body sfdecl =
+    (* ignore(print_string sfdecl.S.sfname); *)
     let (the_function, _) = StringMap.find sfdecl.S.sfname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
@@ -136,6 +138,7 @@ let translate (globals, functions) =
       | S.SArray_literal(_, _), _ -> raise(Failure("Invalid Array literal being created!"))
       | S.SId(s), _ -> L.build_load (lookup s) s builder
       | S.SAccess(id, idx), el_typ -> 
+      (* ignore(print_string "access"); *)
         let arr = lookup id in
         let idx' = expr builder idx in
         let arr_len = L.array_length (ltype_of_typ el_typ)
@@ -199,6 +202,7 @@ let translate (globals, functions) =
       L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder *)
       | S.SCall (s_f, act), _ -> let f_name = s_f.S.sfname in 
       let actuals = List.rev (List.map (expr builder) (List.rev act)) in (* Why reverse twice? *)
+      
       (match f_name with
           "consolePrint" -> L.build_call printf_func (Array.of_list (string_format_str :: actuals)) "printf" builder
         | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
@@ -212,7 +216,7 @@ let translate (globals, functions) =
     let add_terminal builder f =
       match L.block_terminator (L.insertion_block builder) with
 	Some _ -> ()
-      | None -> ignore (f builder) in
+      | None -> (* ignore(print_string "Found no return statement!");  *)ignore (f builder) in
 	
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
@@ -267,18 +271,21 @@ let translate (globals, functions) =
     in
 
     (* Build the code for each statement in the function *)
-    let builder = stmt builder (S.SBlock sfdecl.S.sbody) in
+    let new_builder = stmt builder (S.SBlock sfdecl.S.sbody) in
 
     (* SPECIAL CASE: For the main(), add in a call to the main rendering of the SDL window *)
     let _ = match sfdecl.S.sfname with
-        "main" -> ignore(L.build_call runSDL_func [|  |] "runSDL" builder) 
+        "main" -> ignore(L.build_call runSDL_func [|  |] "runSDL" new_builder) 
       | _ -> () in
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
 
     (* Add a return if the last block falls off the end *)
-    add_terminal builder (match sfdecl.S.styp with
+    (* add_terminal new_builder (match sfdecl.S.styp with
         A.Void -> L.build_ret_void
-      | _ -> raise(Failure("Shouldn't be possible to not return a value here!"))(* L.build_ret (L.const_int (ltype_of_typ t) 0) *))
+      | _ -> L.build_ret const_zero(* L.build_ret (L.const_int (ltype_of_typ t) 0) *)) *)
+    match sfdecl.S.styp with
+        A.Void -> add_terminal new_builder L.build_ret_void
+      | _ -> ()
   in
 
   List.iter build_function_body functions;

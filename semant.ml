@@ -53,15 +53,10 @@ let check (globals, functions) =
   
   (* Raise an exception of the given rvalue type cannot be assigned to
      the given lvalue type *)
-  let check_assign lvaluet rvaluet context err =
-     match context with
-       "Call" -> (let types = (lvaluet, rvaluet) in match types with
-         | (Array(_, t1), Array(_, t2)) -> if t1 == t2 then lvaluet else raise err
-         | _ -> if lvaluet == rvaluet then lvaluet else raise err)
-       | "Assign" -> (let types = (lvaluet, rvaluet) in match types with
-         | (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
-         | _ -> if lvaluet == rvaluet then lvaluet else raise err)
-       | _ -> if lvaluet == rvaluet then lvaluet else raise err
+  let check_assign lvaluet rvaluet err =
+    let types = (lvaluet, rvaluet) in match types with
+        (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
+      | _ -> if lvaluet == rvaluet then lvaluet else raise err
   in
    
   (**** Checking Global Variables ****)
@@ -97,11 +92,9 @@ let check (globals, functions) =
      { ftype = String; fname = "floatToString"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "charToString"
      { ftype = String; fname = "charToString"; formals = [(Char, "x")];
-       locals = []; body = [] } (StringMap.add "length"
-     { ftype = Int; fname = "length"; formals = [(Array(0, Void), "x")];
        locals = []; body = [] } (StringMap.singleton "setFramerate"
      { ftype = Void; fname = "setFramerate"; formals = [(Float, "x")];
-       locals = []; body = [] })))))))
+       locals = []; body = [] }))))))
   in
      
   let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
@@ -210,7 +203,7 @@ let check (globals, functions) =
       | Noexpr -> SNoexpr, Void
       | Assign(var, e) as ex -> 
           let (lt, _) = find_variable env.scope var and (rexpr, rt) = expr env e in          
-        ignore(check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
+        ignore(check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
             " = " ^ string_of_typ rt ^ " in " ^ 
             string_of_expr ex)));
         SAssign(var, (rexpr, rt)), lt
@@ -220,7 +213,7 @@ let check (globals, functions) =
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
          else (* TODO: Add special case for checking type of actual array vs formal array *)
            List.iter2 (fun (ft, _) e -> let _, et = expr env e in
-              ignore (check_assign ft et "Call"
+              ignore (check_assign ft et 
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
              fd.formals actuals;
@@ -270,7 +263,7 @@ let check (globals, functions) =
       | While(p, s) -> let e' = check_bool_expr env p in SWhile(e', stmt env s)
     in
 
-    let l_scope = {parent = Some(g_env.scope); variables = func.locals} in
+    let l_scope = {parent = Some(g_env.scope); variables = func.formals @ func.locals} in
     let l_env = {scope = l_scope} in
 
     {sfname = func.fname; styp = func.ftype; sformals = func.formals; slocals = func.locals; 
