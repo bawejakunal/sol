@@ -245,3 +245,7 @@ TSWLatexianTemp*
 scanner.ml      # generated from ocamllex scanner.mll
 parser.mli
 parser.ml
+
+# ignore sdl gfx
+SDL2_gfx-1.0.3/
+SDL2_gfx-1.0.3.tar.gz

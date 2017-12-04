@@ -22,7 +22,7 @@ SOL="./sol.native"
 
 LIB="predefined.o"
 
-SDL_FLAGS="`sdl2-config --cflags --libs`"
+SDL_FLAGS="-lSDL2 -lSDL2_gfx -lm"
 
 # Set time limit for all operations
 ulimit -t 30

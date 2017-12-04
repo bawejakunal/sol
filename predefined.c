@@ -72,3 +72,51 @@ int runSDL() {
 
 	return 0;
 }
+
+/* draw a point in SOL */
+
+bool drawPointUtil(int *point, int *rgb, int opacity) {
+    pixelRGBA(theGame.renderer, (Sint16)point[0], (Sint16)point[1],
+        (Uint8)rgb[0], (Uint8)rgb[1], (Uint8)rgb[2], 255);
+    return true;
+}
+
+bool drawPoint(int *point, int *rgb) {
+    return drawPointUtil(point, rgb, 255);
+}
+
+/* draw a bezier curve in SOL */
+bool drawCurveUtil(int **points, int num, int steps, int *rgb, int opacity) {
+    
+    int i;
+    Sint16 *vx = NULL;
+    Sint16 *vy = NULL;
+    
+    // accumulate x and y coordinates
+    if ((vx = (Sint16*)malloc(num * sizeof(Sint16))) == NULL)
+        return false;
+
+    if ((vy = (Sint16*)malloc(num * sizeof(Sint16))) == NULL) {
+        free(vx);
+        return false;
+    }
+
+    for (i = 0; i < num; i++) {
+        vx[i] = points[i][0];   // x coordinate
+        vy[i] = points[i][1];   // y coordinate
+    }
+
+    // pass arguments to SDL gfx
+    bezierRGBA(theGame.renderer, vx, vy, num, steps, (Uint8)rgb[0],
+        (Uint8)rgb[1], (Uint8)rgb[2], (Uint8)opacity);
+
+    // memory cleanup
+    free(vx);
+    free(vy);
+
+    return true;
+}
+
+bool drawCurve(int **points, int *rgb) {
+    return drawCurveUtil(points, 3, 100, rgb, 255);
+}

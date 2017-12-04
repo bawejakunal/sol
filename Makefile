@@ -4,6 +4,11 @@
 
 # Easiest way to build: using ocamlbuild, which in turn uses ocamlfind
 
+CC = gcc
+CFLAGS  = -g -O2 -D_REENTRANT -I/usr/include/SDL2
+LIBS = 
+LFLAGS = -lSDL2 -lSDL2_gfx -lm
+
 all : sol.native predefined.o
 
 sol.native:
@@ -46,7 +51,7 @@ parser.ml parser.mli : parser.mly
 	ocamlfind ocamlopt -c -package llvm $<
 
 predefined.o: predefined.c
-	cc -c predefined.c `sdl2-config --cflags --libs`
+	$(CC) -c $^ $(CFLAGS) $(LIBS) $(LFLAGS)
 
 # Testing the "bindings" example
 
