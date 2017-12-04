@@ -86,7 +86,9 @@ let translate (globals, functions) =
       let name = sfdecl.S.sfname
       and formal_types =
 	Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) sfdecl.S.sformals)
-      in let ftype = L.function_type (ltype_of_typ sfdecl.S.styp) formal_types in
+      in let ftype = (match name with
+          "main" -> L.function_type i32_t formal_types
+        | _ -> L.function_type (ltype_of_typ sfdecl.S.styp) formal_types) in
       StringMap.add name (L.define_function name ftype the_module, sfdecl) m in
     List.fold_left function_decl StringMap.empty functions in
   
@@ -275,7 +277,9 @@ let translate (globals, functions) =
 
     (* SPECIAL CASE: For the main(), add in a call to the main rendering of the SDL window *)
     let _ = match sfdecl.S.sfname with
-        "main" -> ignore(L.build_call runSDL_func [|  |] "runSDL" new_builder) 
+        "main" -> let runSDL_ret = L.build_alloca i32_t "runSDL_ret" new_builder in 
+          ignore(L.build_store (L.build_call runSDL_func [|  |] "runSDL_ret" new_builder) runSDL_ret new_builder); 
+          ignore(L.build_ret (L.build_load runSDL_ret "runSDL_ret" new_builder) new_builder)
       | _ -> () in
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
 
