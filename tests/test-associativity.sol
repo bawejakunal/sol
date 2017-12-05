@@ -1,4 +1,4 @@
-func int main() {
+func main() {
     int x;
     x = 1 + 2 - 3;  /* 0 */
     if (x == 0) {
@@ -9,5 +9,4 @@ func int main() {
     if (x == 7) {
         consolePrint("CORRECT");
     }
-    return 0;
 }

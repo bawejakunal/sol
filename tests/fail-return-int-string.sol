@@ -2,7 +2,6 @@ func int somefun() {
     return "should return int";
 }
 
-func int main() {
+func main() {
     somefun();
-    return 0;
 }

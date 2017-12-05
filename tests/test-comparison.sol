@@ -1,4 +1,4 @@
-func int main() {
+func main() {
     if (0 == 0) {
         consolePrint("EQUALITY");
     }
@@ -17,5 +17,4 @@ func int main() {
     if (5 >= 3) {
         consolePrint("GREATER THAN OR EQUAL");
     }
-    return 0;
 }

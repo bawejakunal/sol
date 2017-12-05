@@ -1,4 +1,4 @@
-func int main() {
+func main() {
     if (1 == 1 && 2 == 2) {
         consolePrint("AND");
     }
@@ -8,5 +8,4 @@ func int main() {
     if (!(1 == 0)) {
         consolePrint("NOT");
     }
-    return 0;
 }

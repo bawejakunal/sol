@@ -1,4 +1,4 @@
-func int main() {
+func main() {
     int x;
     x = 1 + 20 * 3;    /* 61 */
     if (x == 61) {
@@ -9,5 +9,4 @@ func int main() {
     if (x == -59) {
         consolePrint("CORRECT");
     }
-    return 0;
 }

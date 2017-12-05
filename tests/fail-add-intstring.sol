@@ -2,10 +2,9 @@ func int add(int x, int y) {
     return x + y;
 }
 
-func int main() {
+func main() {
     float x;
     string y;
     y = "foo";
     x = add(40, y); /* cant add string and int */
-    return 0;
 }
