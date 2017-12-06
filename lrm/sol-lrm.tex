@@ -85,17 +85,19 @@ This section describes the complete lexical conventions followed for a syntactic
         \begin{center}
             \begin{tabular}{ |c|c|c|c| } 
             \hline
-                int     & if            & main          & shape \\ 
-                float   & while         & setFramerate  & parent\\ 
-                char    & func          & translate     & extends\\
-                string  & construct     & rotate        & \\
-                        & return        & render        & \\
+                int     & if            & main          & shape   \\ 
+                float   & while         & setFramerate  & parent  \\ 
+                char    & func          & getFramerate  & extends \\
+                string  & construct     & translate     & \\
+                        & return        & rotate        & \\
+                        &               & render        & \\
                         &               & wait          & \\
                         &               & drawPoint     & \\
                         &               & drawCurve     & \\
                         &               & print         & \\
                         &               & length        & \\
                         &               & consolePrint  & \\
+
             \hline
             \end{tabular}
         \end{center}
@@ -327,17 +329,19 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
     Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input. The \texttt{main} function does not allow for member variables of \texttt{shape} objects to be changed.\\
     \underline{Arguments}: None
     
-    \subsection{\textit{length}}
-    Returns the number of elements in an \texttt{array}.\\
-    \underline{Arguments}: Array of elements
+    \subsection{\textit{setFramerate}}
+    Call \texttt{setFramerate} to specify frames per second to render on screen. The frame rate is specified as a \textit{positive integer argument} and returns \texttt{0} for success and \texttt{-1} to indicate failure.\\
+    \underline{Arguments}: \texttt{rate (int)}\\
+    \underline{Return}: \texttt{0 for success, -1 for failure}
     
-    \subsection{\texttt{setFramerate}}
-    Defined once at the start of the program, to specify the frames rendered per second. May only be defined once.\\
-    \underline{Arguments}: \texttt{rate (float)}
-    
-    \subsection{\texttt{consolePrint}}
+    \subsection{\textit{getFramerate}}
+    Call \texttt{getFramerate} to get the current number of frames rendered per second as \textit{integer}.\\
+    \underline{Arguments}: \texttt{None}\\
+    \underline{Return}: \texttt{frames per second (int)}
+
+    \subsection{\textit{consolePrint}}
     Prints a string to the console. Com]monly used to print error messages.\\
-\underline{Arguments}: \texttt{text (string)}
+    \underline{Arguments}: \texttt{text (string)}
 
 
 \section{Drawing Functions}
