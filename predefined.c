@@ -54,6 +54,9 @@ int startSDL() {
 		return -1;
 	}
 
+    /* initialize frame rate manager */
+    SDL_initFramerate(fpsmanager);
+
 	return 0;
 }
 
@@ -74,7 +77,6 @@ int runSDL() {
 }
 
 /* draw a point in SOL */
-
 bool drawPointUtil(int *point, int *rgb, int opacity) {
     pixelRGBA(theGame.renderer, (Sint16)point[0], (Sint16)point[1],
         (Uint8)rgb[0], (Uint8)rgb[1], (Uint8)rgb[2], 255);
@@ -119,4 +121,19 @@ bool drawCurveUtil(int **points, int num, int steps, int *rgb, int opacity) {
 
 bool drawCurve(int **points, int *rgb) {
     return drawCurveUtil(points, 3, 100, rgb, 255);
+}
+
+
+/* Framerate functions */
+int setFramerate(int rate) {
+    /* 
+     * rate - frames per second (positive integer)
+     * returns 0 for sucess and -1 for error
+     */
+    return SDL_setFramerate(fpsmanager, (Uint32)rate);
+}
+
+int getFramerate() {
+    /* get current frame ratre per second */
+    return (int)SDL_getFramerate(fpsmanager);
 }
