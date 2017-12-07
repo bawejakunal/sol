@@ -17,7 +17,10 @@ typedef struct game
 	SDL_Event Event;
 }GAME;
 
+/* Global variables for graphics management */
 GAME theGame;
+FPSmanager fpsmanager;
+
 
 int startSDL();
 int runSDL();
@@ -28,6 +31,9 @@ void onLoopSDL();
 void onRenderSDL();
 void cleanupSDL();
 
+/* Framerate functions */
+int setFramerate(int rate);
+int getFramerate();
 
 /* Internal Draw functions of SOL */
 
