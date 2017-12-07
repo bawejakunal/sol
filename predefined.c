@@ -137,3 +137,13 @@ int getFramerate() {
     /* get current frame ratre per second */
     return (int)SDL_getFramerate(&fpsmanager);
 }
+
+
+/* 
+ * print on SDL window
+ * returns 0 on success, -1 on failure
+ */
+int print(int *pt, const char *text, int *color) {
+    return stringRGBA(theGame.renderer, (Sint16)pt[0], (Sint16)pt[1], text,
+        (Uint8)color[0], (Uint8)color[1], (Uint8)color[2], 255);
+}

@@ -42,3 +42,10 @@ bool drawPoint(int *point, int *rgb);
 
 bool drawCurveUtil(int **points, int num, int steps, int *rgb, int opacity);
 bool drawCurve(int **points, int *rgb);
+
+
+/* 
+ * print on SDL window
+ * returns 0 on success, -1 on failure
+ */
+int print(int *pt, const char *text, int *color);
