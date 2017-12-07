@@ -55,7 +55,7 @@ int startSDL() {
 	}
 
     /* initialize frame rate manager */
-    SDL_initFramerate(fpsmanager);
+    SDL_initFramerate(&fpsmanager);
 
 	return 0;
 }
@@ -130,10 +130,10 @@ int setFramerate(int rate) {
      * rate - frames per second (positive integer)
      * returns 0 for sucess and -1 for error
      */
-    return SDL_setFramerate(fpsmanager, (Uint32)rate);
+    return SDL_setFramerate(&fpsmanager, (Uint32)rate);
 }
 
 int getFramerate() {
     /* get current frame ratre per second */
-    return (int)SDL_getFramerate(fpsmanager);
+    return (int)SDL_getFramerate(&fpsmanager);
 }

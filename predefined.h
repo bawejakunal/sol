@@ -19,7 +19,7 @@ typedef struct game
 
 /* Global variables for graphics management */
 GAME theGame;
-FPSmanager *fpsmanager;
+FPSmanager fpsmanager;
 
 
 int startSDL();
