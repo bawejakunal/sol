@@ -26,5 +26,12 @@ shape Triangle {
         drawcurve(c, findCentre(c, a), a, [0, 0, 255]);
    }
 }
+
+func main(){
+	int[2] a = [0, 0];
+	int[2] b = [2, 0];
+	int[2] c = [1, 1];
+	Triangle t = Triangle(a, b, c);
+}
  
 
