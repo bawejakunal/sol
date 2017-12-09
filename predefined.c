@@ -9,8 +9,7 @@ bool onInitSDL() {
         return false;
     }
 
-    //win = SDL_CreateWindow("Image Loading", 100, 100, WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE);
-     if((theGame.window = SDL_CreateWindow("SDL Render Clear",100,100,640, 480, SDL_WINDOW_SHOWN)) == NULL) {
+    if((theGame.window = SDL_CreateWindow("SDL Render Clear",100,100,640, 480, SDL_WINDOW_SHOWN)) == NULL) {
         return false;
     }
     //SDL Renderer
@@ -27,8 +26,10 @@ void onEventSDL(SDL_Event* Event) {
         theGame.Running = false;
     }
 }
+
 void onLoopSDL()
 {
+    /* clear screen before drawing again */
     SDL_SetRenderDrawColor(theGame.renderer, 242, 242, 242, 255);
     SDL_RenderClear(theGame.renderer);
 }
@@ -77,20 +78,20 @@ int runSDL() {
 }
 
 /* draw a point in SOL */
-bool drawPointUtil(int *point, int *rgb, int opacity) {
+bool drawPointUtil(const int point[2], const int rgb[3], const int opacity) {
     pixelRGBA(theGame.renderer, (Sint16)point[0], (Sint16)point[1],
-        (Uint8)rgb[0], (Uint8)rgb[1], (Uint8)rgb[2], 255);
+        (Uint8)rgb[0], (Uint8)rgb[1], (Uint8)rgb[2], opacity);
     return true;
 }
 
-bool drawPoint(int *point, int *rgb) {
+bool drawPoint(const int point[2], const int rgb[3]) {
     return drawPointUtil(point, rgb, 255);
 }
 
-/* draw a bezier curve in SOL */
-bool drawCurveUtil(int **points, int num, int steps, int *rgb, int opacity) {
-    
-    int i;
+/* helper function to draw a bezier curve in SOL */
+bool drawCurveUtil(const int points[3][2], const int num, const int steps,
+    const int rgb[3], const int opacity) {
+
     Sint16 *vx = NULL;
     Sint16 *vy = NULL;
     
@@ -103,47 +104,47 @@ bool drawCurveUtil(int **points, int num, int steps, int *rgb, int opacity) {
         return false;
     }
 
-    for (i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
         vx[i] = points[i][0];   // x coordinate
         vy[i] = points[i][1];   // y coordinate
     }
 
     // pass arguments to SDL gfx
-    bezierRGBA(theGame.renderer, vx, vy, num, steps, (Uint8)rgb[0],
+    bool res = bezierRGBA(theGame.renderer, vx, vy, num, steps, (Uint8)rgb[0],
         (Uint8)rgb[1], (Uint8)rgb[2], (Uint8)opacity);
 
     // memory cleanup
     free(vx);
     free(vy);
 
-    return true;
+    return res;
 }
 
-bool drawCurve(int **points, int *rgb) {
-    return drawCurveUtil(points, 3, 100, rgb, 255);
+/* draw a bezier curve with 3 control points */
+bool drawCurve(const int points[3][2], const int steps, const int rgb[3]) {
+    return drawCurveUtil(points, 3, steps, rgb, 255);
 }
 
 
-/* Framerate functions */
+/* 
+ * set frames per second (positive integer)
+ * returns 0 for sucess and -1 for error
+ */
 int setFramerate(int rate) {
-    /* 
-     * rate - frames per second (positive integer)
-     * returns 0 for sucess and -1 for error
-     */
     return SDL_setFramerate(&fpsmanager, (Uint32)rate);
 }
 
-int getFramerate() {
-    /* get current frame ratre per second */
-    return (int)SDL_getFramerate(&fpsmanager);
-}
 
+/* get current frame ratre per second */
+int getFramerate() {
+    return SDL_getFramerate(&fpsmanager);
+}
 
 /* 
  * print on SDL window
  * returns 0 on success, -1 on failure
  */
-int print(int *pt, const char *text, int *color) {
+int print(const int pt[2], const char *text, const int color[3]) {
     return stringRGBA(theGame.renderer, (Sint16)pt[0], (Sint16)pt[1], text,
         (Uint8)color[0], (Uint8)color[1], (Uint8)color[2], 255);
 }
