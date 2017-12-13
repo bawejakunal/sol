@@ -22,7 +22,7 @@ let translate (globals, functions) =
   let context = L.global_context () in
   let the_module = L.create_module context "SOL"
   and i32_t  = L.i32_type   context
-  and f32_t  = L.float_type context
+  and f32_t  = L.double_type context
   and i8_t   = L.i8_type    context
   and void_t = L.void_type  context in
 
@@ -60,12 +60,12 @@ let translate (globals, functions) =
 
   (* Declare the built-in floatToInt() function *)
   let floatToInt_t = L.function_type i32_t [|f32_t|] in
-  let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in
+  let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in *)
 
   (* Declare the built-in intToString() function *)
-  let intToString_t = L.function_type (L.pointer_type i8_t) [|i32_t|] in
-  let intToString_func = L.declare_function "intToString" intToString_t the_module in
-  (* Declare the built-in floatToString() function *)
+  let sprintf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t; L.pointer_type i8_t |] in
+  let sprintf_func = L.declare_function "sprintf" sprintf_t the_module in
+  (* (* Declare the built-in floatToString() function *)
   let floatToString_t = L.function_type (L.pointer_type i8_t) [|f32_t|] in
   let floatToString_func = L.declare_function "floatToString" floatToString_t the_module in
   (* Declare the built-in charToString() function *)
@@ -105,6 +105,9 @@ let translate (globals, functions) =
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
     
     let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+    let int_format_str = L.build_global_stringptr "%d" "int_fmt" builder in
+    let float_format_str = L.build_global_stringptr "%f" "flt_fmt" builder in
+    let char_format_str = L.build_global_stringptr "%c" "char_fmt" builder in
     let const_zero = L.const_int i32_t 0 in
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -207,6 +210,30 @@ let translate (globals, functions) =
       
       (match f_name with
           "consolePrint" -> L.build_call printf_func (Array.of_list (string_format_str :: actuals)) "printf" builder
+        | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 7) "intToString" builder in
+            let final_result = List.hd act in 
+            let result_name = (match final_result with
+              | S.SId(s), _ -> s
+              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of intToString!"))) in
+            let arg = List.tl actuals in
+            ignore(L.build_call sprintf_func (Array.of_list (result :: int_format_str :: arg)) "intToStringResult" builder);
+            L.build_store result (lookup result_name) builder;
+        | "floatToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 20) "floatToString" builder in
+            let final_result = List.hd act in 
+            let result_name = (match final_result with
+              | S.SId(s), _ -> s
+              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of floatToString!"))) in
+            let arg = List.tl actuals in
+            ignore(L.build_call sprintf_func (Array.of_list (result :: float_format_str :: arg)) "floatToStringResult" builder);
+            L.build_store result (lookup result_name) builder;
+        | "charToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 2) "charToString" builder in
+            let final_result = List.hd act in 
+            let result_name = (match final_result with
+              | S.SId(s), _ -> s
+              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of charToString!"))) in
+            let arg = List.tl actuals in
+            ignore(L.build_call sprintf_func (Array.of_list (result :: char_format_str :: arg)) "charToStringResult" builder);
+            L.build_store result (lookup result_name) builder;
         | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
