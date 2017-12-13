@@ -1,5 +1,6 @@
 /*
- *  A function illustrating how to link C code to code generated from LLVM 
+ * @author: Kunal Baweja
+ * Pre-defined fucntions for SOL 
  */
 
 #include "predefined.h"

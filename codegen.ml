@@ -210,7 +210,7 @@ let translate (globals, functions) =
       
       (match f_name with
           "consolePrint" -> L.build_call printf_func (Array.of_list (string_format_str :: actuals)) "printf" builder
-        | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 7) "intToString" builder in
+        | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 12) "intToString" builder in
             let final_result = List.hd act in 
             let result_name = (match final_result with
               | S.SId(s), _ -> s

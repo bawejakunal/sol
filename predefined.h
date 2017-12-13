@@ -1,14 +1,16 @@
-#include "SDL2_gfxPrimitives.h"
-#include "SDL2_imageFilter.h"
-#include "SDL2_framerate.h"
-
-#include "SDL2_rotozoom.h"
-
+/*
+ * @author: Kunal Baweja
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
+
+#include "SDL2_gfxPrimitives.h"
+#include "SDL2_imageFilter.h"
+#include "SDL2_framerate.h"
+#include "SDL2_rotozoom.h"
 
 typedef struct {
 	bool Running;
