@@ -11,15 +11,20 @@ type sexpr_detail =
     | SChar_literal of char
     | SString_literal of string
     | SArray_literal of int * sexpr list
-    | SId of string         (* VDecl ? of bind * expr *)
     | SBinop of sexpr * sop * sexpr
     | SUnop of sunary_op * sexpr
     | SNoexpr    
-    | SAssign of string * sexpr
+    | SAssign of slvalue * sexpr
     | SCall of sfunc_dec * sexpr list
-    | SAccess of string * sexpr
+    | SLval of slvalue
 
 and sexpr = sexpr_detail * typ
+
+and slvalue_detail = 
+      SId of string         (* VDecl ? of bind * expr *)
+    | SAccess of string * sexpr
+
+and slvalue = slvalue_detail * typ 
 
 and stmt_detail =
       SBlock of stmt_detail list
@@ -67,15 +72,18 @@ let rec string_of_sexpr (s: sexpr) = match fst s with
  | SChar_literal(l) -> Char.escaped l
  | SString_literal(l) -> l
  | SArray_literal(len, l) -> string_of_int len ^ ": [" ^ String.concat ", " (List.map string_of_sexpr l) ^ "]"
- | SId(s) -> s
  | SBinop(e1, o, e2) ->
      string_of_sexpr e1 ^ " " ^ string_of_sop o ^ " " ^ string_of_sexpr e2
  | SUnop(o, e) -> string_of_suop o ^ string_of_sexpr e
- | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
+ | SAssign(l, e) -> (string_of_slvalue l) ^ " = " ^ string_of_sexpr e
  | SCall(f, el) ->
      string_of_sfdecl f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
  | SNoexpr -> ""
- | SAccess(id, idx) -> id ^ ".[" ^ string_of_sexpr idx ^ "]"
+ | SLval(l) -> string_of_slvalue l
+
+and string_of_slvalue = function
+  SId(s), _ -> s
+| SAccess(id, idx), _ -> id ^ "[" ^ string_of_sexpr idx ^ "]"
 
 and string_of_sstmt = function
    SBlock(stmts) ->

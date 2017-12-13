@@ -17,12 +17,15 @@ and
 	| Char_literal of char 
 	| String_literal of string
 	| Array_literal of int * expr list
-	| Id of string
 	| Binop of expr * op * expr 
 	| Unop of unary_op * expr 
 	| Noexpr	
-	| Assign of string * expr 
+	| Assign of lvalue * expr 
 	| Call of string * expr list 
+	| Lval of lvalue
+and
+	lvalue = 
+	  Id of string
 	| Access of string * expr
 
 type bind = typ * string
@@ -96,19 +99,22 @@ let rec string_of_expr = function
   | Char_literal(l) -> Char.escaped l
   | String_literal(l) -> l
   | Array_literal(len, l) -> string_of_int len ^ ": [" ^ String.concat ", " (List.map string_of_expr l) ^ "]"
-  | Id(s) -> s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Assign(l, e) -> (string_of_lvalue l) ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""
-  | Access(id, idx) -> id ^ ".[" ^ string_of_expr idx ^ "]"
+  | Lval(l) -> string_of_lvalue l
  
  and
 
-string_of_typ = function
+string_of_lvalue = function
+  Id(s) -> s
+| Access(id, idx) -> id ^ "[" ^ string_of_expr idx ^ "]"
+
+and string_of_typ = function
     Int -> "int"
   | Float -> "float"
   | Char -> "char"

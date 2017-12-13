@@ -117,8 +117,6 @@ expr:
   | CHAR_LITERAL          { Char_literal($1) }
   | STRING_LITERAL          { String_literal($1) }
   | LSQUARE array_expr RSQUARE        { Array_literal(List.length $2, List.rev $2) }
-  | ID               { Id($1) }
-  | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }
@@ -134,10 +132,15 @@ expr:
   | expr OR     expr { Binop($1, Or,    $3) }
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
-  | ID ASSIGN expr   { Assign($1, $3) }
+  | lvalue ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+  | lvalue  { Lval($1) }
   /* TODO: Include expression for typecasting */
+
+lvalue:
+    ID    { Id($1) }
+  | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
 
 actuals_opt:
     /* nothing */ { [] }

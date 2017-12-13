@@ -160,22 +160,7 @@ let check (globals, functions) =
         (if l == List.length s then
           let s_s = List.map (fun e -> expr env e) s in
           SArray_literal(l, s_s), Array(l, prim_type)
-        else raise(Failure("Something wrong with auto-assigning length to array literal " ^ string_of_expr a)))
-      | Id s -> (try
-            let (t, _) = find_variable env.scope s 
-            in SId(s), t
-        with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
-      | Access(id, idx) -> (try 
-            let (t, _) = find_variable env.scope id 
-        and (idx', t_ix) = expr env idx in 
-          let eval_type = function
-            Array(_, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
-              then a_t
-              else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
-                string_of_expr idx))
-            | _ -> raise (Failure(id ^ "is not an array type"))
-          in SAccess(id, (idx', t_ix)), eval_type t
-        with Not_found -> raise(Failure("Undeclared identifier " ^ id))) 
+        else raise(Failure("Something wrong with auto-assigning length to array literal " ^ string_of_expr a))) 
       | Binop(e1, op, e2) as e -> 
           let ta = expr env e1 and tb = expr env e2 
           in let _, t1 = ta and _, t2 = tb in
@@ -201,12 +186,12 @@ let check (globals, functions) =
 	  		   string_of_typ t ^ " in " ^ string_of_expr ex))
         )
       | Noexpr -> SNoexpr, Void
-      | Assign(var, e) as ex -> 
-          let (lt, _) = find_variable env.scope var and (rexpr, rt) = expr env e in          
+      | Assign(lval, e) as ex -> 
+          let (slval, lt) = lval_expr env lval and (rexpr, rt) = expr env e in          
         ignore(check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
             " = " ^ string_of_typ rt ^ " in " ^ 
             string_of_expr ex)));
-        SAssign(var, (rexpr, rt)), lt
+        SAssign(slval, (rexpr, rt)), lt
       | Call(fname, actuals) as call -> let fd = function_decl fname in
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
@@ -223,6 +208,26 @@ let check (globals, functions) =
              (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
              and also because this detail is not needed when making a function call *)
            SCall(s_fd, sactuals), fd.ftype
+      | Lval l -> let slval = (lval_expr env l) in
+        let (slval_det, ltyp) = slval in
+        SLval(slval_det), ltyp
+
+    and lval_expr env = function
+        Id s -> (try
+          let (t, _) = find_variable env.scope s 
+          in ((SId(s), t), t)
+          with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
+      | Access(id, idx) -> (try 
+          let (t, _) = find_variable env.scope id 
+          and (idx', t_ix) = expr env idx in 
+          let eval_type = function
+            Array(_, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
+              then a_t
+              else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
+                string_of_expr idx))
+          | _ -> raise (Failure(id ^ "is not an array type"))
+          in ((SAccess(id, (idx', t_ix)), eval_type t), eval_type t)
+          with Not_found -> raise(Failure("Undeclared identifier " ^ id)))
     
     and check_bool_expr env e = (let (e', t) = (expr env e) in if t != Int (* This is not supposed to be recursive! *)
      then raise (Failure ("expected Int expression (that evaluates to 0 or 1) in " ^ string_of_expr e))

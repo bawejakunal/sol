@@ -141,20 +141,6 @@ let translate (globals, functions) =
       | S.SArray_literal(_, s), A.Array(_, prim_typ) -> 
           L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder e) s))
       | S.SArray_literal(_, _), _ -> raise(Failure("Invalid Array literal being created!"))
-      | S.SId(s), _ -> L.build_load (lookup s) s builder
-      | S.SAccess(id, idx), el_typ -> 
-      (* ignore(print_string "access"); *)
-        let arr = lookup id in
-        let idx' = expr builder idx in
-        let arr_len = L.array_length (ltype_of_typ el_typ)
-        in if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
-          then raise(Failure("Attempted access out of array bounds"))
-          (* TODO: figure out how to check for access out of array bounds *)
-          else L.build_load (L.build_gep arr [| const_zero ; idx' |] "tmp" builder) "tmp" builder 
-      (*let id' = lookup id 
-      and idx' = expr builder idx in
-      if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
-      else L.const_int i32_t idx'*)
       | S.SBinop (e1, op, e2), _ ->
 	    let e1' = expr builder e1
 	    and e2' = expr builder e2 in
@@ -188,8 +174,8 @@ let translate (globals, functions) =
 	      (match op with
 	        S.INeg    -> L.build_neg e' "tmp" builder
         | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder)
-      | S.SAssign (var, s_e), _ -> let e' = expr builder s_e in
-	                   ignore (L.build_store e' (lookup var) builder); e'
+      | S.SAssign (lval, s_e), _ -> let e' = expr builder s_e in
+	                   ignore (L.build_store e' (lval_expr builder lval) builder); e'
       (* L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder *)
       (* | A.Call ("intToFloat", [e]) ->
       L.build_call intToFloat_func [| (expr builder e) |] "intToFloat" builder
@@ -213,7 +199,7 @@ let translate (globals, functions) =
         | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 7) "intToString" builder in
             let final_result = List.hd act in 
             let result_name = (match final_result with
-              | S.SId(s), _ -> s
+              | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of intToString!"))) in
             let arg = List.tl actuals in
             ignore(L.build_call sprintf_func (Array.of_list (result :: int_format_str :: arg)) "intToStringResult" builder);
@@ -221,7 +207,7 @@ let translate (globals, functions) =
         | "floatToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 20) "floatToString" builder in
             let final_result = List.hd act in 
             let result_name = (match final_result with
-              | S.SId(s), _ -> s
+              | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of floatToString!"))) in
             let arg = List.tl actuals in
             ignore(L.build_call sprintf_func (Array.of_list (result :: float_format_str :: arg)) "floatToStringResult" builder);
@@ -229,7 +215,7 @@ let translate (globals, functions) =
         | "charToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 2) "charToString" builder in
             let final_result = List.hd act in 
             let result_name = (match final_result with
-              | S.SId(s), _ -> s
+              | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of charToString!"))) in
             let arg = List.tl actuals in
             ignore(L.build_call sprintf_func (Array.of_list (result :: char_format_str :: arg)) "charToStringResult" builder);
@@ -238,6 +224,24 @@ let translate (globals, functions) =
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list actuals) result builder)
+      | S.SLval(l), _ -> let lval = lval_expr builder (l) in
+        L.build_load lval "tmp" builder
+    
+    and lval_expr builder = function
+      (S.SId(s), _) -> lookup s
+    | (S.SAccess(id, idx), el_typ) -> 
+      (* ignore(print_string "access"); *)
+      let arr = lookup id in
+      let idx' = expr builder idx in
+      let arr_len = L.array_length (ltype_of_typ el_typ)
+      in (* if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
+        then raise(Failure("Attempted access out of array bounds"))
+        (* TODO: figure out how to check for access out of array bounds *)
+        else  *)L.build_gep arr [| const_zero ; idx' |] "tmp" builder
+      (*let id' = lookup id 
+      and idx' = expr builder idx in
+      if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
+      else L.const_int i32_t idx'*)
     in
 
     (* Invoke "f builder" if the current block doesn't already
