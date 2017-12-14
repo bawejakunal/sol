@@ -103,11 +103,11 @@ This section describes the complete lexical conventions followed for a syntactic
         \end{center}
 
     \subsection{\textit{Integer Constants}}
-    A sequence of one or more digits representing a number in base-10.\\
+    A sequence of one or more digits representing a number in base-10, optionally preceded by a unary negation operator (\texttt{-}), to represent negative integers.\\
     Eg: \texttt{1234}
 
     \subsection{\textit{Float Constants}}
-    Similar to an integer, a float has an \textit{integer}, a decimal point (\texttt{.}), and a fractional part. Both the integer and fractional part are a sequence of one or more digits.\\
+    Similar to an integer, a float has an \textit{integer}, a decimal point (\texttt{.}), and a fractional part. Both the integer and fractional part are a sequence of one or more digits. A negative float is represented by a preceding unary negation operator (\texttt{-}).\\
     Eg: \texttt{0.55  10.2}
 
     \subsection{\textit{Character Constants}}
@@ -139,10 +139,13 @@ This section describes the complete lexical conventions followed for a syntactic
     SOL has mainly four categories of operators defined below:
 
         \subsubsection{\textit{Assignment Operator}}
-        An \textit{assignment operator} is denoted by the \texttt{=} symbol having a variable identifier to its left and a valid expression on its right. The \textit{assignment operator} assigns the evaluated value of the expression on the right to the variable on the left.
+        The right associative \textit{assignment operator} is denoted by the (\texttt{=}) symbol having a variable identifier to its left and a valid expression on its right. The \textit{assignment operator} assigns the evaluated value of expression on the right to the variable on left.
+
+        \subsubsection{\textit{Unary Negation Operator}} \label{negation}
+        The right associative unary negation operator (\texttt{-}) can be used to negate the value of an arithmetic expression.
 
         \subsubsection{\textit{Arithmetic Operators}}
-        SOL has the following \textit{binary arithmetic operators}. A \textit{binary arithmetic operator} operates on two \textit{arithmetic expressions} specified before and after the operator respectively. The said expressions must be of type \textit{int} or \textit{float}.
+        SOL has following left-associative \textit{binary arithmetic operators}. A \textit{binary arithmetic operator} operates on two \textit{arithmetic expressions} specified before and after the operator respectively. The said expressions must both be of type \textit{int} or \textit{float}.
 
             \begin{center}
                 \begin{tabular}{ |c|c| }
@@ -223,10 +226,20 @@ This section describes the complete lexical conventions followed for a syntactic
 	SOL expressions are evaluated with the following rules:
 	\begin{itemize}
 		\itemsep0em
-		\item Expressions are evaluated from left to right
-		\item Multiplication, division and modulo operations take precedence over addition and subtraction
-		\item Parentheses override all precedence rules
-		\item Logical NOT has precedence over logical AND, which has precedence over logical OR
+		\item Expressions are evaluated from left to right, operators are left associative, unless stated otherwise.
+
+        \item Expressions within parenthesis take higher precedence and evaluated prior to substituting in outer expression.
+        
+        \item The unary negation operator (\texttt{-}) is placed at the second level of precedence, above the binary and logical operators. It groups right to left as described in section \ref{negation}.
+		
+        \item The second level of precedence is taken by multiplication (\texttt{*}), division (\texttt{/}) and modulo (\texttt{\%}) operations.
+        
+        \item Addition (\texttt{+}) and subtraction (\texttt{-}) operations are at the third level of precedence, above the logical operators.
+		
+        \item The boolean operators in decreasing order of precedence are: \texttt{!, \&\&, ||}.
+
+        \item At the final level of precedence, the right associative assignment operator (\texttt{=}) is placed, which ensures that the expression to its right is evaluated before assignment to left variable identifier.
+
 	\end{itemize}
 	
 	\subsection{\textit{Dot Accessor}}
@@ -384,7 +397,7 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
 
 \subsection{\textit{shape}}
 Similar to a class in C++; a shape defines a particular 2-D shape as part of the drawing on screen. Every \texttt{shape} has a user-defined \texttt{draw} function that specifies how shapes are statically rendered, using multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} commands. The class may contain multiple member variables that could be used to draw the shape. These member variables are defined in a constructor, specified by the keyword \texttt{construct}. It is also possible to declare member functions for a shape. When member variables are accessed within a member function, it is implied that the member variables belong to the current object that calls the function.\\
-Once a \texttt{shape} object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, '.'.\\
+Once a \texttt{shape} object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, `.'.\\
 Eg: \begin{lstlisting}[aboveskip=-13pt]
         shape Triangle {
             int[2] a;
