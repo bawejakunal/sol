@@ -95,7 +95,6 @@ This section describes the complete lexical conventions followed for a syntactic
                         &               & drawPoint     & \\
                         &               & drawCurve     & \\
                         &               & print         & \\
-                        &               & length        & \\
                         &               & consolePrint  & \\
 
             \hline
@@ -262,7 +261,7 @@ This section describes the complete lexical conventions followed for a syntactic
     \end{itemize}
 
 	\subsection{\textit{Array Declarators}} \label{array}
-    An array may be formed from any of the primitive types and \texttt{shape}s, but each array may only contain one type of primitive or \texttt{shape}. At declaration, the type specifier and the size of the array must be indicated (the array size need not be specified for strings, which are character arrays). In a function signature, the size of the array should not be specified. Arrays are most commonly used in SOL to specify coordinates with two integers.\\
+    An array may be formed from any of the primitive types and \texttt{shape}s, but each array may only contain one type of primitive or \texttt{shape}. At declaration, the type specifier and the size of the array must be indicated. The array size need not be specified for strings, which are character arrays. SOL supports \texttt{fixed size arrays}, declared at compile time i.e. a program can not allocate dynamically sized arrays at runtime. Arrays are most commonly used in SOL to specify coordinates with two integers or drawing colors in RGB format with a three element array.\\
     Eg: \texttt{int[2] coor; /* Array of two integers */}
 
     \subsection{\textit{Function Declarators and Definition}}
