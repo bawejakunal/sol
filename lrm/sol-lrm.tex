@@ -356,6 +356,21 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
     Prints a string to the console. Com]monly used to print error messages.\\
     \underline{Arguments}: \texttt{text (string)}
 
+    \subsection{Type Conversion Functions}
+    SOL provides following type conversion functions for converting expressions of a given type to expression of another type.
+
+        \subsubsection{\textit{intToString}}
+        Convert an expression (\texttt{src}) of type \texttt{int} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
+        \underline{Arguments}: \texttt{dst (string), src (int)}
+
+        \subsubsection{\textit{floatToString}}
+        Convert an expression (\texttt{src}) of type \texttt{float} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
+        \underline{Arguments}: \texttt{dst (string), src (float)}
+
+
+        \subsubsection{\textit{charToString}}
+        Convert an expression (\texttt{src}) of type \texttt{char} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
+        \underline{Arguments}: \texttt{dst (string), src (char)}
 
 \section{Drawing Functions}
 The following set of functions are also a category of internal/required functions, which describe the drawing aspects for \texttt{shape} objects defined in a SOL program.
