@@ -13,6 +13,7 @@ type symbol_table = {
 
 type translation_environment = {
   scope: symbol_table;
+  functions: Ast.func_dec StringMap.t
 }
 
 let rec find_variable (scope: symbol_table) name = 
@@ -34,7 +35,7 @@ let find_local (scope: symbol_table) name =
 
    Check each global variable, then check each function *)
 
-let check (globals, functions) =
+let check (globals, shapes, functions) =
 
   (* Raise an exception if the given list has a duplicate *)
   let report_duplicate exceptf list =
@@ -56,14 +57,28 @@ let check (globals, functions) =
   let check_assign lvaluet rvaluet err =
     let types = (lvaluet, rvaluet) in match types with
         (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
+      | (Shape(l_s), Shape(r_s)) -> if l_s = r_s then lvaluet else raise err
       | _ -> if lvaluet == rvaluet then lvaluet else raise err
   in
-   
+
   (**** Checking Global Variables ****)
 
   List.iter (check_not_void (fun n -> "illegal void global " ^ n)) globals;
    
   report_duplicate (fun n -> "duplicate global " ^ n) (List.map snd globals);
+
+  (**** Checking Shapes ****)
+
+  report_duplicate (fun n -> "duplicate shape " ^ n)
+    (List.map (fun sd -> sd.sname) shapes);
+
+  let shape_decls = List.fold_left (fun m sd -> StringMap.add sd.sname sd m)
+                         StringMap.empty shapes
+  in
+
+  let shape_decl s = try StringMap.find s shape_decls
+       with Not_found -> raise (Failure ("unrecognized shape " ^ s))
+  in
 
   (**** Checking Functions ****)
 
@@ -101,11 +116,11 @@ let check (globals, functions) =
                          built_in_decls functions
   in
 
-  let function_decl s = try StringMap.find s function_decls
+  let function_decl s s_map = try StringMap.find s s_map
        with Not_found -> raise (Failure ("unrecognized function " ^ s))
   in
 
-  let _ = function_decl "main" in (* Ensure "main" is defined *)
+  let _ = function_decl "main" function_decls in (* Ensure "main" is defined *)
 
   let check_function g_env func =
 
@@ -164,17 +179,17 @@ let check (globals, functions) =
       | Binop(e1, op, e2) as e -> 
           let ta = expr env e1 and tb = expr env e2 
           in let _, t1 = ta and _, t2 = tb in
-	(match op with
-    Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-  (*| Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float *)
-	| Equal | Neq when t1 = t2 && t1 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
- (* | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int*)
-	| And | Or when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-  | _ -> raise (Failure ("illegal binary operator " ^
-              string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
-              string_of_typ t2 ^ " in " ^ string_of_expr e))
-        )
+        	(match op with
+            Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+          (*| Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float *)
+        	| Equal | Neq when t1 = t2 && t1 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+        	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+         (* | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int*)
+        	| And | Or when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+          | _ -> raise (Failure ("illegal binary operator " ^
+                      string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
+                      string_of_typ t2 ^ " in " ^ string_of_expr e))
+                )
       | Unop(op, e) as ex -> 
           let t1 = expr env e 
           in let _, t = t1 in
@@ -192,7 +207,7 @@ let check (globals, functions) =
             " = " ^ string_of_typ rt ^ " in " ^ 
             string_of_expr ex)));
         SAssign(slval, (rexpr, rt)), lt
-      | Call(fname, actuals) as call -> let fd = function_decl fname in
+      | Call(fname, actuals) as call -> let fd = function_decl fname env.functions in
          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
@@ -208,9 +223,51 @@ let check (globals, functions) =
              (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
              and also because this detail is not needed when making a function call *)
            SCall(s_fd, sactuals), fd.ftype
+      | Shape_fn(s, fname, actuals) as call -> (try 
+          let (t, _) = find_variable env.scope s in
+          match t with
+            Shape(sname) -> let sd = shape_decl sname in
+              let fd = try List.find (fun member_fd -> fname = member_fd.fname) sd.member_fs
+                with Not_found -> raise(Failure("Member function " ^ fname ^ " not found in shape declaration " ^ sname)) in
+              if List.length actuals != List.length fd.formals then
+                raise (Failure ("expecting " ^ string_of_int
+                 (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
+             else (* TODO: Add special case for checking type of actual array vs formal array *)
+               List.iter2 (fun (ft, _) e -> let _, et = expr env e in
+                  ignore (check_assign ft et 
+                    (Failure ("illegal actual argument found " ^ string_of_typ et ^
+                    " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
+                 fd.formals actuals;
+               let sactuals = List.map (fun a -> expr env a) actuals in
+               let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
+                 sbody = []} in 
+                 (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
+                 and also because this detail is not needed when making a function call *)
+               SShape_fn(s, t, s_fd, sactuals), fd.ftype
+            | _ -> raise(Failure("Member function access " ^ fname ^ " for a non-shape variable " ^ s))
+          with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
       | Lval l -> let slval = (lval_expr env l) in
         let (slval_det, ltyp) = slval in
         SLval(slval_det), ltyp
+      | Inst_shape (sname, actuals) -> 
+      (* Check if the shape exists *) 
+        let sd = shape_decl sname in
+         if List.length actuals != List.length sd.construct.formals then
+           raise (Failure ("expecting " ^ string_of_int
+             (List.length sd.construct.formals) ^ " arguments in " ^ string_of_sdecl sd))
+         else (* TODO: Add special case for checking type of actual array vs formal array *)
+           List.iter2 (fun (ft, _) e -> let _, et = expr env e in
+              ignore (check_assign ft et 
+                (Failure ("illegal actual argument found " ^ string_of_typ et ^
+                " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
+             sd.construct.formals actuals;
+           let sactuals = List.map (fun a -> expr env a) actuals in
+           let s_sd = {ssname = sd.sname; spname = sd.pname; smember_vs = sd.member_vs; sconstruct = {sfname = "Construct";
+             styp = Void; sformals = []; slocals = []; sbody = []}; sdraw = {sfname = "Draw";
+             styp = Void; sformals = []; slocals = []; sbody = []}; smember_fs = []} in 
+             (* Not converting the shape completely, to prevent recursive conversions, 
+             and also because this detail is not needed when making a shape instantiation *)
+          SInst_shape(s_sd, sactuals), Shape(sname)
 
     and lval_expr env = function
         Id s -> (try
@@ -221,13 +278,23 @@ let check (globals, functions) =
           let (t, _) = find_variable env.scope id 
           and (idx', t_ix) = expr env idx in 
           let eval_type = function
-            Array(_, a_t) -> if t_ix == Int (* Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
+            Array(_, a_t) -> if t_ix == Int 
+            (* Note: Cannot check if index is within array bounds because the value cannot be evaluated at this stage *)
               then a_t
               else raise (Failure("Improper array element access: ID " ^ id ^ ", index " ^ 
                 string_of_expr idx))
           | _ -> raise (Failure(id ^ "is not an array type"))
-          in ((SAccess(id, (idx', t_ix)), eval_type t), eval_type t)
+          in ((SAccess(id, (idx', t_ix)), t), eval_type t)
           with Not_found -> raise(Failure("Undeclared identifier " ^ id)))
+      | Shape_var(s, v) -> try 
+            let (t, _) = find_variable env.scope s in
+            match t with
+              Shape(sname) -> let sd = shape_decl sname in
+                let (v_t, _) = try List.find (fun (_, n) -> n = v) sd.member_vs
+                  with Not_found -> raise(Failure("Member variable " ^ v ^ " not found in shape declaration " ^ sname)) in
+                ((SShape_var(s, v), t), v_t)
+            | _ -> raise(Failure("Member variable access " ^ v ^ " for a non-shape variable " ^ s))
+          with Not_found -> raise(Failure("Undeclared identifier " ^ s))
     
     and check_bool_expr env e = (let (e', t) = (expr env e) in if t != Int (* This is not supposed to be recursive! *)
      then raise (Failure ("expected Int expression (that evaluates to 0 or 1) in " ^ string_of_expr e))
@@ -242,8 +309,8 @@ let check (globals, functions) =
          | s :: ss -> stmt env s :: check_block env ss
          | [] -> []
         in let scope' = {parent = Some(env.scope); variables = []}
-        in let env' = {scope = scope'}
-        in let sl = check_block env' sl in
+        in let env' = {scope = scope'; functions = env.functions}
+        in let sl = check_block env' sl in 
         scope'.variables <- List.rev scope'.variables;
         SBlock(sl)
       | Expr e -> SExpr(expr env e)
@@ -269,7 +336,7 @@ let check (globals, functions) =
     in
 
     let l_scope = {parent = Some(g_env.scope); variables = func.formals @ func.locals} in
-    let l_env = {scope = l_scope} in
+    let l_env = {scope = l_scope; functions = g_env.functions} in
 
     {sfname = func.fname; styp = func.ftype; sformals = func.formals; slocals = func.locals; 
              sbody = let sbl = stmt l_env (Block func.body) in match sbl with
@@ -278,9 +345,54 @@ let check (globals, functions) =
              
    
   in
+
+  let check_shape g_env shape = 
+
+    List.iter (check_not_void (fun n -> "illegal void member variable " ^ n ^
+      " in " ^ shape.sname)) shape.member_vs;
+
+    report_duplicate (fun n -> "duplicate member variable " ^ n ^ " in " ^ shape.sname)
+      (List.map snd shape.member_vs);
+
+    report_duplicate (fun n -> "duplicate member function " ^ n)
+      (List.map (fun fd -> fd.fname) shape.member_fs);
+
+    let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
+                         g_env.functions shape.member_fs
+    in
+
+    let s_scope = {parent = Some(g_env.scope); variables = g_env.scope.variables @ shape.member_vs} in
+    let s_env = {scope = s_scope; functions = function_decls} in 
+    {ssname = shape.sname; spname = None; smember_vs = shape.member_vs;
+      sconstruct = (let s_construct = check_function s_env shape.construct in 
+        let s_construct = {s_construct with sfname = shape.sname ^ "__construct"} in
+        try( let last_s_construct = List.hd (List.rev s_construct.sbody) in (match last_s_construct with
+            SReturn(_) -> raise(Failure("Constructor cannot have return statement for shape " ^ shape.sname))
+          | _ -> s_construct)) with Failure "hd" -> s_construct);
+      sdraw = (let s_draw = check_function s_env shape.draw in 
+        let s_draw = {s_draw with sfname = shape.sname ^ "__draw"} in
+        try( let last_s_draw = List.hd (List.rev s_draw.sbody) in (match last_s_draw with
+            SReturn(_) -> raise(Failure("Draw function cannot have return statement for shape " ^ shape.sname))
+          | _ -> s_draw)) with Failure "hd" -> s_draw);
+      smember_fs = List.map (function f -> let s_f = check_function s_env f in 
+        let s_f = {s_f with sfname = shape.sname ^ "__" ^ s_f.sfname} in 
+        match s_f.styp with
+      | Void -> s_f
+      | _ -> try(let last_s = List.hd (List.rev s_f.sbody) in (match last_s with
+        | SReturn(_) -> s_f
+        | _ -> raise(Failure("Function must have return statement of type " ^ string_of_typ s_f.styp)))) 
+        with Failure "hd" -> s_f
+      ) shape.member_fs}
+  
+  in
+
+  (* Check each individual function *)
+
   let g_scope = {parent = None; variables = globals} in
-  let g_env = {scope = g_scope} in
-  (globals, List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
+  let g_env = {scope = g_scope; functions = function_decls} in
+  (globals, 
+    List.map (check_shape g_env) shapes,
+    List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
     | Void -> s_f
     | _ -> let last_s = List.hd (List.rev s_f.sbody) in (match last_s with
       | SReturn(_) -> s_f

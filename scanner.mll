@@ -36,13 +36,14 @@ rule token = parse
 | "char"   { CHAR }
 | "string"  { STRING }
 | "func"   { FUNC }
-(*| "shape"  { SHAPE }
-| "parent"  { PARENT }
-| "extends"  { EXTENDS }
+| "shape"  { SHAPE }
 | "construct"  { CONSTRUCT }
+| "draw"   { DRAW }
+| '.'      { DOT }
+(*| "parent"  { PARENT }
+| "extends"  { EXTENDS }
 | "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
 | "consolePrint"  { CONSOLEPRINT }
-| "draw"   { DRAW }
 | "drawpoint"  { DRAWPOINT }
 | "drawcurve"  { DRAWCURVE }
 | "print"  { PRINT }
@@ -54,14 +55,14 @@ rule token = parse
 | "wait"  { WAIT }*)
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
-(*| '.'      { DOT }*)
 | '''[^ '\\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | ''''\\'[''' '"' '\\' 't' 'n']''' as lxm { CHAR_LITERAL(lxm.[1]) }
 | '"' (('\\'[''' '"' '\\' 't' 'n'])+ | [^ '\\' ''' '"']+)* '"' as lxm 
   { let str = String.sub (lxm) 1 ((String.length lxm) - 2) in
   	let unescaped_str = Scanf.unescaped str in 
   	STRING_LITERAL(unescaped_str) }
-| ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { SHAPE_ID(lxm) }
+| ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 

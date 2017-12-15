@@ -1,6 +1,6 @@
 open Ast
 
-type sop = IAdd | ISub | IMult | IDiv | IEqual | INeq | ILess | ILeq | IGreater | IGeq | IAnd | IOr | IMod (*| Dot*)
+type sop = IAdd | ISub | IMult | IDiv | IEqual | INeq | ILess | ILeq | IGreater | IGeq | IAnd | IOr | IMod
 (* I = integer, may add floats, strings *)
 
 type sunary_op = INot | INeg
@@ -17,12 +17,15 @@ type sexpr_detail =
     | SAssign of slvalue * sexpr
     | SCall of sfunc_dec * sexpr list
     | SLval of slvalue
+    | SInst_shape of sshape_dec * sexpr list
+    | SShape_fn of string * typ * sfunc_dec * sexpr list 
 
 and sexpr = sexpr_detail * typ
 
 and slvalue_detail = 
       SId of string         (* VDecl ? of bind * expr *)
     | SAccess of string * sexpr
+    | SShape_var of string * string
 
 and slvalue = slvalue_detail * typ 
 
@@ -42,7 +45,16 @@ and sfunc_dec = {
     sbody    :    stmt_detail list;
 }
 
-type sprogram = bind list * sfunc_dec list(* * shape_dec list*)
+and sshape_dec = {
+  ssname   : string;
+  spname   :   string option; (*parent name*)
+  smember_vs : bind list;
+  sconstruct : sfunc_dec;
+  sdraw    : sfunc_dec;
+  smember_fs : sfunc_dec list;
+}
+
+type sprogram = bind list * sshape_dec list * sfunc_dec list
 
 (* Pretty-printing functions *)
 
@@ -60,7 +72,6 @@ let string_of_sop = function
  | IGeq -> ">="
  | IAnd -> "&&"
  | IOr -> "||"
- (*| Dot -> "."*)
 
 let string_of_suop = function
    INeg -> "-"
@@ -78,12 +89,16 @@ let rec string_of_sexpr (s: sexpr) = match fst s with
  | SAssign(l, e) -> (string_of_slvalue l) ^ " = " ^ string_of_sexpr e
  | SCall(f, el) ->
      string_of_sfdecl f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+ | SInst_shape(s, el) -> "shape " ^ s.ssname ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+ | SShape_fn(s, styp, f, el) ->
+     s ^ "(" ^ (string_of_typ styp) ^ ")." ^ string_of_sfdecl f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
  | SNoexpr -> ""
  | SLval(l) -> string_of_slvalue l
 
 and string_of_slvalue = function
   SId(s), _ -> s
 | SAccess(id, idx), _ -> id ^ "[" ^ string_of_sexpr idx ^ "]"
+| SShape_var(s, v), _ -> s ^ "." ^ v
 
 and string_of_sstmt = function
    SBlock(stmts) ->
@@ -104,6 +119,13 @@ and string_of_sfdecl fdecl =
  String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
  "}\n"
 
-let string_of_sprogram (vars, funcs) =
+ let string_of_ssdecl sdecl =
+  "Shape " ^ sdecl.ssname ^ "(" ^ String.concat ", " (List.map snd sdecl.sconstruct.sformals) ^
+  ")\n Member Variables: " ^ String.concat "" (List.map string_of_svdecl sdecl.smember_vs) ^ 
+  "\n Draw: " ^ string_of_sfdecl sdecl.sdraw ^ 
+  "\n Member functions: " ^ String.concat "" (List.map string_of_sfdecl sdecl.smember_fs)
+
+let string_of_sprogram (vars, shapes, funcs) =
  String.concat "" (List.map string_of_svdecl vars) ^ "\n" ^
+ String.concat "\n" (List.map string_of_ssdecl shapes) ^ "\n" ^
  String.concat "\n" (List.map string_of_sfdecl funcs)
