@@ -51,7 +51,7 @@ SignalError() {
 
 # close sdl window
 closeWindow() {
-    sleep 2 && xdotool windowactivate --sync $(xdotool search --name "SDL Render Clear") key --clearmodifiers --delay 100 alt+F4
+    sleep 2 && xdotool key --clearmodifiers --delay 100 alt+F4
 }
 
 # Compare <outfile> <reffile> <difffile>
@@ -73,8 +73,8 @@ Run() {
         closeWindow &
     fi
     eval $* || {
-	SignalError "$1 failed on $*"
-	return 1
+	   SignalError "$1 failed on $*"
+	   return 1
     }
 }
 
@@ -86,7 +86,7 @@ RunFail() {
         closeWindow &
     fi
     eval $* && {
-	   return 1
+        return 1
     }
     return 0
 }
@@ -142,10 +142,10 @@ CheckFail() {
 
     # RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    (RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err" ||
-    RunFail "$LLC" "${basename}.ll" "1>" "${basename}.s" "2>" "${basename}.err" ||
-    RunFail "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS"  "2>" "${basename}.err" ||
-    RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err") &&
+    RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err" ||
+    (Run "$LLC" "${basename}.ll" "1>" "${basename}.s" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS") ||
+    RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err" &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -183,12 +183,12 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
-# if [ ! -f printbig.o ]
-# then
-#     echo "Could not find printbig.o"
-#     echo "Try \"make printbig.o\""
-#     exit 1
-# fi
+if [ ! -f predefined.o ]
+then
+    echo "Could not find predefined.o"
+    echo "Try \"make clean all\""
+    exit 1
+fi
 
 if [ $# -ge 1 ]
 then
