@@ -80,12 +80,15 @@ Run() {
 
 # RunFail <args>
 # Report the command, run it, and expect an error
+# Command may fail, we do not enforce by SignalError
+# if it does not fail here
 RunFail() {
     echo $* 1>&2
     if [[ "$1" == *exe ]]; then
         closeWindow &
     fi
     eval $* && {
+        error=1
         return 1
     }
     return 0
@@ -138,17 +141,16 @@ CheckFail() {
     echo 1>&2
     echo "###### Testing $basename" 1>&2
 
-    generatedfiles=""
-
-    # RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
-    generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err" ||
-    (Run "$LLC" "${basename}.ll" "1>" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS") ||
-    RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err" &&
+    generatedfiles="${basename}.ll ${basename}.s ${basename}.err ${basename}.exe"
+    RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err"
+    if [ $error -eq 1 ];
+    then
+        Run "$LLC" "${basename}.ll" "1>" "${basename}.s" &&
+        Run "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS" &&
+        RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err"
+        error=0
+    fi
     Compare ${basename}.err ${reffile}.err ${basename}.diff
-
-    # Report the status and clean up the generated files
 
     if [ $error -eq 0 ] ; then
 	if [ $keep -eq 0 ] ; then
@@ -195,7 +197,6 @@ then
     files=$@
 else
     files="tests/test-*.sol tests/fail-*.sol"
-    # files="tests/test-*.sol"
 fi
 
 for file in $files
