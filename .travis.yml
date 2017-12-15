@@ -19,11 +19,9 @@ install:
 
 before_script:
   - eval `opam config env`
-  - sudo apt install --yes xvfb
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+  - "export DISPLAY=:99.0"
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x24"
   - sleep 3
-  - xvfb -screen 0 1024x768x24
 
 script:
   - make clean all
