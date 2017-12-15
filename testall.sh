@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Regression testing script for sol
 # Step through a list of files
@@ -49,6 +49,11 @@ SignalError() {
     echo "  $1"
 }
 
+# close sdl window
+closeWindow() {
+    sleep 2 && xdotool windowactivate --sync $(xdotool search --name "SDL Render Clear") key --clearmodifiers --delay 100 alt+F4
+}
+
 # Compare <outfile> <reffile> <difffile>
 # Compares the outfile with reffile.  Differences, if any, written to difffile
 Compare() {
@@ -64,6 +69,9 @@ Compare() {
 # Report the command, run it, and report any errors
 Run() {
     echo $* 1>&2
+    if [[ "$1" == *exe ]]; then
+        closeWindow &
+    fi
     eval $* || {
 	SignalError "$1 failed on $*"
 	return 1
@@ -74,6 +82,9 @@ Run() {
 # Report the command, run it, and expect an error
 RunFail() {
     echo $* 1>&2
+    if [[ "$1" == *exe ]]; then
+        closeWindow &
+    fi
     eval $* && {
 	SignalError "failed: $* did not report an error"
 	return 1
