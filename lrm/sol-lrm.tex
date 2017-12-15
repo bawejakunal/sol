@@ -57,7 +57,7 @@ The following conventions are followed throughout this SOL Reference Manual.
         \hspace*{4.4em} concept being defined are denoted in italics.
     \end{enumerate}
 
-The following are conventions used while drawing and animating objects, used in internal functions (see Section \ref{internal}):
+The following conventions are applied while drawing and animating objects, using internal functions (see Section \ref{internal}):
 
 	\begin{enumerate}
 		\itemsep0em
@@ -144,7 +144,7 @@ This section describes the complete lexical conventions followed for a syntactic
         The right associative unary negation operator (\texttt{-}) can be used to negate the value of an arithmetic expression.
 
         \subsubsection{\textit{Arithmetic Operators}}
-        SOL has following left-associative \textit{binary arithmetic operators}. A \textit{binary arithmetic operator} operates on two \textit{arithmetic expressions} specified before and after the operator respectively. The said expressions must both be of type \textit{int} or \textit{float}.
+        The following table describes \texttt{binary arithmetic operators} supported in SOL which operate on two \texttt{arithmetic expressions} specified before and after the operator respectively. The said expressions must both be of type \texttt{int} or \texttt{float}. Please refer to section \ref{precedence} for precedence and associativity rules.
 
             \begin{center}
                 \begin{tabular}{ |c|c| }
@@ -161,7 +161,7 @@ This section describes the complete lexical conventions followed for a syntactic
             \end{center}
 
         \subsubsection{\textit{Comparison Operators}}
-        The comparison operators are binary operators for comparing values of operands defined as expressions.
+        The comparison operators are left associative binary operators for comparing values of operands defined as expressions. Please refer to section \ref{precedence} for precedence and associativity rules.
             \begin{center}
                 \begin{tabular}{ |c|c| }
                 \hline
@@ -178,15 +178,15 @@ This section describes the complete lexical conventions followed for a syntactic
             \end{center}
         
         \subsubsection{\textit{Logical Operators}}
-        The logical operators evaluate boolean expressions and return an integer as the result - with 0 as False and 1 as True. The AND (\&\&) and OR ($||$) operators are binary, while the NOT (!) operator is unary.
+        The logical operators evaluate boolean expressions and return an integer as result - with 0 as False and 1 as True. Please refer to section \ref{precedence} for precedence and associativity rules.
 	        \begin{center}
 	        	\begin{tabular}{ |c|c| }
 	        		\hline
-	        		\textbf{Operator} & \textbf{Definition} \\
+	        		\textbf{Operator} & \textbf{Definition}\\
 	        		\hline
-	        		\&\&  & AND \\
-	        		$||$  & OR \\
-	        		!  & NOT \\
+	        		\&\&  & AND\\
+	        		$||$  & OR\\
+	        		!  & NOT\\
 	        		\hline
 	        	\end{tabular}
 	        \end{center}
@@ -221,25 +221,29 @@ This section describes the complete lexical conventions followed for a syntactic
 	A typecast is the conversion of an expression from one type to another. SOL supports explicit casting of \textit{int} to \textit{float}, \textit{float} to \textit{int}, and \textit{int}, \textit{float} and \textit{char} to \textit{string}. To cast an expression to a different type, place the desired type in parentheses in front of the expression. \\
 	Eg: \texttt{(int) myFloat /* Returns the integer value of myFloat */}
 	
-	\subsection{\textit{Precedence and Associativity}}
+	\subsection{\textit{Precedence and Associativity}} \label{precedence}
 	SOL expressions are evaluated with the following rules:
-	\begin{itemize}
+	\begin{enumerate}
 		\itemsep0em
 		\item Expressions are evaluated from left to right, operators are left associative, unless stated otherwise.
 
-        \item Expressions within parenthesis take higher precedence and evaluated prior to substituting in outer expression.
+        \item Expressions within parenthesis take highest precedence and evaluated prior to substituting in outer expression.
         
-        \item The unary negation operator (\texttt{-}) is placed at the second level of precedence, above the binary and logical operators. It groups right to left as described in section \ref{negation}.
+        \item The unary negation operator (\texttt{-}) and logical not operator (\texttt{!}) are placed at the second level of precedence, above the binary, comparison and logical operators. It groups right to left as described in section \ref{negation}.
 		
         \item The third level of precedence is taken by multiplication (\texttt{*}), division (\texttt{/}) and modulo (\texttt{\%}) operations.
         
-        \item Addition (\texttt{+}) and subtraction (\texttt{-}) operations are at the fourth level of precedence, above the logical operators.
+        \item Addition (\texttt{+}) and subtraction (\texttt{-}) operations are at the fourth level of precedence.
 		
-        \item The boolean operators in decreasing order of precedence are: \texttt{!, \&\&, ||}.
+        \item At the fifth level of precedence are the comparison operators: \texttt{\textless, \textgreater, \textless=, \textgreater=}.
+
+        \item At sixth level of precedence are the equality comparison operators: \texttt{==} and \texttt{!=}.
+
+        \item The logical operators, OR (\texttt{||}) and AND (\texttt{\&\&}) take up the next level of precedence.
 
         \item At the final level of precedence, the right associative assignment operator (\texttt{=}) is placed, which ensures that the expression to its right is evaluated before assignment to left variable identifier.
 
-	\end{itemize}
+	\end{enumerate}
 	
 	\subsection{\textit{Dot Accessor}}
 	To access members of a declared \texttt{shape} (further described in section \ref{classes}), use the dot accessor `.'. \\
