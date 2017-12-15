@@ -4,7 +4,12 @@ SDL_GFX="SDL2_gfx-1.0.3"
 SDL_GFX_TAR=$SDL_GFX".tar.gz"
 
 # install sdl
-sudo apt install --yes libegl1-mesa-dev libgles2-mesa-dev sdl2-2.0 libsdl2-dev
+sudo apt install --yes libegl1-mesa-dev \
+    libgles2-mesa-dev\
+    sdl2-2.0         \
+    libsdl2-dev      \
+    xdotool
+
 
 # untar the file folder
 tar xvzf $SDL_GFX_TAR
