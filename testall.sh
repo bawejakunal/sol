@@ -86,8 +86,7 @@ RunFail() {
         closeWindow &
     fi
     eval $* && {
-	SignalError "failed: $* did not report an error"
-	return 1
+	   return 1
     }
     return 0
 }
@@ -141,8 +140,12 @@ CheckFail() {
 
     generatedfiles=""
 
+    # RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
+    (RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err" ||
+    RunFail "$LLC" "${basename}.ll" "1>" "${basename}.s" "2>" "${basename}.err" ||
+    RunFail "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS"  "2>" "${basename}.err" ||
+    RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err") &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
