@@ -23,6 +23,7 @@ before_script:
 script:
   - make clean all
   - ./testall.sh
+  - cat testall.log
 
 notifications:
   email: false
