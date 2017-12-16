@@ -28,10 +28,6 @@ shape Triangle {
         drawcurve(b, findCentre(b, c), c, [0, 255, 0]);
         drawcurve(c, findCentre(c, a), a, [0, 0, 255]);
    }
-
-   func render() {
-        translate(disp);
-   }
 }
 
 func main(){
