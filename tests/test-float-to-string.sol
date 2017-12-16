@@ -3,14 +3,14 @@ func main() {
     string s;
 
     f = -10.0;
-    floatToString(s, f);
+    s = floatToString(f);
     consolePrint(s);
 
     f = 0.0;
-    floatToString(s, f);
+    s = floatToString(f);
     consolePrint(s);
 
     f = 10.0;
-    floatToString(s, f);
+    s = floatToString(f);
     consolePrint(s);
 }

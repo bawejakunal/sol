@@ -3,6 +3,6 @@ func main() {
     string s;
 
     c = 'h';
-    charToString(s, c);
+    s = charToString(c);
     consolePrint(s);
 }

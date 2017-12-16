@@ -1,7 +1,6 @@
 func main() {
     int i;
     int [5]array;
-    string y;
 
     /* assign array elements */
     array = [0,1,2,3,4];
@@ -9,8 +8,7 @@ func main() {
     /* print array elements */
     i = 0;
     while(i < 5) {
-        intToString(y, array[i]);
-        consolePrint(y);
+        consolePrint(intToString(array[i]));
         i = i  + 1;
     }
 }

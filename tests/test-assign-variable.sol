@@ -10,7 +10,7 @@ func main() {
     /* integer assignment */
     x = 5;
     y = x;
-    intToString(s, y);
+    s = intToString(y);
     consolePrint(s);
 
     /* string variable assignment */
@@ -20,6 +20,5 @@ func main() {
 
     f = 4.2;
     g = f;
-    floatToString(s, g);
-    consolePrint(s);
+    consolePrint(floatToString(g));
 }

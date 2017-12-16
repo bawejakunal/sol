@@ -11,7 +11,7 @@ func main() {
 
     i = 4;
     while(i >= 0) {
-        intToString(s, arr[i]);
+        s = intToString(arr[i]);
         consolePrint(s);
         i = i - 1;
     }
