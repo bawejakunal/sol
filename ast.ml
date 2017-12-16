@@ -1,4 +1,4 @@
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod (*| Dot*)
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod
 
 type unary_op = Not | Neg
 
@@ -9,7 +9,7 @@ type typ =
 	| String
 	| Void (* For internal use *)
 	| Array of int * typ (*first expr is the size of the array*)
-	(* Add in shapes *)
+	| Shape of string
 and
    expr = 
 	  Int_literal of int 
@@ -23,10 +23,13 @@ and
 	| Assign of lvalue * expr 
 	| Call of string * expr list 
 	| Lval of lvalue
+	| Inst_shape of string * expr list
+	| Shape_fn of string * string * expr list 
 and
 	lvalue = 
 	  Id of string
 	| Access of string * expr
+	| Shape_var of string * string
 
 type bind = typ * string
 
@@ -46,30 +49,16 @@ type func_dec = {
 	body	:	stmt list;
 }
 
-(*type draw_dec = {
-	locals	:	bind_local list;
-	body	:	stmt list;
-}
-
-type construct_dec = {
-	formal	:	bind_formal list;
-	locals	:	bind_local list;
-	body	:	stmt list;
-}
-
-type shape_body = 
-	| ShapeConstruct of construct_dec
-	| ShapeVar of bind_local
-	| ShapeFunc of func_dec
-
 type shape_dec = {
-	sname	:	string;
-	pname	: 	string;
-	draw	:	draw_dec;
-	body	:	shape_body list;
-}*)
+	sname		:	string;
+	pname		: 	string option; (*parent name*)
+	member_vs	:	bind list;
+	construct	:	func_dec;
+	draw		:	func_dec;
+	member_fs	:	func_dec list;
+}
 
-type program = bind list * func_dec list(* * shape_dec list*)
+type program = bind list * shape_dec list * func_dec list
 
 (* Pretty-printing functions *)
 
@@ -87,7 +76,6 @@ let string_of_op = function
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
-  (*| Dot -> "."*)
 
 let string_of_uop = function
     Neg -> "-"
@@ -105,6 +93,9 @@ let rec string_of_expr = function
   | Assign(l, e) -> (string_of_lvalue l) ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Inst_shape(s, el) -> "shape " ^ s ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Shape_fn(s, f, el) ->
+      s ^ "." ^ f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""
   | Lval(l) -> string_of_lvalue l
  
@@ -113,6 +104,7 @@ let rec string_of_expr = function
 string_of_lvalue = function
   Id(s) -> s
 | Access(id, idx) -> id ^ "[" ^ string_of_expr idx ^ "]"
+| Shape_var(s, v) -> s ^ "." ^ v
 
 and string_of_typ = function
     Int -> "int"
@@ -121,6 +113,7 @@ and string_of_typ = function
   | Void -> "void"
   | String -> "string"
   | Array(l,t) -> string_of_typ t ^ " [" ^ string_of_int l ^ "]"
+  | Shape(s) -> "Shape " ^ s
 
 let rec string_of_stmt = function
     Block(stmts) ->
@@ -141,6 +134,13 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-let string_of_program (vars, funcs) =
+let string_of_sdecl sdecl =
+  "Shape " ^ sdecl.sname ^ "(" ^ String.concat ", " (List.map snd sdecl.construct.formals) ^
+  ")\n Member Variables: " ^ String.concat "" (List.map string_of_vdecl sdecl.member_vs) ^ 
+  "\n Draw: " ^ string_of_fdecl sdecl.draw ^ 
+  "\n Member functions: " ^ String.concat "" (List.map string_of_fdecl sdecl.member_fs)
+
+let string_of_program (vars, shapes, funcs) =
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  String.concat "\n" (List.map string_of_sdecl shapes) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)

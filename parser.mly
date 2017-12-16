@@ -5,17 +5,18 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LSQUARE RSQUARE COMMA
-%token PLUS MINUS TIMES DIVIDE MODULO ASSIGN NOT
+%token PLUS MINUS TIMES DIVIDE MODULO ASSIGN NOT DOT 
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token RETURN IF WHILE INT FLOAT CHAR STRING FUNC
-/*%token SHAPE PARENT EXTENDS CONSTRUCT MAIN CONSOLEPRINT LENGTH SETFRAMERATE 
-%token DRAW DRAWCURVE DRAWPOINT PRINT
+%token SHAPE CONSTRUCT DRAW /*PARENT EXTENDS MAIN CONSOLEPRINT LENGTH SETFRAMERATE 
+%token DRAWCURVE DRAWPOINT PRINT
 %token TRANSLATE ROTATE RENDER WAIT*/
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
 %token <char> CHAR_LITERAL
 %token <string> STRING_LITERAL
 %token <string> ID
+%token <string> SHAPE_ID
 %token EOF
 
 %right ASSIGN
@@ -26,6 +27,7 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
 %right NOT NEG /* Have to add in parentheses */
+%left DOT
 %left LPAREN RPAREN LSQUARE RSQUARE
 
 %start program
@@ -37,10 +39,10 @@ program:
   decls EOF { $1 }
 
 decls:
-   /* nothing */ { [], [](*, [] *)}
- | decls vdecl { let (v, f(*, s*)) = $1 in ($2 :: v), f(*, s *)}
- | decls fdecl { let (v, f(*, s*)) = $1 in v, ($2 :: f)(*, s *)}
- /*| decls sdecl { let (v, f, s) = $1 in v, f, ($2 :: s) }*/
+   /* nothing */ { [], [], [] }
+ | decls vdecl { let (v, s, f) = $1 in ($2 :: v), s, f }
+ | decls fdecl { let (v, s, f) = $1 in v, s, ($2 :: f) }
+ | decls sdecl { let (v, s, f) = $1 in v, ($2 :: s), f }
 
 fdecl:
    FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE /* Handling case for empty return type */
@@ -70,6 +72,7 @@ typ:
   | FLOAT { Float }
   | CHAR { Char }
   | STRING { String }
+  | SHAPE_ID { Shape($1) }
 
 /*formal_typ:
     typ {$1}
@@ -134,6 +137,8 @@ expr:
   | NOT expr         { Unop(Not, $2) }
   | lvalue ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+  | SHAPE SHAPE_ID LPAREN actuals_opt RPAREN { Inst_shape($2, $4) }
+  | ID DOT ID LPAREN actuals_opt RPAREN { Shape_fn($1, $3, $5) }
   | LPAREN expr RPAREN { $2 }
   | lvalue  { Lval($1) }
   /* TODO: Include expression for typecasting */
@@ -141,6 +146,7 @@ expr:
 lvalue:
     ID    { Id($1) }
   | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
+  | ID DOT ID   { Shape_var($1, $3) }
 
 actuals_opt:
     /* nothing */ { [] }
@@ -149,3 +155,40 @@ actuals_opt:
 actuals_list:
     expr                    { [$1] }
   | actuals_list COMMA expr { $3 :: $1 }
+
+sdecl:
+    SHAPE SHAPE_ID LBRACE vdecl_list cdecl ddecl shape_fdecl_list RBRACE
+      { { sname = $2;
+      pname = None;
+      member_vs = List.rev $4;
+      construct = $5; (* NOTE: Make this optional later *)
+      draw = $6;
+      member_fs = $7;
+      }
+    }
+
+cdecl:
+   CONSTRUCT LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { { ftype = Void;
+   fname = "constructor";
+   formals = $3;
+   locals = List.rev $6;
+   body = List.rev $7 }
+   }
+
+ddecl:
+   DRAW LPAREN RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { { ftype = Void;
+   fname = "draw";
+   formals = [];
+   locals = List.rev $5;
+   body = List.rev $6 }
+   }
+
+shape_fdecl_list:
+    /* nothing */ { [] }
+  | fdecl_list   { List.rev $1 }
+
+fdecl_list:
+    fdecl                   { [$1] }
+  | fdecl_list fdecl { $2 :: $1 }
