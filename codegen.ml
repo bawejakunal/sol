@@ -48,7 +48,7 @@ let translate (globals, shapes, functions) =
     | A.Char -> i8_t
     | A.String -> L.pointer_type i8_t
     | A.Void -> void_t
-    | A.Array(l, t) -> L.array_type (ltype_of_typ t) l 
+    | A.Array(l, t) -> L.pointer_type (L.array_type (ltype_of_typ t) l)
     | A.Shape(s) -> shape_type s
     in
 
@@ -175,7 +175,12 @@ let translate (globals, shapes, functions) =
 	StringMap.add n local m in
 
       let add_local m (t, n) =
-	let local_var = L.build_alloca (ltype_of_typ t) n builder
+	let local_var = (match t with
+      (* For arrays, allocate space for the actual const array too *)
+      A.Array(l, prim_typ) -> let arr_deref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) n builder in
+        let arr_ptr = L.build_alloca (ltype_of_typ t) n builder in
+        ignore(L.build_store arr_deref arr_ptr builder); arr_ptr
+    | _ -> L.build_alloca (ltype_of_typ t) n builder)
 	in StringMap.add n local_var m in
 
       let formals = try(List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
@@ -199,8 +204,11 @@ let translate (globals, shapes, functions) =
       | S.SChar_literal(c), _ -> L.const_int i8_t (Char.code c)
       | S.SString_literal(s), _ -> L.build_global_stringptr s "tmp" builder
       | S.SNoexpr, _ -> const_zero
-      | S.SArray_literal(_, s), A.Array(_, prim_typ) -> 
-          L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder e) s))
+      | S.SArray_literal(_, s), A.Array(l, prim_typ) -> 
+          (* Return a pointer to the array literal *)
+          let const_arr = L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder e) s)) in
+          let arr_ref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) "arr_ptr" builder in 
+          ignore(L.build_store const_arr arr_ref builder); arr_ref
       | S.SArray_literal(_, _), _ -> raise(Failure("Invalid Array literal being created!"))
       | S.SBinop (e1, op, e2), _ ->
 	    let e1' = expr builder e1
@@ -315,6 +323,7 @@ let translate (globals, shapes, functions) =
     | S.SAccess(id, idx), _(* el_typ *) -> 
         (* ignore(print_string "access"); *)
         let arr = lookup id in
+        let arr = L.build_load arr "arr_deref" builder in
         let idx' = expr builder idx in
         (* let arr_len = L.array_length (ltype_of_typ el_typ) in 
         if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
