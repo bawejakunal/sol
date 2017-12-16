@@ -196,7 +196,7 @@ let check (globals, shapes, functions) =
         	| Equal | Neq when t1 = t2 && t1 = Int -> SBinop(ta, map_op (op, Int), tb), Int
           | Equal | Neq when t1 = t2 && t1 = Float -> SBinop(ta, map_op (op, Float), tb), Int
         	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-          | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> SBinop(ta, map_op (op, Float), tb), Float
+          | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> SBinop(ta, map_op (op, Float), tb), Int
         	| And | Or when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
           | _ -> raise (Failure ("illegal binary operator " ^
                       string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
