@@ -331,11 +331,11 @@ let translate (globals, shapes, functions) =
         (* ignore(print_string "access"); *)
         let arr = lookup id in
         let idx' = expr builder idx in
-        let arr_len = L.array_length (ltype_of_typ el_typ)
-        in (* if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
+        let arr_len = L.array_length (ltype_of_typ el_typ) in 
+        if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
           then raise(Failure("Attempted access out of array bounds"))
           (* TODO: figure out how to check for access out of array bounds *)
-          else  *)L.build_gep arr [| const_zero ; idx' |] "tmp" builder
+          else L.build_gep arr [| const_zero ; idx' |] "tmp" builder
         (*let id' = lookup id 
         and idx' = expr builder idx in
         if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
