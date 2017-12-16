@@ -272,35 +272,20 @@ let translate (globals, shapes, functions) =
               L.build_in_bounds_gep string_format_str [| const_zero ; const_zero |] "tmp" builder in 
             L.build_call printf_func (Array.of_list (fmt_str_ptr :: actuals)) "printf" builder
         | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 12) "intToString" builder in
-            let final_result = List.hd act in 
-            let result_name = (match final_result with
-              | S.SLval(S.SId(s), _), _ -> s
-              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of intToString!"))) in
-            let arg = List.tl actuals in
             let int_fmt_ptr = 
               L.build_in_bounds_gep int_format_str [| const_zero ; const_zero |] "tmp" builder in 
-            ignore(L.build_call sprintf_func (Array.of_list (result :: int_fmt_ptr :: arg)) "intToStringResult" builder);
-            L.build_store result (lookup result_name) builder;
+            ignore(L.build_call sprintf_func (Array.of_list (result :: int_fmt_ptr :: actuals)) "intToStringResult" builder);
+            result
         | "floatToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 20) "floatToString" builder in
-            let final_result = List.hd act in 
-            let result_name = (match final_result with
-              | S.SLval(S.SId(s), _), _ -> s
-              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of floatToString!"))) in
-            let arg = List.tl actuals in
             let flt_fmt_ptr = 
               L.build_in_bounds_gep float_format_str [| const_zero ; const_zero |] "tmp" builder in 
-            ignore(L.build_call sprintf_func (Array.of_list (result :: flt_fmt_ptr :: arg)) "floatToStringResult" builder);
-            L.build_store result (lookup result_name) builder;
+            ignore(L.build_call sprintf_func (Array.of_list (result :: flt_fmt_ptr :: actuals)) "floatToStringResult" builder);
+            result
         | "charToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 2) "charToString" builder in
-            let final_result = List.hd act in 
-            let result_name = (match final_result with
-              | S.SLval(S.SId(s), _), _ -> s
-              | _ -> raise(Failure("Cannot pass a non-variable name to store the value of charToString!"))) in
-            let arg = List.tl actuals in
             let char_fmt_ptr = 
               L.build_in_bounds_gep char_format_str [| const_zero ; const_zero |] "tmp" builder in 
-            ignore(L.build_call sprintf_func (Array.of_list (result :: char_fmt_ptr :: arg)) "charToStringResult" builder);
-            L.build_store result (lookup result_name) builder;
+            ignore(L.build_call sprintf_func (Array.of_list (result :: char_fmt_ptr :: actuals)) "charToStringResult" builder);
+            result
         | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in

@@ -102,11 +102,11 @@ let check (globals, shapes, functions) =
        locals = []; body = [] } (StringMap.add "floatToInt"
      { ftype = Int; fname = "floatToInt"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "intToString"
-     { ftype = Int; fname = "intToString"; formals = [(String, "s"); (Int, "x")];
+     { ftype = String; fname = "intToString"; formals = [(Int, "x")];
        locals = []; body = [] } (StringMap.add "floatToString"
-     { ftype = Int; fname = "floatToString"; formals = [(String, "s"); (Float, "x")];
+     { ftype = String; fname = "floatToString"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "charToString"
-     { ftype = Int; fname = "charToString"; formals = [(String, "s"); (Char, "x")];
+     { ftype = String; fname = "charToString"; formals = [(Char, "x")];
        locals = []; body = [] } (StringMap.singleton "setFramerate"
      { ftype = Void; fname = "setFramerate"; formals = [(Float, "x")];
        locals = []; body = [] }))))))
