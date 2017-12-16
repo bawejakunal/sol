@@ -8,9 +8,29 @@
 
 %source code highlighting
 \usepackage{listings}
+\usepackage{lstautogobble}
+\usepackage{xcolor}
 
+\definecolor{lightgray}{rgb}{.95,.95,.95}
+
+% settings for SOL code listings
 \lstset{
-	breaklines=true
+   language=Java,
+   morekeywords={func, construct, shape, string},
+   keywordstyle=\bfseries\color{green!40!black},
+   commentstyle=\itshape\color{purple!40!black},
+   identifierstyle=\color{blue},
+   extendedchars=true,
+   basicstyle=\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   breaklines=true,
+   showtabs=false,
+   frame=single,
+   stringstyle=\color{red},
+   backgroundcolor=\color{lightgray},
+   autogobble=true,
+   aboveskip=-10pt
 }
 
 \begin{document}
@@ -215,8 +235,7 @@ This section describes the complete lexical conventions followed for a syntactic
 	Identifier scope is a specific area of code wherein an identifier exists. A scope of an identifier is from its declaration until the end of the code block within which it is declared.
 	
 	\subsection{\textit{File Scope}}
-	Any identifier (such as a variable or a function) that is defined outside a code block has file scope i.e. it exists throughout the file.
-
+	Any identifier (such as a variable or a function) that is defined outside a code block has file scope i.e. it exists throughout the file.\\
 	If an identifier with file scope has the same name as an identifier with block scope, the block-scope identifier gets precedence.
 
 \section{Expressions and Operators}
@@ -273,9 +292,11 @@ This section describes the complete lexical conventions followed for a syntactic
 
     \subsection{\textit{Function Declarators and Definition}}
     Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically returns nothing. Functions are given a name (which is a valid identifier) followed by function arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
-    Eg: \begin{lstlisting}[aboveskip=-13pt]
+    Example:\\
+    \begin{lstlisting}
         func example(int a, int b){
-            /* a function named ‘example’ that takes two arguments that are both of type int */
+            /* a function named example that takes
+               two arguments, both of type int */
         }
     \end{lstlisting}
 
@@ -287,45 +308,56 @@ This section describes the complete lexical conventions followed for a syntactic
         \item Constructors are given the same name as the class and followed by arguments, within parenthesis as a comma-separated list of variable declarations, similar to function definitions
         \item Constructors do not have a return type specified
     \end{enumerate}
-    Eg: \begin{lstlisting}[aboveskip=-13pt]
-        construct Triangle(int[] a_init, int[] b_init, int[] c_init) {
-            a = a_init;
-            b = b_init;
-            c = c_init;
+    Example:\\
+    \begin{lstlisting}
+    shape Point {
+        int [2]coordinate;
+        construct (int x, int y) {
+            /* constructor definition */
+            coordinate[0] = x;
+            coordinate[1] = y;
         }
+    }
     \end{lstlisting}
 
     \subsection{\textit{Definitions}}
     A definition of an object or type includes a value, assigned by the assignment operator `\texttt{=}'.\\
-    Eg: \begin{lstlisting}[aboveskip=-13pt]
-            int x = a;    /* declaration & definition*/
-            char y;       /* declaration */
-            y = 'b';      /* definition */
-            float z = 3.4;
-            int[3] w = [5, 2, 0];
-            string f = "cats";
-        \end{lstlisting}
+    Example:\\
+    \begin{lstlisting}
+        char y;       /* declarations */
+        float z;
+        int [3]w;     /* array declaration */
+        string s;
+        y = 'b';      /* definitions */
+        z = 3.4;
+        w = [5, 2, 0];
+        s = "cats";
+    \end{lstlisting}
 
 \section{Statements} \label{classes}
 A statement in SOL refers to a complete instruction for a SOL program. All statements are executed in order of sequence. The four types of statements are described in detail below:\\
 
 \subsection{\textit{Expression Statement}}
 Expression statements are those statements that get evaluated and produce a result. This can be as simple as an assignment or a function call.\\
-Eg: \texttt{int x = 5; /* assign 5 to variable x */}
+Eg: \texttt{x = 5; /* assign 5 to identifier x */}
 
 \subsection{\textit{If Statement}}
 An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
-Eg: \begin{lstlisting}[aboveskip=-13pt]
-        int x = 1;
-        if (x == 1) {
-            /* This code gets executed */
-        }
-    \end{lstlisting}
+Example:\\
+\begin{lstlisting}
+    int x;
+    x = 1;
+    if (x == 1) {
+        /* This code gets executed */
+    }
+\end{lstlisting}
 
 \subsection{\textit{While Statement}}
 A \textit{while} statement specifies the looping construct in SOL. It starts with the \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; this is followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration and the code within \texttt{while} block executes if the condition evaluates to a non-zero \textit{integer}. \\
-Eg: \begin{lstlisting}[aboveskip=-13pt]
-        int x = 5;
+Example:\\
+\begin{lstlisting}
+        int x;
+        x = 5;
         while (x > 0) {
             /* This code gets executed 5 times */
             x = x - 1;
@@ -334,12 +366,13 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
 
 \subsection{\textit{Return statement}}
 Stops execution of a function and returns to where the function was called originally in the code. Potentially returns a value; this value must conform with the return type specified in the function declaration. If no return type was specified, a \textit{return} statement without any value specified is syntactically valid (but not compulsory).\\
-Eg: \begin{lstlisting}[aboveskip=-13pt]
-        func int sum(int x, int y) {
-            /* return sum of two integers */
-            return x + y;
-        }
-    \end{lstlisting}
+Example:\\
+\begin{lstlisting}
+    func int sum(int x, int y) {
+        /* return sum of two integers */
+        return x + y;
+    }
+\end{lstlisting}
     
     \section{Internal Functions} \label{internal}
     SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
@@ -421,96 +454,93 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
 \subsection{\textit{shape}}
 Similar to a class in C++; a shape defines a particular 2-D shape as part of the drawing on screen. Every \texttt{shape} has a user-defined \texttt{draw} function that specifies how shapes are statically rendered, using multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} commands. The class may contain multiple member variables that could be used to draw the shape. These member variables are defined in a constructor, specified by the keyword \texttt{construct}. It is also possible to declare member functions for a shape. When member variables are accessed within a member function, it is implied that the member variables belong to the current object that calls the function.\\
 Once a \texttt{shape} object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, `.'.\\
-Eg: \begin{lstlisting}[aboveskip=-13pt]
-        shape Triangle {
-            int[2] a;
-            int[2] b;
-            int[2] c;
-            construct Triangle(int[] a_init, int[] b_init, int[] c_init) {
-                a = a_init;
-                b = b_init;
-                c = c_init;
-            }
-        
-            func int[] findCentre(int[] x, int []y) {
-                if(length(a) != length(b)) {
-                    consolePrint("Arrays size mismatch. Abort");
-                    return int[0];
-                }
-            
-                int i = 0;
-                int c[length(a)];
-                while(i < length(x)) {
-                    c[i] = a[i] + b[i] / 2;
-                    i = i + 1;
-                }
-                return c;
-            }
-
-            func draw() {
-                /* Draw lines between the three vertices of the triangle */
-                drawcurve(a, findCentre(a, b), b, [255, 0, 0]);
-                drawcurve(b, findCentre(b, c), c, [0, 255, 0]);
-                drawcurve(c, findCentre(c, a), a, [0, 0, 255]);
+Example:\\
+\begin{lstlisting}
+    shape Triangle {
+        int[2] a; /* Corners of a triangle */
+        int[2] b;
+        int[2] c;
+        construct (int [2]a_init, int [2]b_init, int [2]c_init) {
+            int i;
+            i = 0;
+            /* copy values */
+            while (i < 2) {
+                a[i] = a_init[i];
+                b[i] = b_init[i];
+                c[i] = c_init[i];
+                i = i + 1;
             }
         }
-    \end{lstlisting}
+    
+        /* write result in pre-allocated array res */
+        func findCentroid(int [2]res) {
+            res[0] = (a[0] + b[0] + c[0]) / 3;
+            res[0] = (a[1] + b[1] + c[1]) / 3;
+        }
+
+        /* internal draw function definition */
+        draw() {
+            /* Draw triangle lines with bezier curves */
+            drawcurve(a, findCentre(a, b), b, [255, 0, 0]); /* red */
+            drawcurve(b, findCentre(b, c), c, [0, 255, 0]); /* green */
+            drawcurve(c, findCentre(c, a), a, [0, 0, 255]); /* blue */
+        }
+    }
+\end{lstlisting}
 
 \subsection{\textit{Inheritance}}
 SOL allows single class inheritance for shapes i.e given a shape, such as \texttt{Line}, one may create a sub-shape of \texttt{Line}, called \texttt{LineBottom}, and inherit all of its fields from the parent \texttt{shape}, \texttt{Line}, using the keyword \texttt{extends}.\\
-
-Eg: \begin{lstlisting}[aboveskip=-13pt]
-        shape Line {
-            int[2] a;
-            int[2] b;
-            
-            construct Line(int[] a_init, int[] b_init) {
-                a = a_init;
-                b = b_init;
-            }
-    
-            func int[] findCentre(int[] x, int[] y) {
-                if(length(a) != length(b)) {
-                    consolePrint("Arrays size mismatch! Abort !");
-                    return int[0];
-                }
+Example:\\
+\begin{lstlisting}
+    shape Line {
+        int[2] a;
+        int[2] b;
         
-                int i = 0;
-                int c[length(a)];
-                while(i < length(x)) {
-                    c[i] = a[i] + b[i] / 2;
-                    i = i + 1;
-                }
-                return c;
-            }
-            
-            func draw() {
-                drawcurve(a, findCentre(a, b), b, [0, 0, 0]);
+        construct (int[2] a_init, int[2] b_init) {
+            int i;
+            i = 0;
+            /* copy values */
+            while (i < 2) {
+                a[i] = a_init[i];
+                b[i] = b_init[i];
+                i = i + 1;
             }
         }
 
-        /* Subclass of Line */
-        shape LineBottom extends Line {
-            int[2] c;
-            int[2] d;
-    
-            construct LineBottom(int[] a_init, int[] b_init, int[] c_init) {
-                parent(a_init, b_init);
-                c = c_init;
-                d = b;
-            }
-    
-            func draw() {
-                parent();
-                drawcurve(c, findCentre(c, d), d, [0, 0, 0]);
+        func findCentre(int[2] res, 2int[2] x, int[2] y) {
+            /* write result to res */
+            int i;
+            i = 0;
+            while(i < 2) {
+                res[i] = (a[i] + b[i]) / 2;
+                i = i + 1;
             }
         }
-    \end{lstlisting}
+        
+        func draw() {
+            drawcurve(a, findCentre(a, b), b, [0, 0, 0]);
+        }
+    }
+
+    /* Subclass of Line */
+    shape LineBottom extends Line {
+        int[2] c;
+        int[2] d;
+
+        construct (int[2] a_init, int[2] b_init, int[2] c_init) {
+            parent(a_init, b_init);
+            c = c_init;
+            d = b;
+        }
+
+        func draw() {
+            parent();
+            drawcurve(c, findCentre(c, d), d, [0, 0, 0]);
+        }
+    }
+\end{lstlisting}
 
     \subsubsection{\textit{parent} (keyword)}
     The parent \texttt{shape}'s functions can be accessed by the function call \texttt{parent()}. This invokes the implementation of the current member function defined in the parent \texttt{shape}. In constructors, the \texttt{parent()} calls the constructor for the parent \texttt{shape}.
 
 \end{document}
-
-%%
-%% End of file `elsarticle-template-1-num.tex'.
