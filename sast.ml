@@ -1,9 +1,10 @@
 open Ast
 
-type sop = IAdd | ISub | IMult | IDiv | IEqual | INeq | ILess | ILeq | IGreater | IGeq | IAnd | IOr | IMod
-(* I = integer, may add floats, strings *)
+type sop = IAdd | ISub | IMult | IDiv | IEqual | INeq | ILess | ILeq | IGreater | IGeq | IAnd | IOr | IMod |
+           FAdd | FSub | FMult | FDiv | FEqual | FNeq | FLess | FLeq | FGreater | FGeq | FMod
+(* I = integer, F = floats, may add strings *)
 
-type sunary_op = INot | INeg
+type sunary_op = INot | INeg | FNeg
 
 type sexpr_detail =
       SInt_literal of int
@@ -72,10 +73,22 @@ let string_of_sop = function
  | IGeq -> ">="
  | IAnd -> "&&"
  | IOr -> "||"
+ | FAdd -> "+"
+ | FSub -> "-"
+ | FMult -> "*"
+ | FDiv -> "/"
+ | FMod -> "%"
+ | FEqual -> "=="
+ | FNeq -> "!="
+ | FLess -> "<"
+ | FLeq -> "<="
+ | FGreater -> ">"
+ | FGeq -> ">="
 
 let string_of_suop = function
    INeg -> "-"
  | INot -> "!"
+ | FNeg -> "-"
 
 let rec string_of_sexpr (s: sexpr) = match fst s with
    SInt_literal(l) -> string_of_int l

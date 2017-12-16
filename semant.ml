@@ -159,6 +159,17 @@ let check (globals, shapes, functions) =
       | (And, Int) -> IAnd
       | (Or, Int) -> IOr
       | (Mod, Int) -> IMod
+      | (Add, Float) -> FAdd
+      | (Sub, Float) -> FSub
+      | (Mult, Float) -> FMult
+      | (Div, Float) -> FDiv
+      | (Equal, Float) -> FEqual
+      | (Neq, Float) -> FNeq
+      | (Less, Float) -> FLess
+      | (Leq, Float) -> FLeq
+      | (Greater, Float) -> FGreater
+      | (Geq, Float) -> FGeq
+      | (Mod, Float) -> FMod
       | (_, _) -> raise(Failure("Invalid operation " ^ (string_of_op (fst tup)) ^ " for type " ^ (string_of_typ (snd tup)))) in
 
     (* Return the type of an expression or throw an exception *)
@@ -181,10 +192,11 @@ let check (globals, shapes, functions) =
           in let _, t1 = ta and _, t2 = tb in
         	(match op with
             Add | Sub | Mult | Div | Mod when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-          (*| Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> Float *)
+          | Add | Sub | Mult | Div | Mod when t1 = Float && t2 = Float -> SBinop(ta, map_op (op, Float), tb), Float
         	| Equal | Neq when t1 = t2 && t1 = Int -> SBinop(ta, map_op (op, Int), tb), Int
+          | Equal | Neq when t1 = t2 && t1 = Float -> SBinop(ta, map_op (op, Float), tb), Int
         	| Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
-         (* | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Int*)
+          | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> SBinop(ta, map_op (op, Float), tb), Float
         	| And | Or when t1 = Int && t2 = Int -> SBinop(ta, map_op (op, Int), tb), Int
           | _ -> raise (Failure ("illegal binary operator " ^
                       string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
@@ -195,7 +207,7 @@ let check (globals, shapes, functions) =
           in let _, t = t1 in
 	 (match op with
 	   Neg when t = Int -> SUnop(INeg, t1), Int
-   (*| Neg when t = Float -> Float *)
+   | Neg when t = Float -> SUnop(FNeg, t1), Float 
 	 | Not when t = Int -> SUnop(INot, t1), Int
    | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
 	  		   string_of_typ t ^ " in " ^ string_of_expr ex))

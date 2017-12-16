@@ -223,6 +223,17 @@ let translate (globals, shapes, functions) =
           | S.ILeq    -> L.build_icmp L.Icmp.Sle
           | S.IGreater-> L.build_icmp L.Icmp.Sgt
           | S.IGeq    -> L.build_icmp L.Icmp.Sge
+          | S.FAdd    -> L.build_fadd
+          | S.FSub    -> L.build_fsub
+          | S.FMult   -> L.build_fmul
+          | S.FDiv    -> L.build_fdiv
+          | S.FMod    -> L.build_frem
+          | S.FEqual  -> L.build_fcmp L.Fcmp.Oeq
+          | S.FNeq    -> L.build_fcmp L.Fcmp.One
+          | S.FLess   -> L.build_fcmp L.Fcmp.Olt
+          | S.FLeq    -> L.build_fcmp L.Fcmp.Ole
+          | S.FGreater-> L.build_fcmp L.Fcmp.Ogt
+          | S.FGeq    -> L.build_fcmp L.Fcmp.Oge
           | _ -> raise(Failure("Found some binary operator that isn't handled!"))
           ) e1' e2' "tmp" builder
         )
@@ -231,7 +242,8 @@ let translate (globals, shapes, functions) =
 	    let e' = expr builder e in
 	      (match op with
 	        S.INeg    -> L.build_neg e' "tmp" builder
-        | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder)
+        | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder
+        | S.FNeg    -> L.build_fneg e' "tmp" builder)
       | S.SAssign (lval, s_e), _ -> let e' = expr builder s_e in
 	                   ignore (L.build_store e' (lval_expr builder lval) builder); e'
       (* L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder *)
