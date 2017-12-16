@@ -1,13 +1,16 @@
-/* Test Triangle*/
+/* Test Triangle translate */
 /* Run this code, */
 shape Triangle {
     int[2] a;
     int[2] b;
     int[2] c;
-    construct Triangle(int[2] a_init, int[2] b_init, int[2] c_init) {
+    /* How much to translate triangle */
+
+    construct Triangle(int[2] a_init, int[2] b_init, int[2] c_init){
         a = a_init;
         b = b_init;
         c = c_init;
+        disp = disp_init
     }
  
     func int[] findCentre(int[2] x, int [2]y) {
@@ -28,10 +31,13 @@ shape Triangle {
 }
 
 func main(){
-	int[2] a = [0, 0];
-	int[2] b = [2, 0];
-	int[2] c = [1, 1];
-	Triangle t = Triangle(a, b, c);
+    	int[2] disp;
+	Triangle t;
+	
+	disp = [1,1];
+	Triangle t = Triangle([0, 0], [2, 0], [1, 1]);
+	
+	t.render = {
+		wait(5);
+	}
 }
- 
-
