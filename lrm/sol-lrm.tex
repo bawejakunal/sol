@@ -88,14 +88,17 @@ This section describes the complete lexical conventions followed for a syntactic
                 int     & if            & main          & shape   \\ 
                 float   & while         & setFramerate  & parent  \\ 
                 char    & func          & getFramerate  & extends \\
-                string  & construct     & translate     & \\
-                        & return        & rotate        & \\
+                string  & construct     & print         & \\
+                        & return        & consolePrint  & \\
+                        &               & intToString   & \\
+                        &               & floatToString & \\
+                        &               & charToString  & \\
                         &               & render        & \\
                         &               & wait          & \\
                         &               & drawPoint     & \\
                         &               & drawCurve     & \\
-                        &               & print         & \\
-                        &               & consolePrint  & \\
+                        &               & translate     & \\
+                        &               & rotate        & \\
 
             \hline
             \end{tabular}
@@ -336,7 +339,7 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
             /* return sum of two integers */
             return x + y;
         }
-    \end{lstlisting}[
+    \end{lstlisting}
     
     \section{Internal Functions} \label{internal}
     SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
@@ -363,17 +366,19 @@ Eg: \begin{lstlisting}[aboveskip=-13pt]
     SOL provides following type conversion functions for converting expressions of a given type to expression of another type.
 
         \subsubsection{\textit{intToString}}
-        Convert an expression (\texttt{src}) of type \texttt{int} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
-        \underline{Arguments}: \texttt{dst (string), src (int)}
+        Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (int)}\\
+        \underline{Return}: value of type \texttt{string}
 
         \subsubsection{\textit{floatToString}}
-        Convert an expression (\texttt{src}) of type \texttt{float} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
-        \underline{Arguments}: \texttt{dst (string), src (float)}
-
+        Accepts an expression (\texttt{src}) of type \texttt{float} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (float)}\\
+        \underline{Return}: value of type \texttt{string}
 
         \subsubsection{\textit{charToString}}
-        Convert an expression (\texttt{src}) of type \texttt{char} to an expression (\texttt{dst}) of type \texttt{string}. The result string is written to \texttt{dst}.\\
-        \underline{Arguments}: \texttt{dst (string), src (char)}
+        Accepts an expression (\texttt{src}) of type \texttt{char} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (char)}\\
+        \underline{Return}: value of type \texttt{string}
 
 \section{Drawing Functions}
 The following set of functions are also a category of internal/required functions, which describe the drawing aspects for \texttt{shape} objects defined in a SOL program.
