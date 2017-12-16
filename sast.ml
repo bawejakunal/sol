@@ -26,7 +26,7 @@ and sexpr = sexpr_detail * typ
 and slvalue_detail = 
       SId of string         (* VDecl ? of bind * expr *)
     | SAccess of string * sexpr
-    | SShape_var of string * string
+    | SShape_var of string * slvalue
 
 and slvalue = slvalue_detail * typ 
 
@@ -111,7 +111,7 @@ let rec string_of_sexpr (s: sexpr) = match fst s with
 and string_of_slvalue = function
   SId(s), _ -> s
 | SAccess(id, idx), _ -> id ^ "[" ^ string_of_sexpr idx ^ "]"
-| SShape_var(s, v), _ -> s ^ "." ^ v
+| SShape_var(s, v), _ -> s ^ "." ^ (string_of_slvalue v)
 
 and string_of_sstmt = function
    SBlock(stmts) ->

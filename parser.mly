@@ -8,8 +8,8 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE MODULO ASSIGN NOT DOT 
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token RETURN IF WHILE INT FLOAT CHAR STRING FUNC
-%token SHAPE CONSTRUCT DRAW /*PARENT EXTENDS MAIN CONSOLEPRINT LENGTH SETFRAMERATE 
-%token DRAWCURVE DRAWPOINT PRINT
+%token SHAPE CONSTRUCT DRAW /*PARENT EXTENDS MAIN CONSOLEPRINT LENGTH SETFRAMERATE */
+/*%token DRAWCURVE DRAWPOINT PRINT
 %token TRANSLATE ROTATE RENDER WAIT*/
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
@@ -146,7 +146,7 @@ expr:
 lvalue:
     ID    { Id($1) }
   | ID LSQUARE expr RSQUARE     { Access($1, $3) } /*Access a specific element of an array*/
-  | ID DOT ID   { Shape_var($1, $3) }
+  | ID DOT lvalue   { Shape_var($1, $3) }
 
 actuals_opt:
     /* nothing */ { [] }

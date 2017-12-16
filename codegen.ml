@@ -307,7 +307,7 @@ let translate (globals, shapes, functions) =
           let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list (obj :: actuals)) result builder
-      | S.SLval(l), _ -> let lval = lval_expr builder (l) in
+      | S.SLval(l), _ -> let lval = lval_expr builder l in
         L.build_load lval "tmp" builder
       | S.SInst_shape(_, sactuals), A.Shape(sname) -> let actuals = 
             List.rev (List.map (expr builder) (List.rev sactuals)) in 
@@ -334,13 +334,27 @@ let translate (globals, shapes, functions) =
         and idx' = expr builder idx in
         if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
         else L.const_int i32_t idx'*)
-    | S.SShape_var(s, v), s_t -> let obj = lookup s in
-        (* Find index of variable in the shape definition *)
-        match s_t with
-            A.Shape(sname) -> let sdef = shape_def sname in
-            let index = index_of (fun (_, member_var) -> v = member_var) sdef.S.smember_vs 0 in
-            L.build_struct_gep obj index "tmp" builder
-          | _ -> raise(Failure("Cannot access a shape variable of a non-shape type object!"))
+    | S.SShape_var(s, v), s_t -> 
+        let rec resolve_shape_var obj var obj_type = 
+          (* Find index of variable in the shape definition *)
+          match obj_type with
+              A.Shape(sname) -> let sdef = shape_def sname in
+              (match var with
+                  S.SId(v_n), _ -> let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+                    L.build_struct_gep obj index "tmp" builder
+                | S.SAccess(v_n, idx), _ -> let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+                    let arr = L.build_struct_gep obj index "tmp" builder in
+                    let arr = L.build_load arr "arr_deref" builder in
+                    let idx' = expr builder idx in
+                    L.build_gep arr [| const_zero ; idx' |] "tmp" builder
+                | S.SShape_var(member_n, member_v), member_t -> 
+                    let index = index_of (fun (_, member_var) -> member_n = member_var) sdef.S.smember_vs 0 in
+                    let id = L.build_struct_gep obj index "tmp" builder in
+                    resolve_shape_var id member_v member_t
+              )
+            | _ -> raise(Failure("Cannot access a shape variable of a non-shape type object!"))
+        in 
+        resolve_shape_var (lookup s) v s_t
         
 
     in
@@ -433,7 +447,19 @@ let translate (globals, shapes, functions) =
     let shape_inst = 
       if sfdecl.S.sfname = construct_name 
       (* SPECIAL CASE: For the construct(), add creation of an object of the required type *)
-      then L.build_alloca stype (sname ^ "_inst") builder
+      then (
+        let inst = L.build_alloca stype (sname ^ "_inst") builder in
+        ignore(List.iteri 
+          (fun i (t, n) -> (* For arrays, allocate space for the actual const array too *)
+            match t with
+                A.Array(l, prim_typ) -> 
+                  let arr_deref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) (n ^ "_deref") builder in
+                  let arr_ptr = L.build_struct_gep inst i n builder in
+                  ignore(L.build_store arr_deref arr_ptr builder);
+              | _ -> ()) 
+          sdecl.S.smember_vs); 
+        inst
+        )
         (* In all other cases, return the first argument of the function *)
       else let obj_param = Array.get (L.params the_function) 0 in
         let local_inst = 

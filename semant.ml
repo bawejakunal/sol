@@ -258,8 +258,7 @@ let check (globals, shapes, functions) =
                SShape_fn(s, t, s_fd, sactuals), fd.ftype
             | _ -> raise(Failure("Member function access " ^ fname ^ " for a non-shape variable " ^ s))
           with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
-      | Lval l -> let slval = (lval_expr env l) in
-        let (slval_det, ltyp) = slval in
+      | Lval l -> let (slval_det, ltyp) = (lval_expr env l) in
         SLval(slval_det), ltyp
       | Inst_shape (sname, actuals) -> 
       (* Check if the shape exists *) 
@@ -283,8 +282,8 @@ let check (globals, shapes, functions) =
 
     and lval_expr env = function
         Id s -> (try
-          let (t, _) = find_variable env.scope s 
-          in ((SId(s), t), t)
+          let (t, _) = find_variable env.scope s in 
+          ((SId(s), t), t)
           with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
       | Access(id, idx) -> (try 
           let (t, _) = find_variable env.scope id 
@@ -301,11 +300,24 @@ let check (globals, shapes, functions) =
       | Shape_var(s, v) -> try 
             let (t, _) = find_variable env.scope s in
             match t with
-              Shape(sname) -> let sd = shape_decl sname in
-                let (v_t, _) = try List.find (fun (_, n) -> n = v) sd.member_vs
-                  with Not_found -> raise(Failure("Member variable " ^ v ^ " not found in shape declaration " ^ sname)) in
-                ((SShape_var(s, v), t), v_t)
-            | _ -> raise(Failure("Member variable access " ^ v ^ " for a non-shape variable " ^ s))
+              Shape(sname) -> let sd = shape_decl sname in 
+                let shape_scope = {parent = Some(env.scope); variables = env.scope.variables @ sd.member_vs} in
+                let shape_env = {env with scope = shape_scope} in 
+                let (v_slval, val_typ) = (lval_expr shape_env v) in
+                ((SShape_var(s, v_slval), t), val_typ)
+                (* (match v_slval with
+                  SId(v_n), _ -> let (v_t, _) = try List.find (fun (_, n) -> n = v_n) sd.member_vs
+                    with Not_found -> raise(Failure("Member variable " ^ v_n ^ " not found in shape declaration " ^ sname)) in
+                  ((SShape_var(s, v_slval), t), val_typ)
+                | SAccess(id, _), _ -> let _ = try List.find (fun (_, n) -> n = id) sd.member_vs
+                    with Not_found -> raise(Failure("Member variable " ^ id ^ " not found in shape declaration " ^ sname)) in 
+                    ignore(print_string (string_of_typ val_typ));
+                  ((SShape_var(s, v_slval), t), val_typ) 
+                | SShape_var(member_s, _), _ -> let _ = try List.find (fun (_, n) -> n = member_s) sd.member_vs
+                    with Not_found -> raise(Failure("Member variable " ^ member_s ^ " not found in shape declaration " ^ sname)) in
+                  ((SShape_var(s, v_slval), t), val_typ) 
+                ) *)
+            | _ -> raise(Failure("Attempted member variable access for a non-shape variable " ^ s))
           with Not_found -> raise(Failure("Undeclared identifier " ^ s))
     
     and check_bool_expr env e = (let (e', t) = (expr env e) in if t != Int (* This is not supposed to be recursive! *)

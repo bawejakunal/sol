@@ -29,7 +29,7 @@ and
 	lvalue = 
 	  Id of string
 	| Access of string * expr
-	| Shape_var of string * string
+	| Shape_var of string * lvalue
 
 type bind = typ * string
 
@@ -104,7 +104,7 @@ let rec string_of_expr = function
 string_of_lvalue = function
   Id(s) -> s
 | Access(id, idx) -> id ^ "[" ^ string_of_expr idx ^ "]"
-| Shape_var(s, v) -> s ^ "." ^ v
+| Shape_var(s, v) -> s ^ "." ^ (string_of_lvalue v)
 
 and string_of_typ = function
     Int -> "int"
