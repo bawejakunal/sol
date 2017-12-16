@@ -59,6 +59,12 @@ let translate (globals, shapes, functions) =
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
+  (* Instantiate global constants used for printing/comparisons, once *)
+  let string_format_str = L.define_global "fmt" (L.const_stringz context "%s\n") the_module in
+  let int_format_str = L.define_global "int_fmt" (L.const_stringz context "%d") the_module in
+  let float_format_str = L.define_global "flt_fmt" (L.const_stringz context "%f") the_module in
+  let char_format_str = L.define_global "char_fmt" (L.const_stringz context "%c") the_module in
+
   (* Declare printf(), which the consolePrint built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
@@ -156,12 +162,9 @@ let translate (globals, shapes, functions) =
         "main" -> ignore(L.build_call startSDL_func [|  |] "startSDL" builder) 
       | _ -> () in
     (* TODO: Consider storing the returned value somewhere, return that as an error *)
-    
-    let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
-    let int_format_str = L.build_global_stringptr "%d" "int_fmt" builder in
-    let float_format_str = L.build_global_stringptr "%f" "flt_fmt" builder in
-    let char_format_str = L.build_global_stringptr "%c" "char_fmt" builder in
+
     let const_zero = L.const_int i32_t 0 in
+    
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
@@ -265,14 +268,18 @@ let translate (globals, shapes, functions) =
       let actuals = List.rev (List.map (expr builder) (List.rev act)) in (* Why reverse twice? *)
       
       (match f_name with
-          "consolePrint" -> L.build_call printf_func (Array.of_list (string_format_str :: actuals)) "printf" builder
+          "consolePrint" -> let fmt_str_ptr = 
+              L.build_in_bounds_gep string_format_str [| const_zero ; const_zero |] "tmp" builder in 
+            L.build_call printf_func (Array.of_list (fmt_str_ptr :: actuals)) "printf" builder
         | "intToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 12) "intToString" builder in
             let final_result = List.hd act in 
             let result_name = (match final_result with
               | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of intToString!"))) in
             let arg = List.tl actuals in
-            ignore(L.build_call sprintf_func (Array.of_list (result :: int_format_str :: arg)) "intToStringResult" builder);
+            let int_fmt_ptr = 
+              L.build_in_bounds_gep int_format_str [| const_zero ; const_zero |] "tmp" builder in 
+            ignore(L.build_call sprintf_func (Array.of_list (result :: int_fmt_ptr :: arg)) "intToStringResult" builder);
             L.build_store result (lookup result_name) builder;
         | "floatToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 20) "floatToString" builder in
             let final_result = List.hd act in 
@@ -280,7 +287,9 @@ let translate (globals, shapes, functions) =
               | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of floatToString!"))) in
             let arg = List.tl actuals in
-            ignore(L.build_call sprintf_func (Array.of_list (result :: float_format_str :: arg)) "floatToStringResult" builder);
+            let flt_fmt_ptr = 
+              L.build_in_bounds_gep float_format_str [| const_zero ; const_zero |] "tmp" builder in 
+            ignore(L.build_call sprintf_func (Array.of_list (result :: flt_fmt_ptr :: arg)) "floatToStringResult" builder);
             L.build_store result (lookup result_name) builder;
         | "charToString" -> let result = L.build_array_alloca i8_t (L.const_int i32_t 2) "charToString" builder in
             let final_result = List.hd act in 
@@ -288,7 +297,9 @@ let translate (globals, shapes, functions) =
               | S.SLval(S.SId(s), _), _ -> s
               | _ -> raise(Failure("Cannot pass a non-variable name to store the value of charToString!"))) in
             let arg = List.tl actuals in
-            ignore(L.build_call sprintf_func (Array.of_list (result :: char_format_str :: arg)) "charToStringResult" builder);
+            let char_fmt_ptr = 
+              L.build_in_bounds_gep char_format_str [| const_zero ; const_zero |] "tmp" builder in 
+            ignore(L.build_call sprintf_func (Array.of_list (result :: char_fmt_ptr :: arg)) "charToStringResult" builder);
             L.build_store result (lookup result_name) builder;
         | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
 	        let result = (match fdecl.S.styp with A.Void -> ""
