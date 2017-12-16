@@ -51,7 +51,8 @@ SignalError() {
 
 # close sdl window
 closeWindow() {
-    sleep 2 && xdotool key --clearmodifiers --delay 100 alt+F4
+    # sleep 2 && xdotool key --clearmodifiers --delay 100 alt+F4
+    xdotool sleep 2 && xdotool windowactivate --sync $(xdotool search --name "Shape Oriented Language") key --clearmodifiers --delay 100 alt+F4
 }
 
 # Compare <outfile> <reffile> <difffile>

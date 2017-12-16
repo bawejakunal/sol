@@ -10,7 +10,7 @@ bool onInitSDL() {
         return false;
     }
 
-    if((theGame.window = SDL_CreateWindow("SDL Render Clear",100,100,640, 480, SDL_WINDOW_SHOWN)) == NULL) {
+    if((theGame.window = SDL_CreateWindow("Shape Oriented Language",100,100,640, 480, SDL_WINDOW_SHOWN)) == NULL) {
         return false;
     }
     //SDL Renderer
