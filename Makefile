@@ -26,7 +26,7 @@ sol.d.byte:
 clean:
 	ocamlbuild -clean
 	rm -rf testall.log *.diff sol scanner.ml parser.ml parser.mli
-	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe
+	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe *.err *.diff
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
 

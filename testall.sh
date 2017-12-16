@@ -51,7 +51,7 @@ SignalError() {
 
 # close sdl window
 closeWindow() {
-    sleep 2 && xdotool windowactivate --sync $(xdotool search --name "SDL Render Clear") key --clearmodifiers --delay 100 alt+F4
+    sleep 2 && xdotool key --clearmodifiers --delay 100 alt+F4
 }
 
 # Compare <outfile> <reffile> <difffile>
@@ -73,21 +73,23 @@ Run() {
         closeWindow &
     fi
     eval $* || {
-	SignalError "$1 failed on $*"
-	return 1
+	   SignalError "$1 failed on $*"
+	   return 1
     }
 }
 
 # RunFail <args>
 # Report the command, run it, and expect an error
+# Command may fail, we do not enforce by SignalError
+# if it does not fail here
 RunFail() {
     echo $* 1>&2
     if [[ "$1" == *exe ]]; then
         closeWindow &
     fi
     eval $* && {
-	SignalError "failed: $* did not report an error"
-	return 1
+        error=1
+        return 1
     }
     return 0
 }
@@ -139,13 +141,16 @@ CheckFail() {
     echo 1>&2
     echo "###### Testing $basename" 1>&2
 
-    generatedfiles=""
-
-    generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$SOL" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
+    generatedfiles="${basename}.ll ${basename}.s ${basename}.err ${basename}.exe"
+    RunFail "$SOL" "$1" "1>" "${basename}.ll" "2>" "${basename}.err"
+    if [ $error -eq 1 ];
+    then
+        Run "$LLC" "${basename}.ll" "1>" "${basename}.s" &&
+        Run "$CC" "-o" "${basename}.exe" "${basename}.s" "$LIB" "$SDL_FLAGS" &&
+        RunFail "./${basename}.exe" "1>" "${basename}.err" "2>" "${basename}.err"
+        error=0
+    fi
     Compare ${basename}.err ${reffile}.err ${basename}.diff
-
-    # Report the status and clean up the generated files
 
     if [ $error -eq 0 ] ; then
 	if [ $keep -eq 0 ] ; then
@@ -180,19 +185,18 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
-# if [ ! -f printbig.o ]
-# then
-#     echo "Could not find printbig.o"
-#     echo "Try \"make printbig.o\""
-#     exit 1
-# fi
+if [ ! -f predefined.o ]
+then
+    echo "Could not find predefined.o"
+    echo "Try \"make clean all\""
+    exit 1
+fi
 
 if [ $# -ge 1 ]
 then
     files=$@
 else
     files="tests/test-*.sol tests/fail-*.sol"
-    # files="tests/test-*.sol"
 fi
 
 for file in $files
