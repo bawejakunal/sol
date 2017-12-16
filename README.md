@@ -29,3 +29,7 @@ Follow the below steps to install dependencies for SOL and compile `sol.native` 
 
 4. Build the `sol.native` compiler  
       `make clean all`
+
+### Run Automated Tests
+1. Run `./testall.sh` to run the test cases in [tests](tests/) folder.  
+2. Test results can be seen on console `./testall.log` generated file.
