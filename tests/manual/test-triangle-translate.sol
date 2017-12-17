@@ -1,3 +1,5 @@
+/*@author: Erik Dyer*/
+
 /* Test Triangle translate */
 /* Run this code, */
 shape Triangle {

@@ -1,3 +1,5 @@
+/*@author: Erik Dyer & Kunal Baweja*/
+
 func int add(int x, int y) {
     return x + y;
 }

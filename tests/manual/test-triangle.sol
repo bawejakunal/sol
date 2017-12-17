@@ -1,4 +1,6 @@
-/* Test Triangle translate */
+/*@author: Erik Dyer*/
+
+/* Test Triangle*/
 /* Run this code, */
 shape Triangle {
     int[2] a;
