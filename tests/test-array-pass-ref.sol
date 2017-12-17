@@ -1,3 +1,4 @@
+/*@author: Kunal Baweja*/
 /* test arrays passed by reference */
 
 func assign(int [5]b) {

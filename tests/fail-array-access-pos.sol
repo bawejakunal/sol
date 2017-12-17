@@ -1,3 +1,5 @@
+/*@author: Erik Dyer*/
+
 func main() {
     int i;
     int [5]array;
@@ -7,6 +9,5 @@ func main() {
 
     /* print array elements */
     i = 0;
-        consolePrint(
-        intToString(array[5]));
+    consolePrint(intToString(array[5]));
 }

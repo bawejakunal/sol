@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#@author: Kunal Baweja
+
 # update repo data
 sudo apt update
 

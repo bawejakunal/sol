@@ -1,3 +1,5 @@
+/*@author: Kunal Baweja*/
+
 func checkEqual(int x, int y) {
     if (x == y) {
         consolePrint("CORRECT");

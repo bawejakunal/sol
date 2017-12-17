@@ -1,3 +1,5 @@
+/*@author: Kunal Baweja*/
+
 func main() {
     if (1 == 1 && 2 == 2) {
         consolePrint("AND");

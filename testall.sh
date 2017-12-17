@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#@author: Kunal Baweja
+
 # Regression testing script for sol
 # Step through a list of files
 #  Compile, run, and check the output of each expected-to-work test

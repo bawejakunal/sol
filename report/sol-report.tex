@@ -1,5 +1,5 @@
 \documentclass[letterpaper,12pt]{article}
-
+\usepackage[toc,page]{appendix}
 %% Use the option review to obtain double line spacing
 %% \documentclass[preprint,review,12pt]{elsarticle}
 
@@ -13,8 +13,65 @@
 
 \definecolor{lightgray}{rgb}{.95,.95,.95}
 
+% gnu make listing
+\lstdefinestyle{bash}{
+   language=bash,
+   keywordstyle=\bfseries\color{green!40!black},
+   commentstyle=\itshape\color{purple!40!black},
+   identifierstyle=\color{blue},
+   extendedchars=true,
+   basicstyle=\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   breaklines=true,
+   showtabs=false,
+   frame=single,
+   stringstyle=\color{red},
+   backgroundcolor=\color{lightgray},
+   autogobble=true,
+   aboveskip=-4pt
+}
+
+% gnu make listing
+\lstdefinestyle{make}{
+   language=[gnu]make,
+   keywordstyle=\bfseries\color{green!40!black},
+   commentstyle=\itshape\color{purple!40!black},
+   identifierstyle=\color{blue},
+   extendedchars=true,
+   basicstyle=\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   breaklines=true,
+   showtabs=false,
+   frame=single,
+   stringstyle=\color{red},
+   backgroundcolor=\color{lightgray},
+   autogobble=true,
+   aboveskip=-4pt
+}
+
+% ocaml listing
+\lstdefinestyle{caml}{
+   language=[Objective]Caml,
+   keywordstyle=\bfseries\color{green!40!black},
+   commentstyle=\itshape\color{purple!40!black},
+   identifierstyle=\color{blue},
+   extendedchars=true,
+   basicstyle=\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   breaklines=true,
+   showtabs=false,
+   frame=single,
+   stringstyle=\color{red},
+   backgroundcolor=\color{lightgray},
+   autogobble=true,
+   aboveskip=-4pt
+}
+
 % settings for SOL code listings
-\lstset{
+\lstdefinestyle{sol}{
    language=Java,
    morekeywords={func, construct, shape, string},
    keywordstyle=\bfseries\color{green!40!black},
@@ -32,6 +89,8 @@
    autogobble=true,
    aboveskip=-10pt
 }
+
+
 
 \begin{document}
 
@@ -292,7 +351,7 @@ This section describes the complete lexical conventions followed for a syntactic
     \subsection{\textit{Function Declarators and Definition}}
     Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically returns nothing. Functions are given a name (which is a valid identifier) followed by function arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         func example(int a, int b){
             /* a function named example that takes
                two arguments, both of type int */
@@ -308,7 +367,7 @@ This section describes the complete lexical conventions followed for a syntactic
         \item Constructors do not have a return type specified
     \end{enumerate}
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
     shape Point {
         int [2]coordinate;
         construct (int x, int y) {
@@ -322,7 +381,7 @@ This section describes the complete lexical conventions followed for a syntactic
     \subsection{\textit{Definitions}}
     A definition of an object or type includes a value, assigned by the assignment operator `\texttt{=}'.\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         char y;       /* declarations */
         float z;
         int [3]w;     /* array declaration */
@@ -343,7 +402,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
     \subsection{\textit{If Statement}}
     An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         int x;
         x = 1;
         if (x == 1) {
@@ -354,7 +413,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
     \subsection{\textit{While Statement}}
     A \textit{while} statement specifies the looping construct in SOL. It starts with the \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; this is followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration and the code within \texttt{while} block executes if the condition evaluates to a non-zero \textit{integer}. \\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
             int x;
             x = 5;
             while (x > 0) {
@@ -366,7 +425,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
     \subsection{\textit{Return statement}}
     Stops execution of a function and returns to where the function was called originally in the code. Potentially returns a value; this value must conform with the return type specified in the function declaration. If no return type was specified, a \textit{return} statement without any value specified is syntactically valid (but not compulsory).\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         func int sum(int x, int y) {
             /* return sum of two integers */
             return x + y;
@@ -454,7 +513,7 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
     Similar to a class in C++; a shape defines a particular 2-D shape as part of the drawing on screen. Every \texttt{shape} has a user-defined \texttt{draw} function that specifies how shapes are statically rendered, using multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} commands. The class may contain multiple member variables that could be used to draw the shape. These member variables are defined in a constructor, specified by the keyword \texttt{construct}. It is also possible to declare member functions for a shape. When member variables are accessed within a member function, it is implied that the member variables belong to the current object that calls the function.\\
     Once a \texttt{shape} object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, `.'.\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         shape Triangle {
             int[2] a; /* Corners of a triangle */
             int[2] b;
@@ -490,7 +549,7 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
     \subsection{\textit{Inheritance}}
     SOL allows single class inheritance for shapes i.e given a shape, such as \texttt{Line}, one may create a sub-shape of \texttt{Line}, called \texttt{LineBottom}, and inherit all of its fields from the parent \texttt{shape}, \texttt{Line}, using the keyword \texttt{extends}.\\
     Example:\\
-    \begin{lstlisting}
+    \begin{lstlisting}[style=sol]
         shape Line {
             int[2] a;
             int[2] b;
@@ -541,5 +600,68 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
 
     \subsubsection{\textit{parent} (keyword)}
     The parent \texttt{shape}'s functions can be accessed by the function call \texttt{parent()}. This invokes the implementation of the current member function defined in the parent \texttt{shape}. In constructors, the \texttt{parent()} calls the constructor for the parent \texttt{shape}.
+
+
+% Appendix code listings
+\begin{appendices}
+
+\section{SOL Compiler}
+
+Code listing for compiler code. Author names are mentioned as first comment line of each code listing.
+
+    \subsection{scanner.mll}
+    \textbf{Authors:} \texttt{Aditya Narayanamoorthy, Gergana Alteva}\\
+    \lstinputlisting[style=caml]{../scanner.mll}
+
+    \subsection{parser.mly}
+    \lstinputlisting[style=caml]{../parser.mly}
+
+    \subsection{ast.ml}
+    \lstinputlisting[style=caml]{../ast.ml}
+
+    \subsection{semant.ml}
+    \lstinputlisting[style=caml]{../semant.ml}
+
+    \subsection{sast.ml}
+    \lstinputlisting[style=caml]{../sast.ml}
+
+    \subsection{codegen.ml}
+    \lstinputlisting[style=caml]{../codegen.ml}
+
+    \subsection{sol.ml}
+    \lstinputlisting[style=caml]{../codegen.ml}
+
+    \subsection{predefined.h}
+    \lstinputlisting[style=caml]{../predefined.h}
+
+    \subsection{predefined.c}
+    \lstinputlisting[style=caml]{../predefined.c}
+
+    \subsection{Makefile}
+    \lstinputlisting[style=make]{../Makefile}
+
+
+\section{Environment Setup}
+
+The following scripts can be used for installing dependencies and setting up environment.
+
+    \subsection{install-llvm.sh}
+    \lstinputlisting[style=bash]{../install-llvm.sh}
+
+    \subsection{install-sdl-gfx.sh}
+    \lstinputlisting[style=bash]{../install-sdl-gfx.sh}
+
+\section{Automated testing}
+
+The first two scripts are used for automated testing on Travis CI. For individual test cases, the author names are mentioned as first line of each test case.
+
+    \subsection{.travis.yml}
+    \lstinputlisting[style=bash]{../.travis.yml}
+
+    \subsection{testall.sh}
+    \lstinputlisting[style=bash]{../testall.sh}
+
+    \input{test-cases.tex}
+\end{appendices}
 
 \end{document}
