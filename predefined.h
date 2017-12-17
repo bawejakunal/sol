@@ -41,10 +41,11 @@ int getFramerate();
 bool drawPointUtil(const int point[2], const int rgb[3], const int opacity);
 bool drawPoint(const int point[2], const int rgb[3]);
 
-bool drawCurveUtil(const int points[3][2], const int num, const int steps,
-    const int rgb[2], const int opacity);
+bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
+    const int steps, const int rgb[2], const int opacity);
 
-bool drawCurve(const int points[3][2], const int steps, const int rgb[3]);
+bool drawCurve(const int start[2], const int mid[2], const int end[2],
+    const int steps, const int rgb[3]);
 
 /* 
  * print on SDL window

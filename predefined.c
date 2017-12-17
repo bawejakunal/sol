@@ -90,8 +90,21 @@ bool drawPoint(const int point[2], const int rgb[3]) {
 }
 
 /* helper function to draw a bezier curve in SOL */
-bool drawCurveUtil(const int points[3][2], const int num, const int steps,
-    const int rgb[3], const int opacity) {
+bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
+    const int steps, const int rgb[3], const int opacity) {
+
+    // pass arguments to SDL gfx
+    bool res = bezierRGBA(theGame.renderer, vx, vy, num, steps, (Uint8)rgb[0],
+        (Uint8)rgb[1], (Uint8)rgb[2], (Uint8)opacity);
+
+    return res;
+}
+
+/* draw a bezier curve with 3 control points */
+bool drawCurve(const int start[2], const int mid[2], const int end[2],
+    const int steps, const int rgb[3]) {
+    
+    const int num = 3;
 
     Sint16 *vx = NULL;
     Sint16 *vy = NULL;
@@ -105,25 +118,23 @@ bool drawCurveUtil(const int points[3][2], const int num, const int steps,
         return false;
     }
 
-    for (int i = 0; i < num; i++) {
-        vx[i] = points[i][0];   // x coordinate
-        vy[i] = points[i][1];   // y coordinate
-    }
+    // x coordinates
+    vx[0] = start[0];
+    vx[1] = mid[0];
+    vx[2] = end[0];
 
-    // pass arguments to SDL gfx
-    bool res = bezierRGBA(theGame.renderer, vx, vy, num, steps, (Uint8)rgb[0],
-        (Uint8)rgb[1], (Uint8)rgb[2], (Uint8)opacity);
+    // y coordinates
+    vy[0] = start[1];
+    vy[1] = mid[1];
+    vy[2] = end[1];
+
+    bool res = drawCurveUtil(vx, vy, num, steps, rgb, 255);
 
     // memory cleanup
     free(vx);
     free(vy);
 
     return res;
-}
-
-/* draw a bezier curve with 3 control points */
-bool drawCurve(const int points[3][2], const int steps, const int rgb[3]) {
-    return drawCurveUtil(points, 3, steps, rgb, 255);
 }
 
 
