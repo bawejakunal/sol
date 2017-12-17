@@ -47,8 +47,12 @@ bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
 bool drawCurve(const int start[2], const int mid[2], const int end[2],
     const int steps, const int rgb[3]);
 
-/* 
- * print on SDL window
- * returns 0 on success, -1 on failure
- */
+/* print on SDL window; returns 0 on success, -1 on failure */
 int print(const int pt[2], const char *text, const int color[3]);
+
+/* rotate a coordinate */
+void rotateCoordinate(int pt[2], const int axis[2], const double degree);
+
+/* rotate a curve */
+void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
+    const double degree);

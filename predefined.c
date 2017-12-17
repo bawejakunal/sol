@@ -160,3 +160,36 @@ int print(const int pt[2], const char *text, const int color[3]) {
     return stringRGBA(theGame.renderer, (Sint16)pt[0], (Sint16)pt[1], text,
         (Uint8)color[0], (Uint8)color[1], (Uint8)color[2], 255);
 }
+
+/* 
+ * rotate a coordinate clockwise by degree
+ * around the axis point
+ */
+void rotateCoordinate(int pt[2], const int axis[2], const double degree) {
+    // account for actual rotation to perform
+    int _d = ((int)(degree * 100)) % 36000;
+    double _degree = _d / 100.0;
+    _degree *= M_PI / 180.0;
+
+    // translate back to origin
+    pt[0] -= axis[0];
+    pt[1] -= axis[1];
+
+    // rotate and round off to nearest integers
+    pt[0] = (int)nearbyint(pt[0] * cos(_degree) - pt[1] * sin(_degree));
+    pt[1] = (int)nearbyint(pt[0] * sin(_degree) + pt[1] * cos(_degree));
+
+    // translate point back
+    pt[0] += axis[0];
+    pt[1] += axis[1];
+}
+
+/*
+ * rotate a bezier curve
+ */
+void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
+    const double degree) {
+    rotateCoordinate(start, axis, degree);
+    rotateCoordinate(mid, axis, degree);
+    rotateCoordinate(end, axis, degree);
+}
