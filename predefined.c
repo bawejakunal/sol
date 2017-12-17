@@ -1,6 +1,6 @@
 /*
  * @author: Kunal Baweja
- * Pre-defined fucntions for SOL 
+ * Pre-defined functions for SOL 
  */
 
 #include "predefined.h"

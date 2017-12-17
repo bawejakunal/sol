@@ -1,3 +1,5 @@
+/*@author: Erik Dyer*/
+
 /* Test Triangle*/
 /* Run this code, */
 shape Triangle {

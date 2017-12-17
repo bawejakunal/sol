@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#@author: Kunal Baweja
+
 SDL_GFX="SDL2_gfx-1.0.3"
 SDL_GFX_TAR=$SDL_GFX".tar.gz"
 

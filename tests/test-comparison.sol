@@ -1,3 +1,5 @@
+/*@author: Kunal Baweja*/
+
 func main() {
     /* Integer comparisons */
     if (0 == 0) {

@@ -1,3 +1,5 @@
+/*@author: Erik Dyer*/
+
 func main() {
     int i;
     int [5]array;

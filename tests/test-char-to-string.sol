@@ -1,3 +1,5 @@
+/*@author: Kunal Baweja*/
+
 func main() {
     char c;
     string s;
