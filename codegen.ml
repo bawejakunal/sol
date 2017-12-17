@@ -48,7 +48,7 @@ let translate (globals, shapes, functions) =
     | A.Char -> i8_t
     | A.String -> L.pointer_type i8_t
     | A.Void -> void_t
-    | A.Array(l, t) -> L.pointer_type (L.array_type (ltype_of_typ t) l)
+    | A.Array(l, t) -> L.array_type (ltype_of_typ t) l
     | A.Shape(s) -> shape_type s
     in
 
@@ -108,7 +108,12 @@ let translate (globals, shapes, functions) =
     let function_decl m sfdecl =
       let name = sfdecl.S.sfname
       and formal_types =
-	Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) sfdecl.S.sformals)
+        Array.of_list (List.map 
+          (fun (t,_) -> let ltyp = ltype_of_typ t in 
+            match t with
+              A.Array(_) -> L.pointer_type (ltyp)
+            | _ -> ltyp) 
+        sfdecl.S.sformals)
       in let ftype = (match name with
           "main" -> L.function_type i32_t formal_types
         | _ -> L.function_type (ltype_of_typ sfdecl.S.styp) formal_types) in
@@ -123,13 +128,19 @@ let translate (globals, shapes, functions) =
         let f_name = smember_f.S.sfname 
         and formal_types = 
           Array.of_list (L.pointer_type (shape_type sname) :: 
-            List.map (fun (t,_) -> ltype_of_typ t) smember_f.S.sformals)
+            List.map (fun (t,_) -> let ltyp = ltype_of_typ t in 
+              match t with
+                A.Array(_) -> L.pointer_type (ltyp)
+              | _ -> ltyp) smember_f.S.sformals)
         in let ftype = L.function_type (ltype_of_typ smember_f.S.styp) formal_types in
         StringMap.add f_name (L.define_function f_name ftype the_module, smember_f) m) 
       m ssdecl.S.smember_fs in
       (* Add in each constructor and draw as well *)
       let construct_name = ssdecl.S.sconstruct.S.sfname and
-      formal_types = Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) ssdecl.S.sconstruct.S.sformals) in 
+      formal_types = Array.of_list (List.map (fun (t,_) -> let ltyp = ltype_of_typ t in 
+            match t with
+              A.Array(_) -> L.pointer_type (ltyp)
+            | _ -> ltyp)  ssdecl.S.sconstruct.S.sformals) in 
       let ftype = L.function_type (L.pointer_type (shape_type sname)) formal_types in
       let m = StringMap.add construct_name (L.define_function construct_name ftype the_module, ssdecl.S.sconstruct) m in
       let draw_name = ssdecl.S.sdraw.S.sfname and
@@ -170,18 +181,17 @@ let translate (globals, shapes, functions) =
        value, if appropriate, and remember their values in the "locals" map *)
     let local_vars =
       let add_formal m (t, n) p = L.set_value_name n p;
-	let local = L.build_alloca (ltype_of_typ t) n builder in
-	ignore (L.build_store p local builder);
-	StringMap.add n local m in
+        let local = 
+          (match t with
+          (* For arrays, use the pointer directly *)
+            A.Array(_) -> p
+          | _ -> let l = L.build_alloca (ltype_of_typ t) n builder in
+              ignore (L.build_store p l builder); l) in
+      	StringMap.add n local m in
 
       let add_local m (t, n) =
-	let local_var = (match t with
-      (* For arrays, allocate space for the actual const array too *)
-      A.Array(l, prim_typ) -> let arr_deref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) n builder in
-        let arr_ptr = L.build_alloca (ltype_of_typ t) n builder in
-        ignore(L.build_store arr_deref arr_ptr builder); arr_ptr
-    | _ -> L.build_alloca (ltype_of_typ t) n builder)
-	in StringMap.add n local_var m in
+      	let local_var = L.build_alloca (ltype_of_typ t) n builder	in 
+        StringMap.add n local_var m in
 
       let formals = try(List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
           (Array.to_list (L.params the_function)) )
@@ -198,21 +208,21 @@ let translate (globals, shapes, functions) =
     in
 
     (* Construct code for an expression; return its value *)
-    let rec expr builder = function
+    let rec expr builder loadval = function
 	      S.SInt_literal(i), _ -> L.const_int i32_t i
       | S.SFloat_literal(f), _ -> L.const_float f32_t f
       | S.SChar_literal(c), _ -> L.const_int i8_t (Char.code c)
       | S.SString_literal(s), _ -> L.build_global_stringptr s "tmp" builder
       | S.SNoexpr, _ -> const_zero
-      | S.SArray_literal(_, s), A.Array(l, prim_typ) -> 
-          (* Return a pointer to the array literal *)
-          let const_arr = L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder e) s)) in
-          let arr_ref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) "arr_ptr" builder in 
-          ignore(L.build_store const_arr arr_ref builder); arr_ref
+      | S.SArray_literal(_, s), (A.Array(_, prim_typ) as t) -> 
+          let const_array = L.const_array (ltype_of_typ prim_typ) (Array.of_list (List.map (fun e -> expr builder true e) s)) in
+          if loadval then const_array
+          else (let arr_ref = L.build_alloca (ltype_of_typ t) "arr_ptr" builder in
+            ignore(L.build_store const_array arr_ref builder); arr_ref)
       | S.SArray_literal(_, _), _ -> raise(Failure("Invalid Array literal being created!"))
       | S.SBinop (e1, op, e2), _ ->
-	    let e1' = expr builder e1
-	    and e2' = expr builder e2 in
+	    let e1' = expr builder true e1
+	    and e2' = expr builder true e2 in
         (match op with
           S.IAnd -> L.build_and 
             (L.build_icmp L.Icmp.Ne e1' const_zero "tmp" builder) 
@@ -250,12 +260,12 @@ let translate (globals, shapes, functions) =
         )
 	      
       | S.SUnop(op, e), _ ->
-	    let e' = expr builder e in
+	    let e' = expr builder true e in
 	      (match op with
 	        S.INeg    -> L.build_neg e' "tmp" builder
         | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder
         | S.FNeg    -> L.build_fneg e' "tmp" builder)
-      | S.SAssign (lval, s_e), _ -> let e' = expr builder s_e in
+      | S.SAssign (lval, s_e), _ -> let e' = expr builder true s_e in
 	                   ignore (L.build_store e' (lval_expr builder lval) builder); e'
       (* L.build_call consolePrint_func [| (expr builder e) |] "consolePrint" builder *)
       (* | A.Call ("intToFloat", [e]) ->
@@ -273,7 +283,13 @@ let translate (globals, shapes, functions) =
       | A.Call ("setFramerate", [e]) ->
       L.build_call setFramerate_func [| (expr builder e) |] "setFramerate" builder *)
       | S.SCall (s_f, act), _ -> let f_name = s_f.S.sfname in 
-      let actuals = List.rev (List.map (expr builder) (List.rev act)) in (* Why reverse twice? *)
+      let actuals = List.rev (List.map 
+        (fun (s_e, t) -> 
+          (* Send a pointer to array types instead of the actual array *)
+          match t with
+            A.Array(_) -> expr builder false (s_e, t)
+          | _ -> expr builder true (s_e, t)) 
+        (List.rev act)) in (* Why reverse twice? *)
       
       (match f_name with
           "consolePrint" -> let fmt_str_ptr = 
@@ -302,15 +318,28 @@ let translate (globals, shapes, functions) =
           let f_name = (match styp with
               A.Shape(sname) -> sname
             | _ -> raise(Failure("Non-shape type object in member function call!"))) ^ "__" ^ s_f.S.sfname in
-          let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+          let actuals = List.rev (List.map 
+            (fun (s_e, t) -> let ll_expr = expr builder false (s_e, t) in 
+              (* Send a pointer to array types instead of the actual array *)
+              match t with
+                A.Array(_) -> expr builder false (s_e, t)
+              | _ -> expr builder true (s_e, t)) 
+              (List.rev act)) in
           let (fdef, fdecl) = StringMap.find f_name function_decls in
           let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list (obj :: actuals)) result builder
-      | S.SLval(l), _ -> let lval = lval_expr builder l in
-        L.build_load lval "tmp" builder
+      | S.SLval(l), _ -> let lval = lval_expr builder l in 
+          if loadval then L.build_load lval "tmp" builder
+          else lval
       | S.SInst_shape(_, sactuals), A.Shape(sname) -> let actuals = 
-            List.rev (List.map (expr builder) (List.rev sactuals)) in 
+            List.rev (List.map (fun (s_e, t) -> let ll_expr = expr builder true (s_e, t) in 
+              (* Send a pointer to array types instead of the actual array *)
+              match t with
+                A.Array(_) -> let copy = L.build_alloca (ltype_of_typ t) "arr_copy" builder in 
+                  ignore(L.build_store ll_expr copy builder); copy
+              | _ -> ll_expr) 
+              (List.rev sactuals)) in 
           (* Call the constructor *)
           let (constr, _) = StringMap.find (sname ^ "__construct") function_decls in
           let new_inst = L.build_call constr (Array.of_list actuals) (sname ^ "_inst_ptr") builder in
@@ -323,8 +352,7 @@ let translate (globals, shapes, functions) =
     | S.SAccess(id, idx), _(* el_typ *) -> 
         (* ignore(print_string "access"); *)
         let arr = lookup id in
-        let arr = L.build_load arr "arr_deref" builder in
-        let idx' = expr builder idx in
+        let idx' = expr builder true idx in
         (* let arr_len = L.array_length (ltype_of_typ el_typ) in 
         if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
           then raise(Failure("Attempted access out of array bounds"))
@@ -344,8 +372,7 @@ let translate (globals, shapes, functions) =
                     L.build_struct_gep obj index "tmp" builder
                 | S.SAccess(v_n, idx), _ -> let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
                     let arr = L.build_struct_gep obj index "tmp" builder in
-                    let arr = L.build_load arr "arr_deref" builder in
-                    let idx' = expr builder idx in
+                    let idx' = expr builder true idx in
                     L.build_gep arr [| const_zero ; idx' |] "tmp" builder
                 | S.SShape_var(member_n, member_v), member_t -> 
                     let index = index_of (fun (_, member_var) -> member_n = member_var) sdef.S.smember_vs 0 in
@@ -370,15 +397,15 @@ let translate (globals, shapes, functions) =
        the statement's successor *)
     let rec stmt builder = function
 	      S.SBlock sl -> List.fold_left stmt builder sl
-      | S.SExpr e -> ignore (expr builder e); builder
+      | S.SExpr e -> ignore (expr builder true e); builder
       (* | S.SVDecl ((t, n), e) -> let var = L.build_alloca (ltype_of_typ t) n builder in
           let e' = expr builder e in
           ignore(L.build_store e' var builder); builder *)
       | S.SReturn e -> ignore (match sfdecl.S.styp with
 	        A.Void -> L.build_ret_void builder
-	      | _ -> L.build_ret (expr builder e) builder); builder
+	      | _ -> L.build_ret (expr builder true e) builder); builder
       | S.SIf (predicate, then_stmt) ->
-          let pred' = expr builder predicate in 
+          let pred' = expr builder true predicate in 
           let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
           let bool_val = 
             (match llty_str with
@@ -404,7 +431,7 @@ let translate (globals, shapes, functions) =
       	    (L.build_br pred_bb);
 
       	  let pred_builder = L.builder_at_end context pred_bb in
-          let pred' = expr pred_builder predicate in 
+          let pred' = expr pred_builder true predicate in 
           let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
           let bool_val = 
             (match llty_str with
@@ -447,19 +474,7 @@ let translate (globals, shapes, functions) =
     let shape_inst = 
       if sfdecl.S.sfname = construct_name 
       (* SPECIAL CASE: For the construct(), add creation of an object of the required type *)
-      then (
-        let inst = L.build_alloca stype (sname ^ "_inst") builder in
-        ignore(List.iteri 
-          (fun i (t, n) -> (* For arrays, allocate space for the actual const array too *)
-            match t with
-                A.Array(l, prim_typ) -> 
-                  let arr_deref = L.build_alloca (L.array_type (ltype_of_typ prim_typ) l) (n ^ "_deref") builder in
-                  let arr_ptr = L.build_struct_gep inst i n builder in
-                  ignore(L.build_store arr_deref arr_ptr builder);
-              | _ -> ()) 
-          sdecl.S.smember_vs); 
-        inst
-        )
+      then L.build_alloca stype (sname ^ "_inst") builder
         (* In all other cases, return the first argument of the function *)
       else let obj_param = Array.get (L.params the_function) 0 in
         let local_inst = 
