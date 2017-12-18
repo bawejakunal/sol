@@ -56,3 +56,10 @@ void rotateCoordinate(int pt[2], const int axis[2], const double degree);
 /* rotate a curve */
 void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
     const double degree);
+
+/* translate a point */
+void translatePoint(int pt[2], const int displace[2]);
+
+/* translateCurve */
+void translateCurve(int start[2], int mid[2], int end[2],
+    const int displace[2]);

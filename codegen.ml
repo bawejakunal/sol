@@ -476,13 +476,7 @@ let translate (globals, shapes, functions) =
       (* SPECIAL CASE: For the construct(), add creation of an object of the required type *)
       then L.build_alloca stype (sname ^ "_inst") builder
         (* In all other cases, return the first argument of the function *)
-      else let obj_param = Array.get (L.params the_function) 0 in
-        let local_inst = 
-          let param_name = sname ^ "_inst" in
-          let _ = L.set_value_name param_name obj_param in
-          L.build_alloca stype param_name builder in 
-        (* Load the parameter, since it is a pointer to the object *)
-        ignore (L.build_store (L.build_load obj_param "tmp" builder) local_inst builder); local_inst
+      else Array.get (L.params the_function) 0
     in
 
     (* Create pointers to all member variables *)

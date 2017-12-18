@@ -184,12 +184,24 @@ void rotateCoordinate(int pt[2], const int axis[2], const double degree) {
     pt[1] += axis[1];
 }
 
-/*
- * rotate a bezier curve
- */
+/* rotate a bezier curve control points */
 void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
     const double degree) {
     rotateCoordinate(start, axis, degree);
     rotateCoordinate(mid, axis, degree);
     rotateCoordinate(end, axis, degree);
+}
+
+/* translate a point by given displacement */
+void translatePoint(int pt[2], const int displace[2]) {
+    pt[0] += displace[0];
+    pt[1] += displace[1];
+}
+
+/* translate a bezier curve control points */
+void translateCurve(int start[2], int mid[2], int end[2],
+    const int displace[2]) {
+    translatePoint(start, displace);
+    translatePoint(mid, displace);
+    translatePoint(end, displace);
 }
