@@ -23,7 +23,14 @@ let rec index_of cmp lst idx = match lst with
 | [] -> raise(Failure("Element not found!"))
 | hd::tl -> if (cmp hd) then idx else index_of cmp tl (idx + 1)
 
-let translate (globals, shapes, functions) =
+(* Define helper function to create list of integers in a range *)
+let range a b =
+  let rec aux a b =
+    if a > b then [] else a :: aux (a+1) b  in
+  if a > b then List.rev (aux b a) else aux a b;;
+
+let translate (globals, shapes, functions, inst_count) =
+  (* ignore(print_string(string_of_int(inst_count) ^ "\n")); *)
   let context = L.global_context () in
   let the_module = L.create_module context "SOL"
   and i32_t  = L.i32_type   context
@@ -35,12 +42,12 @@ let translate (globals, shapes, functions) =
   let shape_defs = List.fold_left 
     (fun m sshape -> StringMap.add sshape.S.ssname sshape m) 
     StringMap.empty shapes in
-  let shape_def s = StringMap.find s shape_defs in
+  let shape_def s = (try StringMap.find s shape_defs with Not_found -> raise(Failure("shape_def Not_found! " ^ s))) in
 
   let named_shape_types = List.fold_left 
     (fun m ssdecl -> let name = ssdecl.S.ssname in StringMap.add name (L.named_struct_type context name) m) 
     StringMap.empty shapes in
-  let shape_type s = StringMap.find s named_shape_types in
+  let shape_type s = (try StringMap.find s named_shape_types with Not_found -> raise(Failure("shape_type Not_found!"))) in
 
   let rec ltype_of_typ = function
       A.Int -> i32_t
@@ -52,12 +59,18 @@ let translate (globals, shapes, functions) =
     | A.Shape(s) -> shape_type s
     in
 
+  (* Create a global list of instantiated shapes *)
+  let shape_objs = Array.make inst_count ("shapeType", L.const_int i32_t 0) in
+
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
     let global_var m (t, n) =
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
+
+  let global_vars = StringMap.add "_Running" 
+    (L.define_global "_Running" (L.const_int (L.i1_type context) 0) the_module) global_vars in
 
   (* Instantiate global constants used for printing/comparisons, once *)
   let string_format_str = L.define_global "fmt" (L.const_stringz context "%s\n") the_module in
@@ -73,9 +86,17 @@ let translate (globals, shapes, functions) =
   let startSDL_t = L.var_arg_function_type i32_t [| |] in
   let startSDL_func = L.declare_function "startSDL" startSDL_t the_module in
 
-  (* Declare the built-in runSDL(), which initializes the SDL environment *)
-  let runSDL_t = L.var_arg_function_type i32_t [| |] in
-  let runSDL_func = L.declare_function "runSDL" runSDL_t the_module in
+  (* Declare the built-in onRenderStartSDL(), which runs before every render loop in SDL *)
+  let onRenderStartSDL_t = L.var_arg_function_type void_t [| |] in
+  let onRenderStartSDL_func = L.declare_function "onRenderStartSDL" onRenderStartSDL_t the_module in
+
+  (* Declare the built-in onRenderFinishSDL(), which runs after every render loop in SDL *)
+  let onRenderFinishSDL_t = L.var_arg_function_type void_t [| |] in
+  let onRenderFinishSDL_func = L.declare_function "onRenderFinishSDL" onRenderFinishSDL_t the_module in
+
+  (* Declare the built-in stopSDL(), which cleans up and exits the SDL environment *)
+  let stopSDL_t = L.var_arg_function_type i32_t [| |] in
+  let stopSDL_func = L.declare_function "stopSDL" stopSDL_t the_module in
 
   (* (* Declare the built-in intToFloat() function *)
   let intToFloat_t = L.function_type f32_t [|i32_t|] in
@@ -85,17 +106,21 @@ let translate (globals, shapes, functions) =
   let floatToInt_t = L.function_type i32_t [|f32_t|] in
   let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in *)
 
-  (* Declare the built-in intToString() function *)
+  (* Declare the built-in sprintf() function, used by the *ToString functions *)
   let sprintf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t; L.pointer_type i8_t |] in
   let sprintf_func = L.declare_function "sprintf" sprintf_t the_module in
-  (* (* Declare the built-in floatToString() function *)
-  let floatToString_t = L.function_type (L.pointer_type i8_t) [|f32_t|] in
-  let floatToString_func = L.declare_function "floatToString" floatToString_t the_module in
-  (* Declare the built-in charToString() function *)
-  let charToString_t = L.function_type (L.pointer_type i8_t) [|i8_t|] in
-  let charToString_func = L.declare_function "charToString" charToString_t the_module in
 
-  (* Declare the built-in length() function *)
+  (* Declare the built-in drawCurve(), which draws a curve in SDL *)
+  let drawCurve_t = L.var_arg_function_type i32_t 
+    [| L.pointer_type i32_t ; L.pointer_type i32_t ; L.pointer_type i32_t ; i32_t ; L.pointer_type i32_t |] in
+  let drawCurve_func = L.declare_function "drawCurve" drawCurve_t the_module in
+
+  (* Declare the built-in drawPoint(), which draws a point in SDL *)
+  let drawPoint_t = L.var_arg_function_type i32_t 
+    [| L.array_type i32_t 2 ; L.array_type i32_t 3 |] in
+  let drawPoint_func = L.declare_function "drawPoint" drawPoint_t the_module in
+
+  (* (* Declare the built-in length() function *)
   let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type i32_t; i32_t|]|] in
   let length_func = L.declare_function "length" length_t the_module in
 
@@ -149,23 +174,78 @@ let translate (globals, shapes, functions) =
       StringMap.add draw_name (L.define_function draw_name ftype the_module, ssdecl.S.sdraw) m in
     List.fold_left shape_function_decl function_decls shapes in
 
-    let shape_decl ssdecl =
-      let name = ssdecl.S.ssname in 
-      let s_type = shape_type name in
-      let lmember_vs = List.rev (List.fold_left (fun l (t, _) -> (ltype_of_typ t) :: l ) [] ssdecl.S.smember_vs) in
-      let lmember_fs = List.rev (List.fold_left (fun l smember_f -> 
-        let formal_types = 
-          Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) smember_f.S.sformals) in 
-        let ftype = L.function_type (ltype_of_typ smember_f.S.styp) formal_types in
-         (L.pointer_type ftype) :: l ) [] ssdecl.S.smember_fs) in
+  (* Fill in the body of each shape type *)
+  let shape_decl ssdecl =
+    let name = ssdecl.S.ssname in 
+    let s_type = shape_type name in
+    let lmember_vs = List.rev (List.fold_left (fun l (t, _) -> (ltype_of_typ t) :: l ) [] ssdecl.S.smember_vs) in
+    let lmember_fs = List.rev (List.fold_left (fun l smember_f -> 
+      let formal_types = 
+        Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) smember_f.S.sformals) in 
+      let ftype = L.function_type (ltype_of_typ smember_f.S.styp) formal_types in
+       (L.pointer_type ftype) :: l ) [] ssdecl.S.smember_fs) in
+    let num_curves = ssdecl.S.sdrawcurveslen in
+    let lbase_curve_points = L.array_type (L.array_type (L.array_type i32_t 2) 3) num_curves in
+    let lbase_curve_steps = L.array_type i32_t num_curves in
+    let lbase_curve_rgb = L.array_type (L.array_type i32_t 3) num_curves in 
+    let members = lmember_fs @ lmember_vs in
+    (L.struct_set_body s_type (Array.of_list(List.rev 
+      (lbase_curve_rgb :: lbase_curve_steps :: lbase_curve_points :: members))) false) in
+    
+  ignore(List.iter shape_decl shapes);
 
-      (L.struct_set_body s_type (Array.of_list(lmember_vs @ lmember_fs)) false) in
-    ignore(List.iter shape_decl shapes);
+  (* Build the onRenderSDL function *)
+  let build_render_function objs the_function = 
+    let builder = L.builder_at_end context (L.entry_block the_function) in 
+    let locals = (List.fold_left2 (fun m (_, n) p -> L.set_value_name n p;
+      StringMap.add n p m) 
+    StringMap.empty objs (Array.to_list(L.params the_function))) in
+
+    (* Go through all instantiated shapes *)
+    List.iter 
+      (fun (sname, varname) -> 
+        (* ignore(print_string(sname)); *)
+        let sdecl = shape_def sname in 
+        let shape_inst = StringMap.find varname locals in 
+        (* Build a call to the shape's draw function *)
+        let (draw_fn, _) = StringMap.find (sname ^ "__draw") function_decls in 
+        ignore(L.build_call draw_fn [| shape_inst |] "" builder);
+        let start_curve_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
+        let pts_arr = L.build_struct_gep shape_inst start_curve_index "_baseCurvePoints" builder in
+        let steps_arr = L.build_struct_gep shape_inst (start_curve_index + 1) "_baseCurveSteps" builder in
+        let rgb_arr = L.build_struct_gep shape_inst (start_curve_index + 2) "_baseCurveRGB" builder in
+        let num_curves = sdecl.S.sdrawcurveslen in
+        let const_zero = L.const_int i32_t 0 in
+        (* Loop through arrays of curve points/step sizes/colors *)
+        List.iter 
+          (fun seq -> 
+            let seq' = L.const_int i32_t seq in
+            let seq_pts_arr = L.build_gep pts_arr [| const_zero ; seq' |] "curr_seq_pts" builder in
+            let steps_val = L.build_load 
+              (L.build_gep steps_arr [| const_zero ; seq' |] "curr_seq_step" builder) "step" builder in
+            let rgb_val = (* L.build_load  *) L.build_gep
+              (L.build_gep rgb_arr [| const_zero ; seq' |] "curr_seq_rgb" builder) [| const_zero; const_zero |] "first_rgb_val" builder (* "rgb_val" builder *) in
+            let x_val = (* L.build_load  *) L.build_gep
+              (L.build_gep seq_pts_arr [| const_zero ; const_zero |] "x_ref" builder) [| const_zero; const_zero |] "first_x_val" builder (* "x_val" builder *) in
+            let y_val = (* L.build_load  *) L.build_gep
+              (L.build_gep seq_pts_arr [| const_zero ; L.const_int i32_t 1 |] "y_ref" builder) [| const_zero; const_zero |] "first_y_val" builder (* "y_val" builder *) in
+            let z_val = (* L.build_load  *) L.build_gep
+              (L.build_gep seq_pts_arr [| const_zero ; L.const_int i32_t 2 |] "z_ref" builder) [| const_zero; const_zero |] "first_z_val" builder (* "z_val" builder *) in
+            (* Send the values into drawCurve *)
+            ignore(L.build_call drawCurve_func [| x_val; y_val; z_val; steps_val; rgb_val |] "drawCurve" builder);
+            ()
+          ) 
+        (range 0 (num_curves - 1))
+      ) 
+    objs;
+
+    ignore(L.build_ret_void builder)
+  in
   
   (* Fill in the body of the given function *)
   let build_function_body sfdecl member_vars =
     (* ignore(print_string (sfdecl.S.sfname ^ "\n")); *)
-    let (the_function, _) = StringMap.find sfdecl.S.sfname function_decls in
+    let (the_function, _) = (try StringMap.find sfdecl.S.sfname function_decls with Not_found -> raise(Failure("build_function_body Not_found!"))) in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     (* SPECIAL CASE: For the main(), add in a call to the initalization of the SDL window *)
@@ -193,7 +273,7 @@ let translate (globals, shapes, functions) =
       	let local_var = L.build_alloca (ltype_of_typ t) n builder	in 
         StringMap.add n local_var m in
 
-      let formals = try(List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
+      let formals = try (List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
           (Array.to_list (L.params the_function)) )
       (* The only case where a mismatch occurs is for shape-member functions, when the first argument is the shape 
       - in this case, ignore the first argument *)
@@ -204,7 +284,7 @@ let translate (globals, shapes, functions) =
     (* Return the value for a variable or formal argument *)
     let lookup n = try StringMap.find n local_vars
                    with Not_found -> (try StringMap.find n member_vars
-                     with Not_found -> StringMap.find n global_vars)
+                     with Not_found -> (try StringMap.find n global_vars with Not_found -> raise(Failure("lookup Not_found!"))))
     in
 
     (* Construct code for an expression; return its value *)
@@ -310,7 +390,29 @@ let translate (globals, shapes, functions) =
               L.build_in_bounds_gep char_format_str [| const_zero ; const_zero |] "tmp" builder in 
             ignore(L.build_call sprintf_func (Array.of_list (result :: char_fmt_ptr :: actuals)) "charToStringResult" builder);
             result
-        | _ -> let (fdef, fdecl) = StringMap.find f_name function_decls in
+        | "drawCurve" ->  
+        (* Add values to the required arrays *)
+        (* First, extract the first element - this is used to find the sequence number of the curve to draw *)
+        let actuals = List.tl actuals in
+        let seq = (match (List.hd act) with
+            S.SInt_literal(_), _ as idx -> idx
+          | _ -> raise(Failure("Accessing the wrong sequence value for drawCurve!"))) in
+        let pts_arr = lookup "_baseCurvePoints" in
+        let steps_arr = lookup "_baseCurveSteps" in
+        let rgb_arr = lookup "_baseCurveRGB" in
+        let seq' = expr builder true seq in
+        let seq_pts_arr = L.build_gep pts_arr [| const_zero ; seq' |] "curr_seq_pts" builder in
+        let seq_steps_ref = L.build_gep steps_arr [| const_zero ; seq' |] "curr_seq_step" builder in
+        let seq_rgb_arr = L.build_gep rgb_arr [| const_zero ; seq' |] "curr_seq_rgb" builder in
+        let x_ref = (L.build_gep seq_pts_arr [| const_zero ; const_zero |] "x_ref" builder) in
+        let y_ref = (L.build_gep seq_pts_arr [| const_zero ; L.const_int i32_t 1 |] "y_ref" builder) in
+        let z_ref = (L.build_gep seq_pts_arr [| const_zero ; L.const_int i32_t 2 |] "z_ref" builder) in
+        ignore(L.build_store (L.build_load (List.nth actuals 0) "x" builder) x_ref builder);
+        ignore(L.build_store (L.build_load (List.nth actuals 1) "y" builder) y_ref builder);
+        ignore(L.build_store (L.build_load (List.nth actuals 2) "z" builder) z_ref builder);
+        ignore(L.build_store (List.nth actuals 3) seq_steps_ref builder);
+        (L.build_store (L.build_load (List.nth actuals 4) "rgb" builder) seq_rgb_arr builder)
+        | _ -> let (fdef, fdecl) = (try StringMap.find f_name function_decls with Not_found -> raise(Failure("SCall Not_found!"))) in
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list actuals) result builder)
@@ -319,31 +421,39 @@ let translate (globals, shapes, functions) =
               A.Shape(sname) -> sname
             | _ -> raise(Failure("Non-shape type object in member function call!"))) ^ "__" ^ s_f.S.sfname in
           let actuals = List.rev (List.map 
-            (fun (s_e, t) -> let ll_expr = expr builder false (s_e, t) in 
+            (fun (s_e, t) -> 
               (* Send a pointer to array types instead of the actual array *)
               match t with
                 A.Array(_) -> expr builder false (s_e, t)
               | _ -> expr builder true (s_e, t)) 
               (List.rev act)) in
-          let (fdef, fdecl) = StringMap.find f_name function_decls in
+          let (fdef, fdecl) = (try StringMap.find f_name function_decls with Not_found -> raise(Failure("SShape_fn Not_found!"))) in
           let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list (obj :: actuals)) result builder
       | S.SLval(l), _ -> let lval = lval_expr builder l in 
           if loadval then L.build_load lval "tmp" builder
           else lval
-      | S.SInst_shape(_, sactuals), A.Shape(sname) -> let actuals = 
-            List.rev (List.map (fun (s_e, t) -> let ll_expr = expr builder true (s_e, t) in 
-              (* Send a pointer to array types instead of the actual array *)
-              match t with
-                A.Array(_) -> let copy = L.build_alloca (ltype_of_typ t) "arr_copy" builder in 
-                  ignore(L.build_store ll_expr copy builder); copy
-              | _ -> ll_expr) 
-              (List.rev sactuals)) in 
+      | S.SInst_shape(_, sactuals), A.Shape(sname) -> 
+          let seq_num = (
+            match List.hd sactuals with
+                S.SInt_literal(i), _ -> i
+              | _ -> raise(Failure("Sequence number of object creation not stored here!"))
+          ) in
+          let actuals = 
+          List.rev (List.map (fun (s_e, t) -> let ll_expr = expr builder true (s_e, t) in 
+            (* Send a pointer to array types instead of the actual array *)
+            match t with
+              A.Array(_) -> let copy = L.build_alloca (ltype_of_typ t) "arr_copy" builder in 
+                ignore(L.build_store ll_expr copy builder); copy
+            | _ -> ll_expr) 
+            (List.rev (List.tl sactuals))) in 
           (* Call the constructor *)
-          let (constr, _) = StringMap.find (sname ^ "__construct") function_decls in
+          let (constr, _) = (try StringMap.find (sname ^ "__construct") function_decls with Not_found -> raise(Failure("SInst_shape Not_found!"))) in
           let new_inst = L.build_call constr (Array.of_list actuals) (sname ^ "_inst_ptr") builder in
-          L.build_load new_inst (sname ^ "_inst") builder
+          let inst = L.build_load new_inst (sname ^ "_inst") builder in
+          (* Add to list of instances *)
+          ignore(shape_objs.(seq_num) <- (sname, new_inst)); inst
       | S.SInst_shape(_, _), _ -> raise(Failure("Cannot instantiate a shape of non-shape type!"))
 
     
@@ -446,28 +556,65 @@ let translate (globals, shapes, functions) =
     in
 
     (* Build the code for each statement in the function *)
-    let new_builder = stmt builder (S.SBlock sfdecl.S.sbody) in
+    let builder = stmt builder (S.SBlock sfdecl.S.sbody) in
 
     (* SPECIAL CASE: For the main(), add in a call to the main rendering of the SDL window, return its result *)
     let _ = match sfdecl.S.sfname with
-        "main" -> let runSDL_ret = L.build_alloca i32_t "runSDL_ret" new_builder in 
-          ignore(L.build_store (L.build_call runSDL_func [|  |] "runSDL_ret" new_builder) runSDL_ret new_builder); 
-          ignore(L.build_ret (L.build_load runSDL_ret "runSDL_ret" new_builder) new_builder)
+        "main" -> 
+        (* Find all shape objects within scope *)
+        let final_objs = List.rev (List.fold_left (fun lst (t, n) -> match t with
+            A.Shape(_) -> (lookup n) :: lst
+          | _ -> lst) 
+        [] (List.rev sfdecl.S.slocals)) in
+        let final_obj_specs = List.rev (List.fold_left (fun lst (t, n) -> match t with
+            A.Shape(sname) -> (sname, n) :: lst
+          | _ -> lst) 
+        [] (List.rev sfdecl.S.slocals)) in
+        (* Define onRenderSDL, which will render all the instantiated shapes *)
+        let formal_types = Array.of_list(List.map (fun s -> L.pointer_type (shape_type s)) (List.map fst final_obj_specs)) in 
+        let ftype = L.function_type (void_t) formal_types in
+        let onRenderFn = L.define_function "onRenderSDL" ftype the_module in 
+        build_render_function final_obj_specs onRenderFn;
+
+        (* Create a loop while program is running *)
+        let pred_bb = L.append_block context "while" the_function in
+        ignore (L.build_br pred_bb builder);
+
+        let body_bb = L.append_block context "while_body" the_function in
+        let builder_body = L.builder_at_end context body_bb in
+        (* Build call to onRenderStartSDL() *)
+        ignore(L.build_call onRenderStartSDL_func [|  |] "" builder_body);
+        (* Build call to onRenderSDL function *)
+        ignore(L.build_call onRenderFn (Array.of_list(final_objs)) "" builder_body);
+        (* Build call to onRenderFinishSDL() *)
+        ignore(L.build_call onRenderFinishSDL_func [|  |] "" builder_body);
+        ignore(L.build_br pred_bb builder_body);
+        
+        let pred_builder = L.builder_at_end context pred_bb in
+        let merge_bb = L.append_block context "merge" the_function in
+        ignore (L.build_cond_br 
+          (L.build_load (StringMap.find "_Running" global_vars) "_Running_val" pred_builder) 
+        body_bb merge_bb pred_builder);
+        let builder = L.builder_at_end context merge_bb in
+
+        let stopSDL_ret = L.build_alloca i32_t "stopSDL_ret" builder in 
+          ignore(L.build_store (L.build_call stopSDL_func [|  |] "stopSDL_ret" builder) stopSDL_ret builder); 
+          ignore(L.build_ret (L.build_load stopSDL_ret "stopSDL_ret" builder) builder)
       | _ -> () in
 
     (* Add a return if the last block falls off the end *)
-    (* add_terminal new_builder (match sfdecl.S.styp with
+    (* add_terminal builder (match sfdecl.S.styp with
         A.Void -> L.build_ret_void
       | _ -> L.build_ret const_zero(* L.build_ret (L.const_int (ltype_of_typ t) 0) *)) *)
     match sfdecl.S.styp with
-        A.Void -> add_terminal new_builder L.build_ret_void
+        A.Void -> add_terminal builder L.build_ret_void
       | _ -> ()
   in
 
   let build_object_function_body sfdecl sdecl = 
     let sname = sdecl.S.ssname in 
     let stype = shape_type sname in
-    let (the_function, _) = StringMap.find sfdecl.S.sfname function_decls in
+    let (the_function, _) = (try StringMap.find sfdecl.S.sfname function_decls with Not_found -> raise(Failure("build_object_function_body Not_found!"))) in
     let builder = L.builder_at_end context (L.entry_block the_function) in 
     let construct_name = sname ^ "__construct" in
     
@@ -490,13 +637,24 @@ let translate (globals, shapes, functions) =
       (fun m ((_, n), i) -> let member_val = L.build_struct_gep shape_inst i n builder in
         StringMap.add n member_val m) 
       StringMap.empty (List.mapi (fun i v -> (v, i)) sdecl.S.smember_vs) in
+
+    let start_curve_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
+
+    (* Create pointers to the variables for drawing curves *)
+    let pts_val = L.build_struct_gep shape_inst start_curve_index "_baseCurvePoints" builder in
+    let member_vars = StringMap.add "_baseCurvePoints" pts_val member_vars in
+    let steps_val = L.build_struct_gep shape_inst (start_curve_index + 1) "_baseCurveSteps" builder in
+    let member_vars = StringMap.add "_baseCurveSteps" steps_val member_vars in
+    let rgb_val = L.build_struct_gep shape_inst (start_curve_index + 2) "_baseCurveRGB" builder in
+    let member_vars = StringMap.add "_baseCurveRGB" rgb_val member_vars in
     
     (* Build rest of the function body *)
     build_function_body sfdecl member_vars;
 
     (* SPECIAL CASE: For the construct(), return the instantiated object *)
     if sfdecl.S.sfname = construct_name 
-    then let builder = L.builder_at_end context (L.entry_block the_function) in 
+    then let bbs = L.basic_blocks the_function in
+      let builder = L.builder_at_end context (Array.get bbs ((Array.length bbs) - 1)) in 
       (* build_function_body would have inserted a void return statement at the end; remove this *)
       match L.block_terminator (L.insertion_block builder) with
         Some ins -> (L.delete_instruction ins); 

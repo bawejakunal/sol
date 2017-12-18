@@ -11,9 +11,18 @@ type symbol_table = {
   variables: bind list
 }
 
+(* Store all information used by drawing functions *)
+type draw_vars = {
+  draw_curves : int
+}
+
 type translation_environment = {
   scope: symbol_table;
-  functions: Ast.func_dec StringMap.t
+  functions: Ast.func_dec StringMap.t;
+  mutable
+  draw_vs: draw_vars option;
+  mutable
+  inst_count: int
 }
 
 let rec find_variable (scope: symbol_table) name = 
@@ -107,9 +116,14 @@ let check (globals, shapes, functions) =
      { ftype = String; fname = "floatToString"; formals = [(Float, "x")];
        locals = []; body = [] } (StringMap.add "charToString"
      { ftype = String; fname = "charToString"; formals = [(Char, "x")];
-       locals = []; body = [] } (StringMap.singleton "setFramerate"
+       locals = []; body = [] } (StringMap.add "setFramerate"
      { ftype = Void; fname = "setFramerate"; formals = [(Float, "x")];
-       locals = []; body = [] }))))))
+       locals = []; body = [] } (StringMap.add "drawCurve"
+     { ftype = Void; fname = "drawCurve"; formals = 
+         [(Array(2, Int), "x"); (Array(2, Int), "y"); (Array(2, Int), "z"); (Int, "stepsize"); (Array(3, Int), "rgb")];
+       locals = []; body = [] } (StringMap.singleton "drawPoint"
+     { ftype = Void; fname = "drawPoint"; formals = [(Array(2, Int), "x"); (Array(3, Int), "rgb")];
+       locals = []; body = [] }))))))))
   in
      
   let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
@@ -219,11 +233,17 @@ let check (globals, shapes, functions) =
             " = " ^ string_of_typ rt ^ " in " ^ 
             string_of_expr ex)));
         SAssign(slval, (rexpr, rt)), lt
-      | Call(fname, actuals) as call -> let fd = function_decl fname env.functions in
-         if List.length actuals != List.length fd.formals then
+      | Call(fname, actuals) as call -> let fd = function_decl fname env.functions in 
+          ignore(if func.fname = "draw" then
+            if (fname = "drawCurve" || fname = "drawPoint")
+            then ()
+            else raise(Failure("drawCurve/drawPoint can only be called within a draw()!"))
+          else ()
+          );
+          if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
-         else (* TODO: Add special case for checking type of actual array vs formal array *)
+          else (* TODO: Add special case for checking type of actual array vs formal array *)
            List.iter2 (fun (ft, _) e -> let _, et = expr env e in
               ignore (check_assign ft et 
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
@@ -234,7 +254,20 @@ let check (globals, shapes, functions) =
              sbody = []} in 
              (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
              and also because this detail is not needed when making a function call *)
-           SCall(s_fd, sactuals), fd.ftype
+          let sactuals = if(fname = "drawCurve")
+          then(
+            match env.draw_vs with
+              Some(d_vars) -> 
+              (* Add in size of the list of variables into the environment *)
+              let new_d_vars = {draw_curves = d_vars.draw_curves + 1} in
+              env.draw_vs <- Some(new_d_vars);
+              (* Add in the sequence in which this drawCurve is called for this shape *)
+              ((SInt_literal(d_vars.draw_curves), Int):: sactuals)
+            | None -> raise(Failure("drawCurve called in a non-shape environment!"))
+            )
+          else(sactuals) in
+          (* Update the draw variables in the environment, now that the function has been checked for correctness *)
+          SCall(s_fd, sactuals), fd.ftype
       | Shape_fn(s, fname, actuals) as call -> (try 
           let (t, _) = find_variable env.scope s in
           match t with
@@ -275,10 +308,13 @@ let check (globals, shapes, functions) =
            let sactuals = List.map (fun a -> expr env a) actuals in
            let s_sd = {ssname = sd.sname; spname = sd.pname; smember_vs = sd.member_vs; sconstruct = {sfname = "Construct";
              styp = Void; sformals = []; slocals = []; sbody = []}; sdraw = {sfname = "Draw";
-             styp = Void; sformals = []; slocals = []; sbody = []}; smember_fs = []} in 
+             styp = Void; sformals = []; slocals = []; sbody = []}; smember_fs = []; 
+             sdrawcurveslen = 0} in 
              (* Not converting the shape completely, to prevent recursive conversions, 
              and also because this detail is not needed when making a shape instantiation *)
-          SInst_shape(s_sd, sactuals), Shape(sname)
+             env.inst_count <- env.inst_count + 1;
+             (* Add in the sequence of creation of this object *)
+          SInst_shape(s_sd, (SInt_literal(env.inst_count - 1), Int) :: sactuals), Shape(sname)
 
     and lval_expr env = function
         Id s -> (try
@@ -333,9 +369,11 @@ let check (globals, shapes, functions) =
          | s :: ss -> stmt env s :: check_block env ss
          | [] -> []
         in let scope' = {parent = Some(env.scope); variables = []}
-        in let env' = {scope = scope'; functions = env.functions}
+        in let env' = {env with scope = scope'}
         in let sl = check_block env' sl in 
         scope'.variables <- List.rev scope'.variables;
+        env.draw_vs <- env'.draw_vs;
+        env.inst_count <- env'.inst_count;
         SBlock(sl)
       | Expr e -> SExpr(expr env e)
       (* | VDecl(b, e) -> let _ = find_local env.scope (snd b) in 
@@ -360,12 +398,13 @@ let check (globals, shapes, functions) =
     in
 
     let l_scope = {parent = Some(g_env.scope); variables = func.formals @ func.locals} in
-    let l_env = {scope = l_scope; functions = g_env.functions} in
+    let l_env = {g_env with scope = l_scope} in
 
     {sfname = func.fname; styp = func.ftype; sformals = func.formals; slocals = func.locals; 
-             sbody = let sbl = stmt l_env (Block func.body) in match sbl with
-             | SBlock(sl) -> sl
-             | _ -> raise(Failure("This isn't supposed to happen!"))}
+      sbody = let sbl = stmt l_env (Block func.body) in 
+      match sbl with
+          SBlock(sl) -> ignore(g_env.draw_vs <- l_env.draw_vs); ignore(g_env.inst_count <- l_env.inst_count); sl
+        | _ -> raise(Failure("This isn't supposed to happen!"))}
              
    
   in
@@ -386,19 +425,27 @@ let check (globals, shapes, functions) =
     in
 
     let s_scope = {parent = Some(g_env.scope); variables = g_env.scope.variables @ shape.member_vs} in
-    let s_env = {scope = s_scope; functions = function_decls} in 
+    let s_draw_vars = {draw_curves = 0} in
+    let s_env = {g_env with scope = s_scope; functions = function_decls; draw_vs = Some(s_draw_vars)} in 
+    (* Find out the number of drawCurve functions being used *)
+    let s_draw = check_function s_env shape.draw in 
+    ignore(g_env.inst_count <- s_env.inst_count);
+    let d_curves = (match s_env.draw_vs with
+          Some(d_vars) -> d_vars.draw_curves
+        | _ -> 0) in
     {ssname = shape.sname; spname = None; smember_vs = shape.member_vs;
       sconstruct = (let s_construct = check_function s_env shape.construct in 
+        ignore(g_env.inst_count <- s_env.inst_count);
         let s_construct = {s_construct with sfname = shape.sname ^ "__construct"} in
         try( let last_s_construct = List.hd (List.rev s_construct.sbody) in (match last_s_construct with
             SReturn(_) -> raise(Failure("Constructor cannot have return statement for shape " ^ shape.sname))
           | _ -> s_construct)) with Failure "hd" -> s_construct);
-      sdraw = (let s_draw = check_function s_env shape.draw in 
-        let s_draw = {s_draw with sfname = shape.sname ^ "__draw"} in
+      sdraw = (let s_draw = {s_draw with sfname = shape.sname ^ "__draw"} in
         try( let last_s_draw = List.hd (List.rev s_draw.sbody) in (match last_s_draw with
             SReturn(_) -> raise(Failure("Draw function cannot have return statement for shape " ^ shape.sname))
-          | _ -> s_draw)) with Failure "hd" -> s_draw);
-      smember_fs = List.map (function f -> let s_f = check_function s_env f in 
+          | _ -> s_draw)) with Failure "hd" -> g_env.draw_vs <- s_env.draw_vs; s_draw);
+      smember_fs = (List.map (function f -> let s_f = check_function s_env f in 
+        ignore(g_env.inst_count <- s_env.inst_count);
         let s_f = {s_f with sfname = shape.sname ^ "__" ^ s_f.sfname} in 
         match s_f.styp with
       | Void -> s_f
@@ -406,14 +453,17 @@ let check (globals, shapes, functions) =
         | SReturn(_) -> s_f
         | _ -> raise(Failure("Function must have return statement of type " ^ string_of_typ s_f.styp)))) 
         with Failure "hd" -> s_f
-      ) shape.member_fs}
+      ) shape.member_fs);
+      sdrawcurveslen = d_curves
+        (* ignore(print_string(string_of_int(List.length d_curves))); d_curves *)
+      }
   
   in
 
   (* Check each individual function *)
 
   let g_scope = {parent = None; variables = globals} in
-  let g_env = {scope = g_scope; functions = function_decls} in
+  let g_env = {scope = g_scope; functions = function_decls; draw_vs = None; inst_count = 0} in
   (globals, 
     List.map (check_shape g_env) shapes,
     List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
@@ -421,4 +471,4 @@ let check (globals, shapes, functions) =
     | _ -> let last_s = List.hd (List.rev s_f.sbody) in (match last_s with
       | SReturn(_) -> s_f
       | _ -> raise(Failure("Function must have return statement of type " ^ string_of_typ s_f.styp)))
-    ) functions)
+    ) functions, g_env.inst_count)

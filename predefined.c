@@ -24,33 +24,42 @@ bool onInitSDL() {
 
 void onEventSDL(SDL_Event* Event) {
     if(Event->type == SDL_QUIT) {
-        theGame.Running = false;
+        _Running = false;
     }
 }
 
-void onLoopSDL()
+void clearSDL()
 {
     /* clear screen before drawing again */
     SDL_SetRenderDrawColor(theGame.renderer, 242, 242, 242, 255);
     SDL_RenderClear(theGame.renderer);
 }
 
-void onRenderSDL()
+void onRenderStartSDL() {
+    while(SDL_PollEvent(&theGame.Event)) {
+        onEventSDL(&theGame.Event);
+    }
+
+    clearSDL();
+}
+
+void onRenderFinishSDL()
 {
     SDL_RenderPresent(theGame.renderer);
 }
 
-void cleanupSDL()
+int stopSDL()
 {
     SDL_DestroyRenderer(theGame.renderer);
     SDL_DestroyWindow(theGame.window);
     SDL_Quit();
+    return 0;
 }
 
 int startSDL() {
 
 	theGame.window = NULL;
-	theGame.Running = true;
+	_Running = true;
 
 	if(onInitSDL() == false) {
 		return -1;
@@ -58,22 +67,6 @@ int startSDL() {
 
     /* initialize frame rate manager */
     SDL_initFramerate(&fpsmanager);
-
-	return 0;
-}
-
-int runSDL() {
-
-	while(theGame.Running) {
-		while(SDL_PollEvent(&theGame.Event)) {
-			onEventSDL(&theGame.Event);
-		}
-
-		onLoopSDL();
-		onRenderSDL();
-	}
-
-	cleanupSDL();
 
 	return 0;
 }
@@ -101,40 +94,43 @@ bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
 }
 
 /* draw a bezier curve with 3 control points */
-bool drawCurve(const int start[2], const int mid[2], const int end[2],
-    const int steps, const int rgb[3]) {
+bool drawCurve(int* start, int* mid, int* end,
+    int steps, int* rgb) {
+    printf("(%d, %d), (%d, %d), (%d, %d), %d, (%d, %d, %d)\n", 
+        start[0], start[1], mid[0], mid[1], end[0], end[1], steps, rgb[0], rgb[1], rgb[2]);
     
-    const int num = 3;
+    // const int num = 3;
 
-    Sint16 *vx = NULL;
-    Sint16 *vy = NULL;
+    // Sint16 *vx = NULL;
+    // Sint16 *vy = NULL;
     
-    // accumulate x and y coordinates
-    if ((vx = (Sint16*)malloc(num * sizeof(Sint16))) == NULL)
-        return false;
+    // // accumulate x and y coordinates
+    // if ((vx = (Sint16*)malloc(num * sizeof(Sint16))) == NULL)
+    //     return false;
 
-    if ((vy = (Sint16*)malloc(num * sizeof(Sint16))) == NULL) {
-        free(vx);
-        return false;
-    }
+    // if ((vy = (Sint16*)malloc(num * sizeof(Sint16))) == NULL) {
+    //     free(vx);
+    //     return false;
+    // }
 
-    // x coordinates
-    vx[0] = start[0];
-    vx[1] = mid[0];
-    vx[2] = end[0];
+    // // x coordinates
+    // vx[0] = start[0];
+    // vx[1] = mid[0];
+    // vx[2] = end[0];
 
-    // y coordinates
-    vy[0] = start[1];
-    vy[1] = mid[1];
-    vy[2] = end[1];
+    // // y coordinates
+    // vy[0] = start[1];
+    // vy[1] = mid[1];
+    // vy[2] = end[1];
 
-    bool res = drawCurveUtil(vx, vy, num, steps, rgb, 255);
+    // bool res = drawCurveUtil(vx, vy, num, steps, rgb, 255);
 
-    // memory cleanup
-    free(vx);
-    free(vy);
+    // // memory cleanup
+    // free(vx);
+    // free(vy);
 
-    return res;
+    // return res;
+    return true;
 }
 
 
