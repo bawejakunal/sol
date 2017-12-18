@@ -1,0 +1,483 @@
+
+\section{Introduction}
+%% Text of abstract
+SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. As a lightweight object-oriented language, SOL allows for unlimited design opportunities and eases the burden of animation. In addition, SOL’s simplicity saves programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects.
+\par
+
+\section{Conventions}
+    The following conventions are followed throughout this SOL Reference Manual.
+
+    \begin{enumerate}
+        \itemsep0em
+        \item \texttt{literal} - Fixed space font for literals such as commands, functions,\\
+        \hspace*{4.4em} keywords, and programming language structures.
+        
+        \item \textit{variable} - The variables for SOL progamming language and words or\\
+        \hspace*{4.4em} concept being defined are denoted in italics.
+    \end{enumerate}
+
+    The following conventions are applied while drawing and animating objects, using internal functions (see Section \ref{internal}):
+
+    \begin{enumerate}
+        \itemsep0em
+        \item The origin of the drawing canvas is on the top left of the screen.
+        \item The positive X-axis goes from left to right.
+        \item The positive Y-axis goes from top to bottom.
+        \item Positive angles specify rotation in a clockwise direction.
+        \item Coordinates are specified as integer arrays of size 2, consisting of an X-coordinate followed by a Y-coordinate.
+        \item Colors are specified as integer arrays of size 3, consisting of Red, Green and Blue values in the range 0 - 255, where \texttt{[0, 0, 0]} is black and \texttt{[255, 255, 255]} is white.
+    \end{enumerate}
+
+\section{Lexical Conventions}
+
+This section describes the complete lexical conventions followed for a syntactically correct SOL program, forming various parts of the language.
+
+    \subsection{\textit{Comments}}
+    Comments in SOL start with character sequence \texttt{/*} and end at character sequence \texttt{*/}. They may extend over multiple lines and all characters following \texttt{/*} are ignored until an ending \texttt{*/} is encountered.
+
+    \subsection{\textit{Identifiers}}
+    In SOL, an identifier is a sequence of characters from the set of english alphabets, arabic numerals and underscore (\_). The first character cannot be a digit. Identifiers are case sensitive. Identifiers cannot be any of the reserved keywords mentioned in section \ref{keywords}.
+
+    \subsection{\textit{Keywords}} \label{keywords}
+    Keywords in SOL include data types, built-in functions, and control statements, and may not be used as identifiers as they are reserved.
+
+        \begin{center}
+            \begin{tabular}{ |c|c|c|c| } 
+            \hline
+                int     & if            & main          & shape   \\ 
+                float   & while         & setFramerate  & parent  \\ 
+                char    & func          & getFramerate  & extends \\
+                string  & construct     & print         & \\
+                        & return        & consolePrint  & \\
+                        &               & intToString   & \\
+                        &               & floatToString & \\
+                        &               & charToString  & \\
+                        &               & render        & \\
+                        &               & wait          & \\
+                        &               & drawPoint     & \\
+                        &               & drawCurve     & \\
+                        &               & translate     & \\
+                        &               & rotate        & \\
+
+            \hline
+            \end{tabular}
+        \end{center}
+
+    \subsection{\textit{Integer Constants}}
+    A sequence of one or more digits representing a number in base-10, optionally preceded by a unary negation operator (\texttt{-}), to represent negative integers.\\
+    Eg: \texttt{1234}
+
+    \subsection{\textit{Float Constants}}
+    Similar to an integer, a float has an \textit{integer}, a decimal point (\texttt{.}), and a fractional part. Both the integer and fractional part are a sequence of one or more digits. A negative float is represented by a preceding unary negation operator (\texttt{-}).\\
+    Eg: \texttt{0.55  10.2}
+
+    \subsection{\textit{Character Constants}}
+    An ASCII character within single quotation marks.\\
+    Eg: \texttt{'x' 'a'}
+
+    \subsection{\textit{Escape Sequences}}
+    The following are special characters represented by escape sequences.
+        \begin{center}
+            \begin{tabular}{ |c|c| }
+            \hline
+                \textbf{Name}   & \textbf{Escape}\\
+                \hline
+                newline         & \textbackslash n\\
+                tab             & \textbackslash t\\
+                backslash       & \textbackslash \textbackslash\\
+                single quote    & \textbackslash '\\
+                double quote    & \textbackslash "\\
+                ASCII NUL character & \textbackslash 0\\
+            \hline
+            \end{tabular}
+        \end{center}
+
+    \subsection{\textit{String constants}}
+    A SOL \textit{string} is a sequence of zero or more \textit{characters} within double quotation marks.\\
+    Eg: \texttt{"cat"}
+
+    \subsection{\textit{Operators}}
+    SOL has mainly four categories of operators defined below:
+
+        \subsubsection{\textit{Assignment Operator}}
+        The right associative \textit{assignment operator} is denoted by the (\texttt{=}) symbol having a variable identifier to its left and a valid expression on its right. The \textit{assignment operator} assigns the evaluated value of expression on the right to the variable on left.
+
+        \subsubsection{\textit{Unary Negation Operator}} \label{negation}
+        The right associative unary negation operator (\texttt{-}) can be used to negate the value of an arithmetic expression.
+
+        \subsubsection{\textit{Arithmetic Operators}}
+        The following table describes \texttt{binary arithmetic operators} supported in SOL which operate on two \texttt{arithmetic expressions} specified before and after the operator respectively. The said expressions must both be of type \texttt{int} or \texttt{float}. Please refer to section \ref{precedence} for precedence and associativity rules.
+
+        \begin{center}
+            \begin{tabular}{ |c|c| }
+            \hline
+                \textbf{Operator} & \textbf{Definition} \\
+                \hline
+                +   &   Addition\\
+                -   &   Subtraction\\
+                $*$   &   Multiplication\\
+                /   &   Division\\
+                \%  &   Modulo\\
+            \hline
+            \end{tabular}
+        \end{center}
+
+        \subsubsection{\textit{Comparison Operators}}
+        The comparison operators are left associative binary operators for comparing values of operands defined as expressions. Please refer to section \ref{precedence} for precedence and associativity rules.
+        \begin{center}
+            \begin{tabular}{ |c|c| }
+            \hline
+                \textbf{Operator} & \textbf{Definition} \\
+                \hline
+                ==              & Equality \\
+                !=              & Not Equals \\
+                \textless       & Less than \\
+                \textgreater    & Greater than \\
+                \textless=      & Less than or equals \\
+                \textgreater=   & Greater than or equals \\
+            \hline
+            \end{tabular}
+        \end{center}
+        
+        \subsubsection{\textit{Logical Operators}}
+        The logical operators evaluate boolean expressions and return an integer as result - with 0 as False and 1 as True. Please refer to section \ref{precedence} for precedence and associativity rules.
+        \begin{center}
+            \begin{tabular}{ |c|c| }
+                \hline
+                \textbf{Operator} & \textbf{Definition}\\
+                \hline
+                \&\&  & AND\\
+                $||$  & OR\\
+                !  & NOT\\
+                \hline
+            \end{tabular}
+        \end{center}
+
+    \subsection{\textit{Punctuators}}
+    The following symbols are used for semantic organization in SOL:
+     \begin{center}
+        \begin{tabular}{ |p{0.25\hsize}|p{0.75\hsize}| }
+            \hline
+            \textbf{Punctuator} & \textbf{Usage} \\
+            \hline
+            \{\}            & Used to denote a block of code. Must be present as a pair. \\
+            ()              & Specifies conditions for statements before the subsequent code, or denotes the arguments of a function. Must be present as a pair. \\
+            \lbrack\rbrack  & Indicates an array. Must be present as a pair. \\
+            ;               & Signals the end of a line of code. \\
+            ,               & Used to separate arguments for a function, or elements in an array definition. \\
+            \hline
+        \end{tabular}
+     \end{center}
+    
+\section{Identifier Scope}
+    \subsection{\textit{Block Scope}}
+    Identifier scope is a specific area of code wherein an identifier exists. A scope of an identifier is from its declaration until the end of the code block within which it is declared.
+    
+    \subsection{\textit{File Scope}}
+    Any identifier (such as a variable or a function) that is defined outside a code block has file scope i.e. it exists throughout the file.\\
+    If an identifier with file scope has the same name as an identifier with block scope, the block-scope identifier gets precedence.
+
+\section{Expressions and Operators}
+    \subsection{\textit{Typecasting}}
+    A typecast is the conversion of an expression from one type to another. SOL supports explicit casting of \textit{int} to \textit{float}, \textit{float} to \textit{int}, and \textit{int}, \textit{float} and \textit{char} to \textit{string}. To cast an expression to a different type, place the desired type in parentheses in front of the expression. \\
+    Eg: \texttt{(int) myFloat /* Returns the integer value of myFloat */}
+    
+    \subsection{\textit{Precedence and Associativity}} \label{precedence}
+    SOL expressions are evaluated with the following rules:
+    \begin{enumerate}
+        \itemsep0em
+        \item Expressions are evaluated from left to right, operators are left associative, unless stated otherwise.
+
+        \item Expressions within parenthesis take highest precedence and evaluated prior to substituting in outer expression.
+        
+        \item The unary negation operator (\texttt{-}) and logical not operator (\texttt{!}) are placed at the second level of precedence, above the binary, comparison and logical operators. It groups right to left as described in section \ref{negation}.
+        
+        \item The third level of precedence is taken by multiplication (\texttt{*}), division (\texttt{/}) and modulo (\texttt{\%}) operations.
+        
+        \item Addition (\texttt{+}) and subtraction (\texttt{-}) operations are at the fourth level of precedence.
+        
+        \item At the fifth level of precedence are the comparison operators: \texttt{\textless, \textgreater, \textless=, \textgreater=}.
+
+        \item At sixth level of precedence are the equality comparison operators: \texttt{==} and \texttt{!=}.
+
+        \item The logical operators, OR (\texttt{||}) and AND (\texttt{\&\&}) take up the next level of precedence.
+
+        \item At the final level of precedence, the right associative assignment operator (\texttt{=}) is placed, which ensures that the expression to its right is evaluated before assignment to left variable identifier.
+
+    \end{enumerate}
+    
+    \subsection{\textit{Dot Accessor}}
+    To access members of a declared \texttt{shape} (further described in section \ref{classes}), use the dot accessor `.'. \\
+    Eg: \texttt{shape\_object.point1 /* This accesses the variable point1 within the object shape\_object */}
+
+
+\section{Declarations}
+
+    Declarations determine how an identifier should be interpreted by the compiler. A declaration should include the identifier type and the given name
+
+    \subsection{\textit{Type Specifiers}} \label{type}
+    SOL provides four type specifiers for data types:
+    \begin{itemize}
+        \itemsep0em
+        \item \textit{int} - integer number
+        \item \textit{float} - floating point number
+        \item \textit{char} - a single character
+        \item \textit{string} - string (ordered sequence of characters)
+    \end{itemize}
+
+    \subsection{\textit{Array Declarators}} \label{array}
+    An array may be formed from any of the primitive types and \texttt{shape}s, but each array may only contain one type of primitive or \texttt{shape}. At declaration, the type specifier and the size of the array must be indicated. The array size need not be specified for strings, which are character arrays. SOL supports \texttt{fixed size arrays}, declared at compile time i.e. a program can not allocate dynamically sized arrays at runtime. Arrays are most commonly used in SOL to specify coordinates with two integers or drawing colors in RGB format with a three element array.\\
+    Eg: \texttt{int[2] coor; /* Array of two integers */}
+
+    \subsection{\textit{Function Declarators and Definition}}
+    Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically returns nothing. Functions are given a name (which is a valid identifier) followed by function arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        func example(int a, int b){
+            /* a function named example that takes
+               two arguments, both of type int */
+        }
+    \end{lstlisting}
+
+    \subsection{\textit{Constructor Declarators}}
+    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to a function definition with three additional constraints: 
+    \begin{enumerate}
+        \itemsep0em
+        \item Constructors are defined inside the class definition
+        \item Constructors are given the same name as the class and followed by arguments, within parenthesis as a comma-separated list of variable declarations, similar to function definitions
+        \item Constructors do not have a return type specified
+    \end{enumerate}
+    Example:\\
+    \begin{lstlisting}[style=sol]
+    shape Point {
+        int [2]coordinate;
+        construct (int x, int y) {
+            /* constructor definition */
+            coordinate[0] = x;
+            coordinate[1] = y;
+        }
+    }
+    \end{lstlisting}
+
+    \subsection{\textit{Definitions}}
+    A definition of an object or type includes a value, assigned by the assignment operator `\texttt{=}'.\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        char y;       /* declarations */
+        float z;
+        int [3]w;     /* array declaration */
+        string s;
+        y = 'b';      /* definitions */
+        z = 3.4;
+        w = [5, 2, 0];
+        s = "cats";
+    \end{lstlisting}
+
+\section{Statements} \label{classes}
+A statement in SOL refers to a complete instruction for a SOL program. All statements are executed in order of sequence. The four types of statements are described in detail below:\\
+
+    \subsection{\textit{Expression Statement}}
+    Expression statements are those statements that get evaluated and produce a result. This can be as simple as an assignment or a function call.\\
+    Eg: \texttt{x = 5; /* assign 5 to identifier x */}
+
+    \subsection{\textit{If Statement}}
+    An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        int x;
+        x = 1;
+        if (x == 1) {
+            /* This code gets executed */
+        }
+    \end{lstlisting}
+
+    \subsection{\textit{While Statement}}
+    A \textit{while} statement specifies the looping construct in SOL. It starts with the \texttt{while} keyword, followed by an expression specified within a pair of parenthesis; this is followed by a block of code within curly braces which is executed repeatedly as long as the condition in parentheses is valid. This condition is re-evaluated before each iteration and the code within \texttt{while} block executes if the condition evaluates to a non-zero \textit{integer}. \\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+            int x;
+            x = 5;
+            while (x > 0) {
+                /* This code gets executed 5 times */
+                x = x - 1;
+            }
+        \end{lstlisting}
+
+    \subsection{\textit{Return statement}}
+    Stops execution of a function and returns to where the function was called originally in the code. Potentially returns a value; this value must conform with the return type specified in the function declaration. If no return type was specified, a \textit{return} statement without any value specified is syntactically valid (but not compulsory).\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        func int sum(int x, int y) {
+            /* return sum of two integers */
+            return x + y;
+        }
+    \end{lstlisting}
+    
+\section{Internal Functions} \label{internal}
+SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
+
+    \subsection{\textit{main}}
+    Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input. The \texttt{main} function does not allow for member variables of \texttt{shape} objects to be changed.\\
+    \underline{Arguments}: None
+
+    \subsection{\textit{setFramerate}}
+    Call \texttt{setFramerate} to specify frames per second to render on screen. The frame rate is specified as a \textit{positive integer argument} and returns \texttt{0} for success and \texttt{-1} to indicate failure.\\
+    \underline{Arguments}: \texttt{rate (int)}\\
+    \underline{Return}: \texttt{0 for success, -1 for failure}
+
+    \subsection{\textit{getFramerate}}
+    Call \texttt{getFramerate} to get the current number of frames rendered per second as \textit{integer}.\\
+    \underline{Arguments}: \texttt{None}\\
+    \underline{Return}: \texttt{frames per second (int)}
+
+    \subsection{\textit{consolePrint}}
+    Prints a string to the console. Com]monly used to print error messages.\\
+    \underline{Arguments}: \texttt{text (string)}
+
+    \subsection{Type Conversion Functions}
+    SOL provides following type conversion functions for converting expressions of a given type to expression of another type.
+
+    \subsubsection{\textit{intToString}}
+    Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
+    \underline{Argument}: \texttt{src (int)}\\
+    \underline{Return}: value of type \texttt{string}
+
+    \subsubsection{\textit{floatToString}}
+    Accepts an expression (\texttt{src}) of type \texttt{float} as the argument and returns the \texttt{string} representation of evaluated result.\\
+    \underline{Argument}: \texttt{src (float)}\\
+    \underline{Return}: value of type \texttt{string}
+
+    \subsubsection{\textit{charToString}}
+    Accepts an expression (\texttt{src}) of type \texttt{char} as the argument and returns the \texttt{string} representation of evaluated result.\\
+    \underline{Argument}: \texttt{src (char)}\\
+    \underline{Return}: value of type \texttt{string}
+
+\section{Drawing Functions}
+The following set of functions are also a category of internal/required functions, which describe the drawing aspects for \texttt{shape} objects defined in a SOL program.
+
+    \subsection{\textit{drawPoint}}
+    Draws a point at a specified coordinate in the specified color.\\
+    \underline{Arguments}: \texttt{pt (int[2]), color (int[3])}
+
+    \subsection{\textit{drawCurve}}
+    \texttt{drawCurve} is one of the basic internal functions used to draw a B\'ezier curve. SOL defines all possible shapes as a collection of B\'ezier curves. The function arguments in order are, the \textit{three control points} for the curve, a \textit{step size} to define smoothness of curve, and the \textit{color} of curve in RGB format.\\
+    \underline{Arguments}: \texttt{pt1 (int[2]), pt2 (int[2]), pt3 (int[2]), steps(int), color (int[3])}
+
+    \subsection{\textit{print}}
+    Displays horizontal text on the render screen at the coordinates specified by the user, in specified color.\\
+    \underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
+
+\section{Animation Functions} \label{animation}
+The following functions are used to animate the objects drawn in a SOL program.
+
+    \subsection{\textit{translate}}
+    Displaces a \texttt{shape} by specifying a two-element array of integers, where the first element is the number of pixels along the horizontal axis and the second element along the vertical axis, over a specified time period in seconds.\\
+    \underline{Arguments}: \texttt{displace (int[2]), time (int)}
+
+    \subsection{\textit{rotate}}
+    Rotate a \texttt{shape} around an axis point by a specified number of degrees over a time period in seconds.\\
+    \underline{Arguments}: \texttt{axis (int[2]), angle (float), time (float)}
+
+    \subsection{\textit{render}}
+    Specify the set of motions to be animated. This code-block can be defined for shapes that need to move or can be left undefined for non-moving shapes. Within this function, various \texttt{rotate} and \texttt{translate} calls can be made to move the shape. This should be specified in the \texttt{main} function.\\
+    \underline{Arguments:} None
+
+    \subsection{\textit{wait}}
+    Pauses animation for a specified amount of time (in seconds). To be called in the \texttt{render} function.\\
+    \underline{Arguments}: \texttt{time (float)}
+
+
+\section{Classes}
+SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shape}s) which can be further animated using the animation functions described in Section \ref{animation}.
+
+    \subsection{\textit{shape}}
+    Similar to a class in C++; a shape defines a particular 2-D shape as part of the drawing on screen. Every \texttt{shape} has a user-defined \texttt{draw} function that specifies how shapes are statically rendered, using multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} commands. The class may contain multiple member variables that could be used to draw the shape. These member variables are defined in a constructor, specified by the keyword \texttt{construct}. It is also possible to declare member functions for a shape. When member variables are accessed within a member function, it is implied that the member variables belong to the current object that calls the function.\\
+    Once a \texttt{shape} object has been instantiated, these member variables cannot be changed, but may still be accessed later, using the dot accessor, `.'.\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        shape Triangle {
+            int[2] a; /* Corners of a triangle */
+            int[2] b;
+            int[2] c;
+            construct (int [2]a_init, int [2]b_init, int [2]c_init) {
+                int i;
+                i = 0;
+                /* copy values */
+                while (i < 2) {
+                    a[i] = a_init[i];
+                    b[i] = b_init[i];
+                    c[i] = c_init[i];
+                    i = i + 1;
+                }
+            }
+        
+            /* write result in pre-allocated array res */
+            func findCentroid(int [2]res) {
+                res[0] = (a[0] + b[0] + c[0]) / 3;
+                res[0] = (a[1] + b[1] + c[1]) / 3;
+            }
+
+            /* internal draw function definition */
+            draw() {
+                /* Draw triangle lines with bezier curves */
+                drawcurve(a, findCentre(a, b), b, [255, 0, 0]); /* red */
+                drawcurve(b, findCentre(b, c), c, [0, 255, 0]); /* green */
+                drawcurve(c, findCentre(c, a), a, [0, 0, 255]); /* blue */
+            }
+        }
+    \end{lstlisting}
+
+    \subsection{\textit{Inheritance}}
+    SOL allows single class inheritance for shapes i.e given a shape, such as \texttt{Line}, one may create a sub-shape of \texttt{Line}, called \texttt{LineBottom}, and inherit all of its fields from the parent \texttt{shape}, \texttt{Line}, using the keyword \texttt{extends}.\\
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        shape Line {
+            int[2] a;
+            int[2] b;
+            
+            construct (int[2] a_init, int[2] b_init) {
+                int i;
+                i = 0;
+                /* copy values */
+                while (i < 2) {
+                    a[i] = a_init[i];
+                    b[i] = b_init[i];
+                    i = i + 1;
+                }
+            }
+
+            func findCentre(int[2] res, 2int[2] x, int[2] y) {
+                /* write result to res */
+                int i;
+                i = 0;
+                while(i < 2) {
+                    res[i] = (a[i] + b[i]) / 2;
+                    i = i + 1;
+                }
+            }
+            
+            func draw() {
+                drawcurve(a, findCentre(a, b), b, [0, 0, 0]);
+            }
+        }
+
+        /* Subclass of Line */
+        shape LineBottom extends Line {
+            int[2] c;
+            int[2] d;
+
+            construct (int[2] a_init, int[2] b_init, int[2] c_init) {
+                parent(a_init, b_init);
+                c = c_init;
+                d = b;
+            }
+
+            func draw() {
+                parent();
+                drawcurve(c, findCentre(c, d), d, [0, 0, 0]);
+            }
+        }
+    \end{lstlisting}
+
+    \subsubsection{\textit{parent} (keyword)}
+    The parent \texttt{shape}'s functions can be accessed by the function call \texttt{parent()}. This invokes the implementation of the current member function defined in the parent \texttt{shape}. In constructors, the \texttt{parent()} calls the constructor for the parent \texttt{shape}.
