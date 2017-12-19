@@ -19,6 +19,9 @@ bool onInitSDL() {
         printf("%s \n", SDL_GetError());
         return 1;
     }
+    // Set default values for framerate
+    theGame.framerate = 30;
+    theGame.frame_interval = 33333;
     return true;
 }
 
@@ -46,6 +49,8 @@ void onRenderStartSDL() {
 void onRenderFinishSDL()
 {
     SDL_RenderPresent(theGame.renderer);
+    // Enforce frame rate by sleeping
+    usleep(theGame.frame_interval);
 }
 
 int stopSDL()
@@ -58,17 +63,17 @@ int stopSDL()
 
 int startSDL() {
 
-	theGame.window = NULL;
-	_Running = true;
+    theGame.window = NULL;
+    _Running = true;
 
-	if(onInitSDL() == false) {
-		return -1;
-	}
+    if(onInitSDL() == false) {
+        return -1;
+    }
 
     /* initialize frame rate manager */
     SDL_initFramerate(&fpsmanager);
 
-	return 0;
+    return 0;
 }
 
 /* draw a point in SOL */
@@ -138,6 +143,8 @@ bool drawCurve(const int start[2], const int mid[2], const int end[2],
  * returns 0 for sucess and -1 for error
  */
 int setFramerate(int rate) {
+    theGame.framerate = rate;
+    theGame.frame_interval = 1e6 / rate;
     return SDL_setFramerate(&fpsmanager, (Uint32)rate);
 }
 

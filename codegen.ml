@@ -123,13 +123,13 @@ let translate (globals, shapes, functions) =
     [| L.pointer_type (L.array_type i32_t 2) ; L.pointer_type i8_t ; L.pointer_type (L.array_type i32_t 3) |] in
   let print_func = L.declare_function "print" print_t the_module in
 
-  (* (* Declare the built-in length() function *)
-  let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type i32_t; i32_t|]|] in
-  let length_func = L.declare_function "length" length_t the_module in
-
   (* Declare the built-in setFramerate() function *)
-  let setFramerate_t = L.function_type void_t [|f32_t|] in
-  let setFramerate_func = L.declare_function "setFramerate" setFramerate_t the_module in *)
+  let setFramerate_t = L.function_type void_t [| i32_t |] in
+  let setFramerate_func = L.declare_function "setFramerate" setFramerate_t the_module in
+
+  (* Declare the built-in getFramerate() function *)
+  let getFramerate_t = L.function_type i32_t [| |] in
+  let getFramerate_func = L.declare_function "getFramerate" getFramerate_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
@@ -353,6 +353,8 @@ let translate (globals, shapes, functions) =
         | "drawCurve" -> L.build_call drawCurve_func (Array.of_list(actuals)) "drawCurve_result" builder
         | "drawPoint" -> L.build_call drawPoint_func (Array.of_list(actuals)) "drawPoint_result" builder
         | "print" -> L.build_call print_func (Array.of_list(actuals)) "print_result" builder
+        | "setFramerate" -> L.build_call setFramerate_func (Array.of_list(actuals)) "" builder
+        | "getFramerate" -> L.build_call getFramerate_func (Array.of_list(actuals)) "getFramerate_result" builder
         | _ -> let (fdef, fdecl), actuals = 
             (try StringMap.find f_name function_decls, actuals
             with Not_found -> 

@@ -108,7 +108,9 @@ let check (globals, shapes, functions) =
        locals = []; body = [] } (StringMap.add "charToString"
      { ftype = String; fname = "charToString"; formals = [(Char, "x")];
        locals = []; body = [] } (StringMap.add "setFramerate"
-     { ftype = Void; fname = "setFramerate"; formals = [(Float, "x")];
+     { ftype = Void; fname = "setFramerate"; formals = [(Int, "x")];
+       locals = []; body = [] } (StringMap.add "getFramerate"
+     { ftype = Int; fname = "getFramerate"; formals = [];
        locals = []; body = [] } (StringMap.add "drawCurve"
      { ftype = Void; fname = "drawCurve"; formals = 
          [(Array(2, Int), "x"); (Array(2, Int), "y"); (Array(2, Int), "z"); (Int, "stepsize"); (Array(3, Int), "rgb")];
@@ -116,7 +118,7 @@ let check (globals, shapes, functions) =
      { ftype = Void; fname = "drawPoint"; formals = [(Array(2, Int), "x"); (Array(3, Int), "rgb")];
        locals = []; body = [] } (StringMap.singleton "print"
      { ftype = Void; fname = "print"; formals = [(Array(2, Int), "x"); (String, "text"); (Array(3, Int), "rgb")];
-       locals = []; body = [] })))))))))
+       locals = []; body = [] }))))))))))
   in
      
   let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "SDL2_gfxPrimitives.h"
 #include "SDL2_imageFilter.h"
@@ -13,9 +14,11 @@
 #include "SDL2_rotozoom.h"
 
 typedef struct {
-	SDL_Window* window;
-	SDL_Renderer* renderer;
-	SDL_Event Event;
+    int framerate;
+    long int frame_interval; // In nicroseconds
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Event Event;
 } GAME;
 
 /* Global variables for graphics management */
