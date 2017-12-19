@@ -5,7 +5,7 @@
 # Easiest way to build: using ocamlbuild, which in turn uses ocamlfind
 
 CC = gcc
-CFLAGS = -std=c99 -O2 -D_REENTRANT -I/usr/include/SDL2
+CFLAGS = -std=c99 -O2 -D_REENTRANT -I/usr/include/SDL2 -Wno-implicit
 LIBS = 
 LFLAGS = -lSDL2 -lSDL2_gfx -lm
 
