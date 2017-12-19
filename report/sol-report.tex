@@ -25,6 +25,9 @@
 % display backtick
 \usepackage{upquote}
 
+% import images
+\usepackage{graphicx}
+
 \definecolor{lightgray}{rgb}{.95,.95,.95}
 
 % gnu make listing
@@ -389,6 +392,91 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
   %% include the common content for lrm
   \input{../lrm/sol-lrm-content.tex}
 
+\chapter{Project Plan}
+
+  This chapter details the project development, testing process, timelines, milestones and roles and responsibilities of each team member.
+
+  \section{Project Development Process}
+  Throughout the SOL compiler development process we tried to stick as closely as possible to in-lecture instructions and suggestions given by instructor, Prof. Stephen A. Edwards, and our project mentor Connor Abbott. The four major phases of project development are described in the following sections.
+
+    \subsection{Planning}
+      Once the team decided on addressing easy animations through an object-oriented programming language, we quickly got down to listing as many features as we could think of with respect to a graphics animation. As Aditya Narayanamoorthy \textit{(Language Guru)} had taken a Computer Graphics course previously, he helped us pick out the most basic and necessary features for the language, such as using \textit{B\'ezier curves} to describe shapes in our language. We tried to narrow down the minimal number of language features that would allow a SOL programmer to describe, display and animate a shape on screen using SOL. In case of a disagreement on the features to be included, the final call was taken by the \textit{Language Guru}. All the decided features are detaile in the SOL Language Reference Manual (chapter \ref{lrm}), which every team member used as a reference point for the rest of the project development and testing phases.\\
+
+      In our planning phase we also decided on the software development process, including division of work based on each member's expertise, discussed time availabilities, tools and development environments to use, summarized below:
+      \begin{enumerate}
+        \itemsep 0em
+        \item We scheduled two days per week for 3 hour long meetings for the team to work together on the project.
+        \item Chose Github as the version control system for our project, in conjunction with Slack for team communication.
+      \end{enumerate}
+
+    \subsection{Specfication}
+      For specifying the exact feature details, we required a lightweight graphics library, that would interface with the graphics backend and link well against the LLVM compiler output and develop a good understanding of its working. Erik, the systems architect, tried out a few graphics library and suggested using SDL2, primarily because of its ease of use for rendering simple graphics on screen and it's bindings of multiple languages including C, C++ and OCaml.\\
+
+      The next major specification step for SOL programming language, was to decide on how to represent and render shapes. Aditya, our Language Guru, suggested that all shapes can be expressed as a combination of B\'ezier curves and hence the basic units of drawing in SOL, available to a programmer should be the \texttt{drawPoint} and \texttt{drawCurve} functions to draw shapes, along with \texttt{translate} and \texttt{rotate} functions to animate the drawings in a 2D plane. To accomplish drawing B\'ezier curves, on top of SDL2, we chose the SDL2\_gfx library which was compiled and integrated into the development environment by Kunal and Erik.\\
+
+      Throughout the compiler development, we asked our mentor Connor Abbott for advice on how to prioritize  and implement features crucial for SOL, like fixed size arrays v/s dynamic arrays or advantages of using an SAST over a simple AST. During the development phase we also realized that some of the features that we had originally planned for SOL were not quite straightforward to implement, or differed from our initial understanding. This made us modify some specific components of the language, which we updated in the Language Reference Manual and testing suite, after consulting with our mentor.
+
+    \subsection{Development and Testing}
+      We followed a \textit{test driven development} approach for SOL language as far as possible. Initially test cases were written based on the features mentioned in our programming language reference manual. Test cases were divided into two main categories, features that are allowed in SOL, such as integer addition, defining shapes etc and failure cases which check whether the compiler properly rejects syntactically or semantically incorrect programs. Each test case comprised of a basic SOL program source code that would test one particular feature or component of the language and compare the actual output against an standardized file containing expected output messages.\\
+
+      The compiler was built by integrating one feature at a time, end to end, starting at the scanner, all the way up to codegen phase and which would allow the compiler to support that feature alongside previously implemented features. Each feature implementation was tested against the test suite to ensure correct behaviour and also ensure that it does not breaks any of the previously implemented features, using the testing script and Travis CI builds that were triggered on each code push to our github repository.\\
+
+      Towards the end of project development timeline, we also incorporated a manual testing component, as there is no way to ensure correct display of graphics within Travis CI environment. These tests can be run using the same test suite script, with manual inspection of displayed graphics to ensure correctness.\\
+
+  \section{Programming Style Guide}
+    \begin{itemize}
+      \itemsep 0em
+      \item Most of our compiler source code is written in OCaml, we simply used the standard Ocaml programming guidelines as mentioned on the official tutorials page\\
+      \colorbox{lightgray}{\href{https://ocaml.org/learn/tutorials/guidelines.html}{https://ocaml.org/learn/tutorials/guidelines.html}}
+
+      \item To enforce OCaml style guides, Kunal set up the open sourced merlin linter and analyzer in sublime text editor\\
+      \colorbox{lightgray}{\href{https://github.com/let-def/sublime-text-merlin}{https://github.com/let-def/sublime-text-merlin}}
+
+      \item A significant component of SOL compiler is the \textit{predefined.o} static library written in C (C99 standard) for which the C++ linter was used within sublime text.\\
+      \colorbox{lightgray}{\href{ https://github.com/SublimeLinter/SublimeLinter-cppcheck}{ https://github.com/SublimeLinter/SublimeLinter-cppcheck}}
+
+      \item As a general rule of thumb, we tried to use descriptive variable names throughout our code, which helps the reader to easily understand the code.
+    \end{itemize}
+
+  \section{Project Timeline}
+    \subsection{Milestones}
+      \begin{center}
+        {\renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{|p{8cm}|p{4cm}|}
+        \hline
+          \textbf{Milestone} & \textbf{Date} \\
+          \hline
+          Initial research \& brainstorming & Sept. 11 \\
+          \hline
+          Decide on language idea & Sept. 19 \\
+          \hline
+          Finish Proposal & Sept. 26 \\
+          \hline
+          Finish LRM & Oct. 16 \\
+          \hline
+          Add regression test suite/Travis CI & Oct. 29 \\
+          \hline
+          Implement primitives \& other basics & Nov. 1 \\
+          \hline
+          Hello World Demo & Nov. 8 \\
+          \hline
+          Implement arrays, internal functions & Dec. 2 \\
+          \hline
+          Implement shapes & Dec. 12 \\
+          \hline
+          Implement drawing (SDL) & Dec. 16-17 \\
+          \hline
+          Update and Finish Testing (manual) & Dec. 17-19 \\
+          \hline
+          Final Report Preparation & Dec. 18-19 \\
+          \hline
+          Demo Day & Dec. 20\\
+        \hline
+        \end{tabular}
+      \end{center}
+
+    \subsection{Github timeline}
+      \includegraphics[scale=0.37]{github-timeline}
 
 
 % Appendix code listings
