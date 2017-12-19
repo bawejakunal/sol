@@ -108,14 +108,20 @@ let translate (globals, shapes, functions) =
   let sprintf_func = L.declare_function "sprintf" sprintf_t the_module in
 
   (* Declare the built-in drawCurve(), which draws a curve in SDL *)
-  let drawCurve_t = L.var_arg_function_type i32_t 
-    [|  L.pointer_type (L.array_type i32_t 2) ;  L.pointer_type (L.array_type i32_t 2) ;  L.pointer_type (L.array_type i32_t 2) ; i32_t ;  L.pointer_type (L.array_type i32_t 3) |] in
+  let drawCurve_t = L.function_type i32_t 
+    [|  L.pointer_type (L.array_type i32_t 2) ;  L.pointer_type (L.array_type i32_t 2) ; 
+        L.pointer_type (L.array_type i32_t 2) ; i32_t ;  L.pointer_type (L.array_type i32_t 3) |] in
   let drawCurve_func = L.declare_function "drawCurve" drawCurve_t the_module in
 
   (* Declare the built-in drawPoint(), which draws a point in SDL *)
-  let drawPoint_t = L.var_arg_function_type i32_t 
-    [| L.array_type i32_t 2 ; L.array_type i32_t 3 |] in
+  let drawPoint_t = L.function_type i32_t 
+    [| L.pointer_type (L.array_type i32_t 2) ; L.pointer_type (L.array_type i32_t 3) |] in
   let drawPoint_func = L.declare_function "drawPoint" drawPoint_t the_module in
+
+  (* Declare the built-in drawPoint(), which draws a point in SDL *)
+  let print_t = L.function_type i32_t 
+    [| L.pointer_type (L.array_type i32_t 2) ; L.pointer_type i8_t ; L.pointer_type (L.array_type i32_t 3) |] in
+  let print_func = L.declare_function "print" print_t the_module in
 
   (* (* Declare the built-in length() function *)
   let length_t = L.function_type i32_t [|L.struct_type context [|L.pointer_type i32_t; i32_t|]|] in
@@ -333,7 +339,9 @@ let translate (globals, shapes, functions) =
               L.build_in_bounds_gep char_format_str [| const_zero ; const_zero |] "tmp" builder in 
             ignore(L.build_call sprintf_func (Array.of_list (result :: char_fmt_ptr :: actuals)) "charToStringResult" builder);
             result
-        | "drawCurve" -> L.build_call drawCurve_func (Array.of_list(actuals)) "drawCurve" builder
+        | "drawCurve" -> L.build_call drawCurve_func (Array.of_list(actuals)) "drawCurve_result" builder
+        | "drawPoint" -> L.build_call drawPoint_func (Array.of_list(actuals)) "drawPoint_result" builder
+        | "print" -> L.build_call print_func (Array.of_list(actuals)) "print_result" builder
         | _ -> let (fdef, fdecl) = (try StringMap.find f_name function_decls with Not_found -> raise(Failure("SCall Not_found!"))) in
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in

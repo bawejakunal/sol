@@ -112,9 +112,11 @@ let check (globals, shapes, functions) =
        locals = []; body = [] } (StringMap.add "drawCurve"
      { ftype = Void; fname = "drawCurve"; formals = 
          [(Array(2, Int), "x"); (Array(2, Int), "y"); (Array(2, Int), "z"); (Int, "stepsize"); (Array(3, Int), "rgb")];
-       locals = []; body = [] } (StringMap.singleton "drawPoint"
+       locals = []; body = [] } (StringMap.add "drawPoint"
      { ftype = Void; fname = "drawPoint"; formals = [(Array(2, Int), "x"); (Array(3, Int), "rgb")];
-       locals = []; body = [] }))))))))
+       locals = []; body = [] } (StringMap.singleton "print"
+     { ftype = Void; fname = "print"; formals = [(Array(2, Int), "x"); (String, "text"); (Array(3, Int), "rgb")];
+       locals = []; body = [] })))))))))
   in
      
   let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
@@ -225,10 +227,10 @@ let check (globals, shapes, functions) =
             string_of_expr ex)));
         SAssign(slval, (rexpr, rt)), lt
       | Call(fname, actuals) as call -> let fd = function_decl fname env.functions in 
-          ignore(if (fname = "drawCurve" || fname = "drawPoint") then
+          ignore(if (fname = "drawCurve" || fname = "drawPoint"|| fname = "print") then
             if func.fname = "draw"
             then ()
-            else raise(Failure("drawCurve/drawPoint can only be called within a draw()!"))
+            else raise(Failure("drawCurve/drawPoint/print can only be called within a draw()!"))
           else ()
           );
           if List.length actuals != List.length fd.formals then

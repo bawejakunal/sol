@@ -40,13 +40,10 @@ rule token = parse
 | "construct"  { CONSTRUCT }
 | "draw"   { DRAW }
 | '.'      { DOT }
-(*| "drawpoint"  { DRAWPOINT }
-| "drawcurve"  { DRAWCURVE }
-| "parent"  { PARENT }
+(*| "parent"  { PARENT }
 | "extends"  { EXTENDS }
 | "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
 | "consolePrint"  { CONSOLEPRINT }
-| "print"  { PRINT }
 | "length"  { LENGTH }
 | "setFramerate"  { SETFRAMERATE }
 | "translate"  { TRANSLATE }
