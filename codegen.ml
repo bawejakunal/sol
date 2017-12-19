@@ -209,25 +209,36 @@ let translate (globals, shapes, functions) =
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
     let local_vars =
-      let add_formal m (t, n) p = L.set_value_name n p;
-        let local = 
-          (match t with
-          (* For arrays, use the pointer directly *)
-            A.Array(_) -> p
-          | _ -> let l = L.build_alloca (ltype_of_typ t) n builder in
-              ignore (L.build_store p l builder); l) in
-      	StringMap.add n local m in
+      let add_formal m (t, n) p = 
+      (* Special case: for member variables, add the first formal (pointer to the instance) directly into the map *)
+      if (String.length n > 2 && (String.sub n 0 2) = "__")
+      then (StringMap.add n p m)
+      else(
+        L.set_value_name n p;
+          let local = 
+            (match t with
+            (* For arrays, use the pointer directly *)
+              A.Array(_) -> p
+            | _ -> let l = L.build_alloca (ltype_of_typ t) n builder in
+                ignore (L.build_store p l builder); l) in
+        	StringMap.add n local m
+      ) in
 
-      let add_local m (t, n) =
-      	let local_var = L.build_alloca (ltype_of_typ t) n builder	in 
-        StringMap.add n local_var m in
+      let add_local m (t, n) = 
+        (* Special case: for constructors, don't re-add the local into the map *)
+        if (String.length n > 2 && (String.sub n 0 2) = "__")
+        then m
+        else (
+        	let local_var = L.build_alloca (ltype_of_typ t) n builder	in 
+          StringMap.add n local_var m
+        ) in
 
-      let formals = try (List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
+      let formals = (List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
           (Array.to_list (L.params the_function)) )
-      (* The only case where a mismatch occurs is for shape-member functions, when the first argument is the shape 
+      (* (* The only case where a mismatch occurs is for shape-member functions, when the first argument is the shape 
       - in this case, ignore the first argument *)
       with Invalid_argument("List.fold_left2") -> List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
-          (List.tl (Array.to_list (L.params the_function))) in
+          (List.tl (Array.to_list (L.params the_function))) *) in
       List.fold_left add_local formals sfdecl.S.slocals in
 
     (* Return the value for a variable or formal argument *)
@@ -342,7 +353,20 @@ let translate (globals, shapes, functions) =
         | "drawCurve" -> L.build_call drawCurve_func (Array.of_list(actuals)) "drawCurve_result" builder
         | "drawPoint" -> L.build_call drawPoint_func (Array.of_list(actuals)) "drawPoint_result" builder
         | "print" -> L.build_call print_func (Array.of_list(actuals)) "print_result" builder
-        | _ -> let (fdef, fdecl) = (try StringMap.find f_name function_decls with Not_found -> raise(Failure("SCall Not_found!"))) in
+        | _ -> let (fdef, fdecl), actuals = 
+            (try StringMap.find f_name function_decls, actuals
+            with Not_found -> 
+            (* In this case, another member function is being called from inside a member function *)
+            let (sname, inst_name) = (match List.hd sfdecl.S.sformals with
+                (A.Shape(s), n) -> (s, n)
+              | _ -> (* In this case, the member function is being called from the constructor *)
+                  match List.hd sfdecl.S.slocals with
+                      (A.Shape(s), n) -> (s, n)
+                    | _ -> raise(Failure("SCall Not_found"))
+            ) 
+            in 
+            let new_f_name = sname ^ "__" ^ f_name in 
+            (StringMap.find new_f_name function_decls, (lookup inst_name) :: actuals)) in
 	        let result = (match fdecl.S.styp with A.Void -> ""
                                             | _ -> f_name ^ "_result") in
           L.build_call fdef (Array.of_list actuals) result builder)
@@ -536,13 +560,20 @@ let translate (globals, shapes, functions) =
     let (the_function, _) = (try StringMap.find sfdecl.S.sfname function_decls with Not_found -> raise(Failure("build_object_function_body Not_found!"))) in
     let builder = L.builder_at_end context (L.entry_block the_function) in 
     let construct_name = sname ^ "__construct" in
+    let inst_name = "__" ^ sname ^ "_inst" in
     
     let shape_inst = 
       if sfdecl.S.sfname = construct_name 
       (* SPECIAL CASE: For the construct(), add creation of an object of the required type *)
-      then L.build_alloca stype (sname ^ "_inst") builder
+      then L.build_alloca stype inst_name builder
         (* In all other cases, return the first argument of the function *)
-      else Array.get (L.params the_function) 0
+      else let inst = Array.get (L.params the_function) 0 in ignore(L.set_value_name inst_name inst); inst
+    in
+
+    let sfdecl = 
+      if sfdecl.S.sfname = construct_name
+      then {sfdecl with S.styp = A.Shape(sname); S.slocals = (A.Shape(sname), inst_name) :: sfdecl.S.slocals}
+      else {sfdecl with S.sformals = (A.Shape(sname), inst_name) :: sfdecl.S.sformals}
     in
 
     (* Create pointers to all member variables *)
@@ -550,6 +581,10 @@ let translate (globals, shapes, functions) =
       (fun m ((_, n), i) -> let member_val = L.build_struct_gep shape_inst i n builder in
         StringMap.add n member_val m) 
       StringMap.empty (List.mapi (fun i v -> (v, i)) sdecl.S.smember_vs) in
+    let member_vars = if sfdecl.S.sfname = construct_name
+      then StringMap.add inst_name shape_inst member_vars
+      else member_vars 
+    in
     
     (* Build rest of the function body *)
     build_function_body sfdecl member_vars;
@@ -562,7 +597,7 @@ let translate (globals, shapes, functions) =
       match L.block_terminator (L.insertion_block builder) with
         Some ins -> (L.delete_instruction ins); 
           ignore(L.build_ret shape_inst builder)
-      | None -> ()
+      | None -> ignore(L.build_ret shape_inst builder)
     else ()
 
   in
