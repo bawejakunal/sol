@@ -72,7 +72,7 @@ Compare() {
 # Report the command, run it, and report any errors
 Run() {
     echo $* 1>&2
-    if [[ "$1" == *exe ]]; then
+    if [[ "$1" == *exe && "$1" != *mnl-* ]]; then
         closeWindow &
     fi
     eval $* || {
@@ -202,18 +202,15 @@ else
     files="tests/test-*.sol tests/fail-*.sol"
 fi
 
+# ignore unknown files
 for file in $files
 do
     case $file in
-	*test-*)
+	*test-*.sol|*mnl-*.sol)
 	    Check $file 2>> $globallog
 	    ;;
-	*fail-*)
+	*fail-*.sol)
 	    CheckFail $file 2>> $globallog
-	    ;;
-	*)
-	    echo "unknown file type $file"
-	    globalerror=1
 	    ;;
     esac
 done
