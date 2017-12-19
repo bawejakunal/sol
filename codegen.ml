@@ -512,7 +512,18 @@ let translate (globals, shapes, functions) =
         "main" -> 
         (* Find all shape objects within scope *)
         let final_objs = List.rev (List.fold_left (fun lst (t, n) -> match t with
-            A.Shape(sname) -> (sname, lookup n) :: lst
+            A.Shape(sname) -> let inst = lookup n in 
+              let rec find_child_objs p_lst p_inst p_sname = 
+                let v_lst = (p_sname, p_inst) :: p_lst in
+                (* Look through the shape's member variables, to see if it has any other shape members *)
+                let sdef = shape_def p_sname in
+                List.fold_left (fun l (v_t, v_n) -> match v_t with
+                    A.Shape(v_sname) -> (* Find reference to variable shape *)
+                      let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+                      let v_inst = L.build_struct_gep p_inst index "tmp" builder in
+                      (v_sname, v_inst) :: (find_child_objs l v_inst v_sname)
+                  | _ -> l) v_lst sdef.S.smember_vs
+              in find_child_objs lst inst sname
           | _ -> lst) 
         [] (List.rev sfdecl.S.slocals)) in
 
