@@ -478,6 +478,94 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \subsection{Github timeline}
       \includegraphics[scale=0.37]{github-timeline}
 
+  \section {Team Roles and Responsibilities}
+    The following table summarizes the major responsibilities taken up by each team member, with a number of components overlapping among team members.
+    \begin{center}
+      {\renewcommand{\arraystretch}{1.5}
+      \begin{tabular}{|p{5cm}|p{10cm}|}
+      \hline
+      \textbf{Team Member} & \textbf{Responsibilities} \\
+      \hline
+      Aditya Narayanamoorthy (Language Guru) & Scanner, Parser, Ast, Semant, Sast, Codegen \\
+      \hline
+      Gergana Alteva (Project Manager) & Scanner, Parser, Ast, Semant, Sast, Codegen \\
+      \hline
+      Erik Dyer (System Architect) & VM, Docker, Graphics Library researching (SDL2), testing \\
+      \hline
+      Kunal Baweja (Tester) & predefined library, SDL2, SDL2\_gfx, Automated and Manual Test suite, Travis CI \\
+      \hline
+      \end{tabular}
+    \end{center}
+
+  \section{Software Development Environment}
+    The following software development tools, libraries and dependencies were used for developing SOL compiler by the team.
+    \begin{enumerate}
+      \itemsep 0em
+      \item Ubuntu \texttt{15.04} VM setup with ocaml compiler, opam, llvm toolchain, and ocaml Llvm module for llvm bindings.
+      \item Ocaml version: \texttt{4.02.3}
+      \item LLVM dev library: \texttt{3.8}
+      \item opam Llvm package (Ocaml Llvm bindings)
+      \item Sublime text with \texttt{merlin(ocaml)} and \texttt{cppcheck(C99)} linters
+      \item Version Control: \texttt{Github}
+      \item Travis CI: Automated testing on \texttt{Ubuntu 16.04} environment (same dependency configurations)
+    \end{enumerate}
+
+  \section {Project Logs}
+  Please see appendix \ref{git:log} for project logs in reverse chronological order of timeline.
+
+\chapter{Architectural Design}
+  We describe the compilation structure for a SOL program through SOL compiler in this chapter. This can be broken down into 3 phases:
+  \begin{enumerate}
+    \itemsep 0em
+
+    \item Compile SOL program to LLVM IR bytecode representation
+    \item Compile generated IR to architecture specific assembly code using LLVM compiler
+    \item Compile and link against predefined static library to produce executable
+  \end{enumerate}
+
+  \begin{figure}[ht]
+    \includegraphics[scale=1]{compile-architecture.png}
+    \caption{SOL Compiler Block Diagram}
+  \end{figure}
+
+  \section{Interfaces between SOL Compiler components}
+    \subsection{Scanner}
+      The scanner takes as input a \texttt{SOL(.sol) source program} and generates tokens for \textit{identifiers, keywords, operators, values, functions and shapes}, as specified by the lexical conventions for SOL in  Language Reference Manual (see chapter \ref{lrm}). It rejects a source program if it observes an invalid token, against the rules specified in \texttt{scanner.mll}
+
+    \subsection{Parser}
+      The parser accepts the tokenized output from scanner and generates an abstract syntax tree (AST) based on SOL syntax. It rejects the source program if a syntactic error is seen due to which a valid AST can not be generated.
+
+    \subsection{Semantic Checker}
+      The AST output from parser is passed to semantic checker to ensure semantic correctness of each program statement, including static type checking. Eg: An \texttt{int} variable can not be assigned a floating point value, per SOL specification. Such an assignment in SOL program will be semantically incorrect and rejected at the semantic checking phase.\\
+      The semantic checking phase associates semantic information to the AST nodes and produces a SAST, if the program passes the semantic check.
+
+    \subsection{Code Generation}
+    The code generator accepts the SAST generated after semantic checking and generates the LLVM IR code using the OCaml Llvm bindings. The SOL \textit{primitives, arrays, shapes, functions, member functions} are all mapped to corresponding LLVM primitives, arrays, structs and function definitions representations.\\
+    Once the LLVM IR code is generated successfully, the SOL compiler task is over. After this we use the LLVM compiler (\texttt{llc}) to convert the IR code to architecture specific assembly code. This is further compiled into an executable and statically linked against a predefined library, that interfaces with \texttt{SDL2} and \texttt{SDL2\_gfx}. 
+
+    The compiler components were implemented by team members as listed below:
+    \begin{center}
+      {\renewcommand{\arraystretch}{1.5}
+      \begin{tabular}{|p{5cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Component} & \textbf{Source file} & \textbf{Team members} \\
+        \hline
+        Lexical Analysis & scanner.mll & Aditya, Gergana\\
+        \hline
+        Parsing & parser.mly & Aditya, Gergana\\
+        \hline
+        Abstract Syntax Tree & ast.ml & Aditya, Gergana\\
+        \hline
+        Semantic Analysis & semant.ml & Aditya, Gergana\\
+        \hline
+        SAST & sast.ml & Aditya, Gergana\\
+        \hline
+        LLVM backend & codegen.ml & Aditya, Gergana\\
+        \hline
+        Predefined graphic library & predefined.c & Kunal\\
+        \hline
+      \end{tabular}
+    \end{center}
 
 % Appendix code listings
 \begin{appendices}
@@ -545,6 +633,9 @@ The first two scripts are used for automated testing on Travis CI. For individua
 \chapter{Manual Testing}\label{mnl-test}
 
   \input{manual-test.tex}
+
+\chapter{Commit Logs} \label{git:log}
+  \lstinputlisting[style=make, stringstyle=\color{black}]{commit.log}
 
 \end{appendices}
 

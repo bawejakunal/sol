@@ -9,11 +9,14 @@ shape Points {
 
     draw() {
         int i;
+        int [2]b;
+
+        b = a;
         i = 0;
         while (i < 50) {
-            a[0] = a[0] + i;
-            a[1] = a[1] + i;
-            drawPoint(a, [0, 0, 0]);
+            b[0] = b[0] + i;
+            b[1] = b[1] + i;
+            drawPoint(b, [0, 0, 0]);
             i = i + 1;
         }
     }
