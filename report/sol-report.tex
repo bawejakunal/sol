@@ -19,7 +19,11 @@
 \usepackage[hidelinks]{hyperref}
 \hypersetup{
     linktoc=all,     %sections and subsections linked
+    urlcolor=blue
 }
+
+% display backtick
+\usepackage{upquote}
 
 \definecolor{lightgray}{rgb}{.95,.95,.95}
 
@@ -123,12 +127,269 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 \tableofcontents{}
 
 \chapter{Introduction}
+  SOL (Shape Oriented Language), is a domain specific programming language that allows programmers to create 2D animations with ease, through an object-oriented approach. Engineers, programmers, scientists and designers, through SOL, have the ability to define and create objects, known as Shapes, and dictate their appearance and movements on the screen. SOL\'s simplicity saves developers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. It compiles into LLVM IR bytecode, making it adaptable across different architectures. The produced LLVM IR bytecode can be translated further into assembly code and linked statically against a predefined library before compiling down into an executable for a specific architecture using the LLVM compiler and GCC compilers respectively. The predefined library used by SOL for graphic rendering has been built on top of SDL2, that abstracts away the lower level details for drawing and animating objects.
+
+  \section{Background}
+  SOL takes its inspiration from the ease of programming in \textit{object-oriented paradigm} and the complexity of existing libraries/solutions for rendering graphics. It attempts to combine both of them and provide a language which allows developers to organize graphics into a collection of \textit{Shapes} (much like objects) which can be easily defined, created and interacted with to produce powerful images and/or animations at a fast paced development.\\
+
+  SOL is commonly used to model various types of scientific data, but it can also be applicable in other domains, such as:
+  \begin{enumerate}
+    \itemsep 0em
+    \item Drawing engineering models
+    \item Data visualization
+    \item Bored college students making funny memes
+    \item Entertaining animations
+  \end{enumerate}
+
+\chapter{Language Tutorial}
+  This chapter provides a simple language tutorial to guide programmers towards creating their first SOL program! It has been divided into three parts:
+  \begin{enumerate}
+    \item \textbf{Environment setup} - guide to setting up the SOL compiler and development environment
+    \item \textbf{Language Quick Tour} - a bried descriptioin of basic components of language.
+    \item \textbf{Sample Program} - create and rotate a line about its midpoint
+  \end{enumerate}
+
+  \section{Environment setup}
+  SOL compiler has been developed and tested on Ubuntu 15.04 and Ubuntu 16.04 environments, and capable of supporting others as well. It can work on multiple architecture as the LLVM IR bytecode can further be compiled into architecture specific executables. The environment setup tutorial assumes you have the latest version of SOL compile source code downloaded from our repository.
+
+    \subsection{Building SOL compiler (Ubuntu 15.04 or later version)}
+    \begin{enumerate}
+      \item SOL compiler is written in OCaml. Download the source code from our github repository: \colorbox{lightgray}{{\href{https://github.com/bawejakunal/sol}{https://github.com/bawejakunal/sol}}}
+
+      \item Download and run the bash script below, which installs the latest compatible version of OCaml compiler and opam for *-nix OS environments.\\
+      \colorbox{lightgray}{{\href{https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh}{https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh}}}
+
+      \item Configure the opam environment for importing Ocaml packages\\
+      \colorbox{lightgray}{\lstinline[style=bash]{eval `opam config env`}}
+
+      \item Install LLVM compiler toolchain and ocaml bindings, for the SOL compiler\\
+      \colorbox{lightgray}{\lstinline[style=bash]{./install-llvm.sh}}
+
+      \item Download and Install SDL2 and SDL2\_gfx libraries which are used by our predefined static library for graphics rendering.\\
+        \colorbox{lightgray}{\lstinline[style=bash]{wget} \href{http://www.ferzkopp.net/Software/SDL2\_gfx/SDL2\_gfx-1.0.3.tar.gz}{http://www.ferzkopp.net/Software/SDL2\_gfx/SDL2\_gfx-1.0.3.tar.gz}}\\
+        \colorbox{lightgray}{\lstinline[style=bash]{./install-sdl-gfx.sh}}
+
+      \item Build the SOL compiler as \texttt{sol.native} and the static graphic libarary as \texttt{predefined.o}\\
+      \colorbox{lightgray}{\lstinline[style=bash]{make all}}
+
+    \end{enumerate}
+
+  \section{SOL Quick Tour}
+  This section provides a quick tour on the data types, data structures and the shape oriented programming paradigm provided by SOL, with examples. Towards the end we walk through the steps to generate an executable SOL program. For a detailed explanation of language syntax, semantics and built-int functions refer to chapter \ref{lrm}.
+
+    \subsection{Primitive data types}
+      All variables of primitive data types are declared starting with their type followed by an identification. SOL supports following primitives:
+      \begin{enumerate}
+        \itemsep 0em
+        \item \texttt{int} - integers
+        \item \texttt{float} - double precision floating point number
+        \item \texttt{char} - single character from \texttt{ASCII} character set
+        \item \texttt{string} - a sequence of one or more \texttt{ASCII} characters
+      \end{enumerate}
+      Example:\\
+      \begin{lstlisting}[style=sol]
+        func main() {
+            int x;  /* declare primitives */
+            float y;
+            char c;
+            string s;
+
+            x = 5;  /* assign values to primitives */
+            y = 6.5;
+            c = 'a';
+            s = "better call SOL";
+        }
+      \end{lstlisting}
+
+    \subsection{Arrays and Shapes}
+      SOL supports two complex data structures:
+      \subsubsection{Array}
+        An array is a fixed size sequence of primitives. Individual elements can be accessed within array by specifying indices as integers in range \texttt{0} to \texttt{1 less than array length}.\\
+        Example:\\
+        \begin{lstlisting}[style=sol]
+          func main() {
+              int [3]a;      /* declare array of 3 integers */
+              a = [1, 2, 3]; /* init array with 3 elements*/
+              a[1] = 4;      /* update second element value to 4 */
+              a[2] = a[0];   /* last element equal to first element */
+          }
+        \end{lstlisting}
+
+      \subsubsection{Shape}
+        A collection of one or more variables of \textit{primitives, arrays and/or shapes} which come together to describe a \textit{shape}. These variables are called \textit{member variables} of a shape. A shape definition can also contain function definitions, referred as \textit{member functions}.\\
+        Example:\\
+        \begin{lstlisting}[style=sol]
+          class Line {
+              string name;  /* identify a line by name */
+              int [2]start; /* first end point of a line */
+              int [2]end;   /* other end point of a line */
+
+              /* compulsory constructor for a shape */
+              construct(int [2]s, int[2]e) {
+                  /* constructor can be empty definition */
+                  start = s;
+                  end = e;
+              }
+
+              /* compulsory draw member function.*/
+              draw() {
+                  /* accepts no arguments */
+                  /* can be empty definition */
+              }
+          }
+
+          func main() {
+              Line l; /* declare a variable of shape Line */
+              l = shape Line([1,1], [2,2]); /* instantiate a Line object */
+          }
+        \end{lstlisting}
+
+    \subsection{Operators}
+    SOL supports \texit{arithmetic operations, relational comparisons and logical operations}. For all binary operators described in this section, the operands are specified to the left and right, respectively, of the operator and \textit{both operands must be expressions of same data types}.\\
+    All logical operators accept \textit{boolean logic expressions},represented as \textit{integer expression} in SOL. Non-zero expressions correspond to \texttt{true} and a \texttt{zero} corresponds to \texttt{false}. 
+
+    \begin{enumerate}
+      \itemsep 0em
+      \item \textit{Binary arithmetic operators}: \texttt{+, -, *, / \%}
+      \item \textit{Relational operators (binary)}: \texttt{==, |=, >, >=, <, <=}
+      \item \textit{Logical operators}: \texttt{\&\&, ||} \textit{(operands must be of type int)}
+      \item \textit{Logical not}: \texttt{!} \textit{(unary and right associative)}
+      \item \textit{Unary negation}: \texttt{-} \textit{(unary and right associative)}
+    \end{enumerate}
+
+    All expressions are evaluated left to right. Please refer to section \ref{precedence} for exact order of preference and associativity rules for each operator.\\
+
+    Example:\\
+    \begin{lstlisting}[style=sol]
+        func main() {
+            int x;
+            int y;
+            int c;
+            float f;
+            float g;
+
+            x = 2;
+            y = 3;
+            f = 3.0;
+            g = 6.0;
+
+            y = x + y;  /*5: integer addition */
+            x = y - x;  /*3: subtraction */
+
+            g = g * f;  /* 18: floating point multiplication*/
+            f = g / f;  /* 6: floating point division */
+            y = y % 2;  /*1: modulo operation */
+
+            c = g == f; /*0: EQUALITY is false */
+            c = g != f; /*1: NOT EQUAL is true */
+            c = g > f;  /*1: g GREATER THAN f */
+            c = y >= x; /*1: y GREATER THAN OR EQUAL x is true */
+            c = y < x;  /*0: y LESS THAN x is false */
+            c = 5 <= 5; /*1: 5 LESS THAN OR EQUALS 5 is true */
+
+            c = 5 && 0; /*0: LOGICAL AND of true and false */
+            c = 2 || 0; /*1: LOGICAL OR of true and false */
+
+            c = !c;   /*0: LOGICAL NOT of true(1) */
+            f = -f;   /*-6: unary negation of arithmetic expression */
+        }
+    \end{lstlisting} 
+
+    \subsection{Control flow statements}
+    SOL program statements are executed in order, with the entry point being the main function. However, sometimes developers need to execute only a branch of source code (jump through some statements) or execute a portion of code repeatedly. SOL provides two control flow statements if and while for conditional branching and looping through a portion of code, respectively.
+
+      \subsubsection{if-statement}
+      An \textit {if statement block} allows to execute or skip a \texit{code branch} based on a \textit{logical expression}.\\
+      Example:\\
+      \begin{lstlisting}[style=sol]
+        func main() {
+          if (1 > 2) {
+            /* condition if false; skip this code block */
+            consolePrint("NOT PRINTED");
+          }
+          consolePrint("Hello World");
+        }
+      \end{lstlisting}
+
+      \subsubsection{while-statement}
+      A \texit{while statement block} allows to execute a portion of source code repeatedly until a logical condition holds \texttt{true}.
+      \begin{lstlisting}[style=sol]
+        func main() {
+            int i;
+            i = 1;
+            while (i <= 5) {
+                consolePrint("Hello");  /* this loop prints Hello 5 times*/
+                i = i + 1;    /* loop terminates when i exceeds 5 */
+            }
+        }
+      \end{lstlisting}
+
+    \subsection{Functions in SOL}
+    In SOL functions can be defined as a way to abstract away and re-use a code lock, with a named representation. These are useful if a particular piece of code needs to be executed at multiple places in the program. Functions in SOL can be defined as stand alone functions or as \textit{member functions} of a \textit{shape} definition. Function definitions begin with the \texttt{func} keyword and they optionally accept arguments as input values and return a result, for which the result type needs to be indicated in the function definition. A function may not return any result (void type) in which case no return type needs to be mentioned during function definition. Please refer section \ref{function} for a detailed explanation of function definition syntax.\\
+    
+    Example:\\
+    \begin{lstlisting}[style=sol]
+      /* define a function that accepts two integers and returns their sum */
+      func int add(int x, int y) {
+          /* sum of two integers */
+          return x + y;
+      }
+
+      func main() {
+          int sum;
+          sum = add(2, 3);
+          if (sum == 5) {
+              consolePrint("CORRECT");
+          }
+      }
+    \end{lstlisting}
+
+    Functions in SOL also support recursion. SOL also provides a number a of type conversion functions and built-in functions for displaying and animating shapes on screen and printing text on screen or console. Please refer to section \ref{internal} for detailed information, syntax on these functions.
+
+  \section{Rotate a Line around midpoint (Sample SOL program)}
+  The following program shows a simple example to define a line, create it and rotate it around its midpoint.
+  \begin{enumerate}
+    \itemsep 0em
+    \item As SOL treats all animation as an interaction of \textit{shapes}, we first define a straight line as a \textit{shape} in SOL, define its \texttt{draw} function.\\
+      \begin{lstlisting}[style=sol]
+        shape Line {
+            int [2]start;
+            int [3]mid;
+            int [2]end;
+
+            construct(int [2]s, int [2]e) {
+                start = s;
+                end = e;
+                mid[0] = (s[0] + e[0]) / 2;
+                mid[1] = (s[1] + e[1]) / 2;
+            }
+
+          draw() {
+            /* draw red line */
+            drawCurve(start, mid, end, 100, [200, 0, 0]);
+          }
+        }
+      \end{lstlisting}
+
+    \item The next step is to create a line object and instantiate it within \texttt{main} function, which is the entry point to a SOL program.\\
+      \begin{lstlisting}[style=sol]
+        func main() {
+          Line l; /* declare a line shape */
+
+          /* create a line with given end points */
+          l = shape Line([10,10], [100, 100]);
+
+          /* rotate line here */
+        }
+      \end{lstlisting}
+  \end{enumerate}
+
+\chapter{Language Reference Manual} \label{lrm}
+
+  %% include the common content for lrm
+  \input{../lrm/sol-lrm-content.tex}
 
 
-\chapter{Language Reference Manual}
-
-%% include the common content for lrm
-\input{../lrm/sol-lrm-content.tex}
 
 % Appendix code listings
 \begin{appendices}
@@ -192,6 +453,10 @@ The first two scripts are used for automated testing on Travis CI. For individua
     %% use g.py scrip to generate the test-case.tex
     %% recompile the latex document
     \input{test-cases.tex}
+
+\chapter{Manual Testing}\label{mnl-test}
+
+  \input{manual-test.tex}
 
 \end{appendices}
 
