@@ -45,8 +45,8 @@ bool drawPoint(const int point[2], const int rgb[3]);
 bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
     const int steps, const int rgb[2], const int opacity);
 
-bool drawCurve(int* start, int* mid, int* end,
-    int steps, int* rgb);
+bool drawCurve(const int start[2], const int mid[2], const int end[2],
+    const int steps, const int rgb[3]);
 
 /* print on SDL window; returns 0 on success, -1 on failure */
 int print(const int pt[2], const char *text, const int color[3]);

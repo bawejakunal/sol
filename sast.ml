@@ -53,8 +53,6 @@ and sshape_dec = {
   sconstruct : sfunc_dec;
   sdraw    : sfunc_dec;
   smember_fs : sfunc_dec list;
-  sdrawcurveslen : int;    (* Store length of points, steps and color values used for drawCurve *)
-
 }
 
 type sprogram = bind list * sshape_dec list * sfunc_dec list
@@ -138,10 +136,9 @@ and string_of_sfdecl fdecl =
   "Shape " ^ sdecl.ssname ^ "(" ^ String.concat ", " (List.map snd sdecl.sconstruct.sformals) ^
   ")\n Member Variables: " ^ String.concat "" (List.map string_of_svdecl sdecl.smember_vs) ^ 
   "\n Draw: " ^ string_of_sfdecl sdecl.sdraw ^ 
-  "\n Member functions: " ^ String.concat "" (List.map string_of_sfdecl sdecl.smember_fs) ^
-  "\n drawCurve:" ^ string_of_int sdecl.sdrawcurveslen
+  "\n Member functions: " ^ String.concat "" (List.map string_of_sfdecl sdecl.smember_fs)
 
-let string_of_sprogram (vars, shapes, funcs, _) =
+let string_of_sprogram (vars, shapes, funcs) =
  String.concat "" (List.map string_of_svdecl vars) ^ "\n" ^
  String.concat "\n" (List.map string_of_ssdecl shapes) ^ "\n" ^
  String.concat "\n" (List.map string_of_sfdecl funcs)

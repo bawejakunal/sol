@@ -94,43 +94,42 @@ bool drawCurveUtil(const Sint16 *vx, const Sint16 *vy, const int num,
 }
 
 /* draw a bezier curve with 3 control points */
-bool drawCurve(int* start, int* mid, int* end,
-    int steps, int* rgb) {
-    printf("(%d, %d), (%d, %d), (%d, %d), %d, (%d, %d, %d)\n", 
-        start[0], start[1], mid[0], mid[1], end[0], end[1], steps, rgb[0], rgb[1], rgb[2]);
+bool drawCurve(const int start[2], const int mid[2], const int end[2],
+    int steps, const int rgb[3]) {
+    // printf("(%d, %d), (%d, %d), (%d, %d), %d, (%d, %d, %d)\n", 
+    //     start[0], start[1], mid[0], mid[1], end[0], end[1], steps, rgb[0], rgb[1], rgb[2]);
     
-    // const int num = 3;
+    const int num = 3;
 
-    // Sint16 *vx = NULL;
-    // Sint16 *vy = NULL;
+    Sint16 *vx = NULL;
+    Sint16 *vy = NULL;
     
-    // // accumulate x and y coordinates
-    // if ((vx = (Sint16*)malloc(num * sizeof(Sint16))) == NULL)
-    //     return false;
+    // accumulate x and y coordinates
+    if ((vx = (Sint16*)malloc(num * sizeof(Sint16))) == NULL)
+        return false;
 
-    // if ((vy = (Sint16*)malloc(num * sizeof(Sint16))) == NULL) {
-    //     free(vx);
-    //     return false;
-    // }
+    if ((vy = (Sint16*)malloc(num * sizeof(Sint16))) == NULL) {
+        free(vx);
+        return false;
+    }
 
-    // // x coordinates
-    // vx[0] = start[0];
-    // vx[1] = mid[0];
-    // vx[2] = end[0];
+    // x coordinates
+    vx[0] = start[0];
+    vx[1] = mid[0];
+    vx[2] = end[0];
 
-    // // y coordinates
-    // vy[0] = start[1];
-    // vy[1] = mid[1];
-    // vy[2] = end[1];
+    // y coordinates
+    vy[0] = start[1];
+    vy[1] = mid[1];
+    vy[2] = end[1];
 
-    // bool res = drawCurveUtil(vx, vy, num, steps, rgb, 255);
+    bool res = drawCurveUtil(vx, vy, num, steps, rgb, 255);
 
-    // // memory cleanup
-    // free(vx);
-    // free(vy);
+    // memory cleanup
+    free(vx);
+    free(vy);
 
-    // return res;
-    return true;
+    return res;
 }
 
 
