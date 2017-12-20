@@ -1,8 +1,5 @@
-/*@author: Erik Dyer & Kunal Baweja */
-
-/* Test Triangle*/
-/* Run this code, */
-
+/*@author: Erik Dyer */
+/* Test Triangle Translate*/
 
 func findCenter(int [2]m, int[2]x, int[2]y) {
     m[0] = (x[0] + y[0]) / 2;
