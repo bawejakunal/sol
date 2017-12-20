@@ -15,8 +15,8 @@ shape Polygon{
 
     draw(){
         int i;
-        int degrees;
-        int radians;
+        float degrees;
+        float radians;
         int[] mid;
         int[] end;
 
