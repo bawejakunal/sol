@@ -1,7 +1,7 @@
 
 \section{Introduction}
 %% Text of abstract
-SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. As a lightweight object-oriented language, SOL allows for unlimited design opportunities and eases the burden of animation. In addition, SOL’s simplicity saves programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects.
+SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. SOL uses \textit{point} (visual dot) and \texit{B\'ezier Curves} with three control points as the basic drawing controls provided to the programmer for defining shapes. As a lightweight object-oriented language, SOL allows for unlimited design opportunities and eases the burden of animation. In addition, SOL’s simplicity saves programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects.
 \par
 
 \section{Conventions}
@@ -178,10 +178,6 @@ This section describes the complete lexical conventions followed for a syntactic
     If an identifier with file scope has the same name as an identifier with block scope, the block-scope identifier gets precedence.
 
 \section{Expressions and Operators}
-    \subsection{\textit{Typecasting}}
-    A typecast is the conversion of an expression from one type to another. SOL supports explicit casting of \textit{int} to \textit{float}, \textit{float} to \textit{int}, and \textit{int}, \textit{float} and \textit{char} to \textit{string}. To cast an expression to a different type, place the desired type in parentheses in front of the expression. \\
-    Eg: \texttt{(int) myFloat /* Returns the integer value of myFloat */}
-    
     \subsection{\textit{Precedence and Associativity}} \label{precedence}
     SOL expressions are evaluated with the following rules:
     \begin{enumerate}
@@ -234,7 +230,7 @@ This section describes the complete lexical conventions followed for a syntactic
 
     \subsection{\textit{Function Declarators and Definition}} \label{function}
     Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically does not return any value. Functions are given a name (a valid \textit{identifier}) followed by function formal arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
-    Function can also be defined within \textit{shape} definitions in which case it is referred as \textit{member function} of the class. (see section \ref{classes})\\
+    Functions can also be defined within \textit{shape} definitions in which case they are referred as \textit{member functions} of a class. (see section \ref{classes})\\
 
     Example:\\
     \begin{lstlisting}[style=sol]
@@ -386,7 +382,8 @@ The following set of functions are also a category of internal/required function
     \underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
 
     \subsection{\textit{draw}}
-    For every \texttt{shape} definition \texttt{draw} is a required function that must be defined by the programmer. The \texttt{draw} function does not accept any input arguments and called internally to display the object on screen.
+    For every \texttt{shape} definition \texttt{draw} is a required function that must be defined by the programmer. The \texttt{draw} function does not accept any input arguments and called internally to display the object on screen. The \texttt{drawCurve}, \texttt{drawPoint} and \texttt{print} functions calls can be used within \texttt{draw} definition to describe the actual drawing of an object.\\
+    At runtime \texttt{draw} functions of all objects instantiated at runtime are called, to create the final scene rendering on screen.
 
 \section{Animation Functions} \label{animation}
 The following functions are used to animate the objects drawn in a SOL program.
@@ -461,7 +458,7 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
 
     \subsubsection{Creating Shape Instances}
     Actual instances for a \texit{shape} definition can be created, which represent the actual shapes rendered on the screen.\\
-    To instantiate an object for a shape, we first declare a variable of defined \textit{shape} (say \texttt{Triangle}) and then instantiate by calling the \texit{constructor}.\\
+    To instantiate an object for a shape, we first declare a variable of defined \textit{shape} (say \texttt{Triangle}) and then instantiate it by calling the \texit{constructor}.\\
     Example:\\
     \begin{lstlisting}[style=sol]
         func main() {
