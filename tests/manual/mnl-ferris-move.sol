@@ -106,7 +106,12 @@ shape FerrisWheel {
         float degrees;
         int[2] strt;
 
-        center = ctr;
+        /* carriages rotate around a point below
+         * the center of ferris wheel spokes
+         */
+        center[1] = ctr[1] + 16;
+        center[0] = ctr[0];
+
         radius = intToFloat(r);
         sides = n;
         plgn = shape Polygon(ctr, r, n, 0.0, [160, 82, 45]);
