@@ -70,7 +70,7 @@ void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
     const double degree);
 
 /* translate a point */
-void translatePoint(int pt[2], int* displaceX, int* displaceY, int sign, int maxFrame);
+void translatePoint(int pt[2], int* displaceX, int* displaceY, int maxFrame, int sign);
 
 /* translateCurve */
 void translateCurve(int start[2], int mid[2], int end[2],
