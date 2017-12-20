@@ -64,15 +64,15 @@ This section describes the complete lexical conventions followed for a syntactic
 
     \subsection{\textit{Integer Constants}}
     A sequence of one or more digits representing a number in base-10, optionally preceded by a unary negation operator (\texttt{-}), to represent negative integers.\\
-    Eg: \texttt{1234}
+    Example: \texttt{1234}
 
     \subsection{\textit{Float Constants}}
     Similar to an integer, a float has an \textit{integer}, a decimal point (\texttt{.}), and a fractional part. Both the integer and fractional part are a sequence of one or more digits. A negative float is represented by a preceding unary negation operator (\texttt{-}).\\
-    Eg: \texttt{0.55  10.2}
+    Example: \texttt{0.55  10.2}
 
     \subsection{\textit{Character Constants}}
     An ASCII character within single quotation marks.\\
-    Eg: \texttt{'x' 'a'}
+    Example: \texttt{'x' 'a'}
 
     \subsection{\textit{Escape Sequences}}
     The following are special characters represented by escape sequences.
@@ -93,7 +93,7 @@ This section describes the complete lexical conventions followed for a syntactic
 
     \subsection{\textit{String constants}}
     A SOL \textit{string} is a sequence of zero or more \textit{characters} within double quotation marks.\\
-    Eg: \texttt{"cat"}
+    Example: \texttt{"cat"}
 
     \subsection{\textit{Operators}}
     SOL has mainly four categories of operators defined below:
@@ -203,7 +203,7 @@ This section describes the complete lexical conventions followed for a syntactic
     
     \subsection{\textit{Dot Accessor}}
     To access members of a declared \texttt{shape} (further described in section \ref{classes}), use the dot accessor `.' followed by the identifier name of the \textit{member variable} or \textit{member function}. \\
-    Eg: \texttt{shape\_object.point1 /* This accesses the variable point1 within the object shape\_object */}
+    Example: \texttt{shape\_object.point1 /* This accesses the variable point1 within the object shape\_object */}
 
 
 \section{Declaring Identifers}
@@ -224,8 +224,8 @@ This section describes the complete lexical conventions followed for a syntactic
     An identifier, also referred to as a \textit{variable}, is declared by specifying the \texttt{primitive type} or name of the \texttt{Shape}, followed by a valid identifier, as specified in section \ref{identifer}. Variables can be declared only at the beginning of a function or at the top of the source files, as global variables, which are accessible within all subsequent function or shape definitions.
 
     \subsection{\textit{Array Declarators}} \label{array}
-    An array may be formed from any of the primitive types and \texttt{shape}s, but each array may only contain one type of primitive or \texttt{shape}. At declaration, the type specifier and the size of the array must be indicated. The array size need not be specified for strings, which are character arrays. SOL supports \texttt{fixed size arrays}, declared at compile time i.e. a program can not allocate dynamically sized arrays at runtime. Arrays are most commonly used in SOL to specify coordinates with two integers and specify drawing colors in RGB format with an array of three integers.\\
-    Eg: \texttt{int[2] coor; /* Array of two integers */}
+    An array may be formed from any of the primitive types and \texttt{shape}s, but each array may only contain one type of primitive or \texttt{shape}. At declaration, the type specifier and the size of the array must be indicated. The array size need not be specified for strings, which are character arrays. SOL supports \texttt{fixed size arrays}, declared at compile time i.e. a program can not allocate dynamically sized arrays at runtime. Arrays are commonly used in SOL to specify coordinates with two integers and specify drawing colors in RGB format with an array of three integers.\\
+    Example: \texttt{int[2] coor; /* Array of two integers */}
 
     \subsection{\textit{Function Declarators and Definition}} \label{function}
     Functions are declared with the keyword: \texttt{func}. This is followed by the \textit{return type} of the function. If no return type is specified, then the function automatically does not return any value. Functions are given a name (a valid \textit{identifier}) followed by function formal arguments. These arguments are a comma-separated list of variable declarations within parentheses. Primitives are passed into functions by value, and objects and arrays are passed by reference. This function declaration is then followed by the function definition, within curly braces; functions must always be defined immediately after they are declared.\\
@@ -240,11 +240,11 @@ This section describes the complete lexical conventions followed for a syntactic
     \end{lstlisting}
 
     \subsection{\textit{Constructor Declarators}}
-    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to a function definition with three additional constraints: 
+    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to function definitions with three additional constraints: 
     \begin{enumerate}
         \itemsep0em
-        \item Constructors are defined inside the class definition
-        \item A construct is defined with \texttt{construct} keyword, followed by optional formal arguments, within parenthesis as a comma-separated list of variable declarations, similar to function definitions
+        \item Constructors are defined inside the \textit{shape} definition
+        \item A constructor is defined with the \texttt{construct} keyword, followed by optional formal arguments, within parenthesis as a comma-separated list of variable declarations, similar to function definitions
         \item Constructors do not have a return type specified
     \end{enumerate}
     Example:\\
@@ -282,7 +282,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
 
     \subsection{\textit{Expression Statement}}
     Expression statements are those statements that get evaluated and produce a result. This can be as simple as an assignment or a function call.\\
-    Eg: \texttt{x = 5; /* assign 5 to identifier x */}
+    Example: \texttt{x = 5; /* assign 5 to identifier x */}
 
     \subsection{\textit{If Statement}}
     An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
@@ -308,7 +308,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
         \end{lstlisting}
 
     \subsection{\textit{Return statement}}
-    Stops execution of a function and returns to where the function was called originally in the code. Potentially returns a value; this value must conform with the return type specified in the function declaration. If no return type was specified, a \textit{return} statement without any value specified is syntactically valid (but not compulsory).\\
+    The return statement stops execution of a function and returns to where the function was called originally in the code. Potentially returns a value; this value must conform with the return type specified in the function declaration. If no return type was specified, a \textit{return} statement without any value specified is syntactically valid (but not compulsory).\\
     Example:\\
     \begin{lstlisting}[style=sol]
         func int sum(int x, int y) {
@@ -321,7 +321,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
 SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
 
     \subsection{\textit{main}}
-    Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may, declare and define variables or shape objects or call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input.\\
+    Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may declare and define variables or shape objects or call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input.\\
     Example:\\
     \begin{lstlisting}[style=sol]
         func main() {
@@ -339,7 +339,7 @@ SOL specifies a set of required/internal functions that must be defined for spec
     \underline{Return}: \texttt{0 for success, -1 for failure}
 
     \subsection{\textit{getFramerate}}
-    Call \texttt{getFramerate} to get the current number of frames rendered per second as \textit{integer}.\\
+    Call \texttt{getFramerate} to get the current number of frames rendered per second as an \textit{integer}.\\
     \underline{Arguments}: \texttt{None}\\
     \underline{Return}: \texttt{frames per second (int)}
 
@@ -348,7 +348,7 @@ SOL specifies a set of required/internal functions that must be defined for spec
     \underline{Arguments}: \texttt{text (string)}
 
     \subsection{Type Conversion Functions}
-    SOL provides following type conversion functions for converting expressions of a given type to expression of another type.
+    SOL provides following type conversion functions for converting expressions of a given type to an expression of another type.
 
     \subsubsection{\textit{intToString}}
     Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
@@ -381,7 +381,7 @@ The following set of functions are also a category of internal/required function
     \underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
 
     \subsection{\textit{draw}}
-    For every \texttt{shape} definition \texttt{draw} is a required function that must be defined by the programmer. The \texttt{draw} function does not accept any input arguments and called internally to display the object on screen. The \texttt{drawCurve}, \texttt{drawPoint} and \texttt{print} functions calls can be used within \texttt{draw} definition to describe the actual drawing of an object.\\
+    For every \texttt{shape} definition \texttt{draw} is a required function that must be defined by the programmer. The \texttt{draw} function does not accept any input arguments and is called internally to display the object on screen. The \texttt{drawCurve}, \texttt{drawPoint} and \texttt{print} functions calls can be used within the \texttt{draw} definition to describe the actual drawing of an object.\\
     At runtime \texttt{draw} functions of all objects instantiated at runtime are called, to create the final scene rendering on screen.
 
 \section{Animation Functions} \label{animation}
@@ -400,7 +400,7 @@ The following functions are used to animate the objects drawn in a SOL program.
     \underline{Arguments:} None
 
     \subsection{\textit{wait}}
-    Pauses animation for a specified amount of time (in seconds). To be called in the \texttt{render} function.\\
+    Pauses animation for a specified amount of time in seconds. To be called in the \texttt{render} function.\\
     \underline{Arguments}: \texttt{time (float)}
 
 
@@ -411,9 +411,9 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
     Similar to a class in C++; a \textit{shape} defines a particular 2-D shape as part of the drawing on screen. The name of a \textit{shape} must always start with an uppercase english alphabet.
 
     \subsubsection{Shape definition}
-    A \textit{shape} definition starts with the \texttt{shape} keyword, followed by the \textit{shape name},(eg: \texttt{Triangle}) and the definition within curly braces (\{\}) code block. \texit{Shape} definitions may optionally contain \textit{member variables}.\\
+    A \textit{shape} definition starts with the \texttt{shape} keyword, followed by the \textit{shape name},(Example: \texttt{Triangle}) and the definition within curly braces (\{\}) code block. \texit{Shape} definitions may optionally contain \textit{member variables}.\\
     
-    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword and \texttt{draw} function. The \texttt{construct} definition can optionally have \texit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe on screen display of the object.\\
+    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword and \texttt{draw} function. The \texttt{construct} definition can optionally have \texit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe the screen display of the \textit{shape} object.\\
 
     It is possible to define \textit{functions} in a shape definition. The \texit{member functions} are defined with the same rules as specified in section \ref{function}.\\
     When \textit{member variables} are accessed within a member function, it is implied that the member variables belong to the current object that calls the function. If a \textit{member variable} or \textit{global variable} name is same as that of a \texit{local variable} or \textit{formal argument} in function definition, then the \textit{local variable} or \textit{formal argument} overshadows the other conflicting variable.\\
