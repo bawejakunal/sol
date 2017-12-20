@@ -9,8 +9,8 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ AND OR
 %token RETURN IF WHILE INT FLOAT CHAR STRING FUNC
 %token SHAPE CONSTRUCT DRAW /*PARENT EXTENDS MAIN CONSOLEPRINT LENGTH SETFRAMERATE */
-/*%token DRAWCURVE DRAWPOINT PRINT
-%token TRANSLATE ROTATE RENDER WAIT*/
+%token RENDER
+/*%token TRANSLATE ROTATE WAIT*/
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
 %token <char> CHAR_LITERAL
@@ -104,6 +104,7 @@ stmt:
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt { If($3, $5) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+  | ID DOT RENDER ASSIGN LBRACE stmt_list RBRACE { Shape_render($1, List.rev $6) }
 
 /*expr_opt:*/
     /* nothing */ /*{ Noexpr }

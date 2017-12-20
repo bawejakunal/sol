@@ -11,9 +11,17 @@ type symbol_table = {
   variables: bind list
 }
 
+type shape_variables = {
+  mutable
+  num_translates: int;
+  shape_type : string;
+  shape_inst : string
+}
+
 type translation_environment = {
   scope: symbol_table;
   functions: Ast.func_dec StringMap.t;
+  shape_vars: shape_variables option;
 }
 
 let rec find_variable (scope: symbol_table) name = 
@@ -59,6 +67,11 @@ let check (globals, shapes, functions) =
         (Array(l1, t1), Array(l2, t2)) -> if t1 == t2 && l1 == l2 then lvaluet else raise err
       | (Shape(l_s), Shape(r_s)) -> if l_s = r_s then lvaluet else raise err
       | _ -> if lvaluet == rvaluet then lvaluet else raise err
+  in
+
+  (* Define global declaration of translate *)
+  let translate_fdecl = { ftype = Void; fname = "translate"; formals = [(Array(2, Int), "disp"); (Int, "t")];
+       locals = []; body = [] } 
   in
 
   (**** Checking Global Variables ****)
@@ -130,7 +143,7 @@ let check (globals, shapes, functions) =
   in
 
   let function_decl s s_map = try StringMap.find s s_map
-       with Not_found -> raise (Failure ("unrecognized function " ^ s))
+       with Not_found -> raise (Failure ("unrecognized function " ^ s ^ " in this scope!"))
   in
 
   let _ = function_decl "main" function_decls in (* Ensure "main" is defined *)
@@ -243,17 +256,23 @@ let check (globals, shapes, functions) =
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
           else (* TODO: Add special case for checking type of actual array vs formal array *)
-           List.iter2 (fun (ft, _) e -> let _, et = expr env e in
+            List.iter2 (fun (ft, _) e -> let _, et = expr env e in
               ignore (check_assign ft et 
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
              fd.formals actuals;
-           let sactuals = List.map (fun a -> expr env a) actuals in
-           let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
-             sbody = []} in 
-             (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
-             and also because this detail is not needed when making a function call *)
-          SCall(s_fd, sactuals), fd.ftype
+            let sactuals = List.map (fun a -> expr env a) actuals in
+            let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
+              sbody = []} in 
+              (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
+              and also because this detail is not needed when making a function call *)
+            let sactuals = (if fname = "translate" then (match env.shape_vars with
+                Some(v) -> v.num_translates <- v.num_translates + 1; 
+                  (SInt_literal(v.num_translates - 1), Int) :: 
+                    (SLval(SId(v.shape_inst), Shape(v.shape_type)), Shape(v.shape_type)) :: sactuals
+              | _ -> raise(Failure("Translate called in non-render block!")))
+            else (sactuals)) in
+            SCall(s_fd, sactuals), fd.ftype
       | Shape_fn(s, fname, actuals) as call -> (try 
           let (t, _) = find_variable env.scope s in
           match t with
@@ -348,12 +367,14 @@ let check (globals, shapes, functions) =
 	Block sl -> let rec check_block env = function
            [Return _ as s] -> [stmt env s]
          | Return _ :: _ -> raise (Failure "nothing may follow a return")
-         (* | Block sl :: ss -> (check_block env sl) @ check_block env ss *) (* What were you thinking, Edwards? *)
          | s :: ss -> stmt env s :: check_block env ss
          | [] -> []
         in let scope' = {parent = Some(env.scope); variables = []}
         in let env' = {env with scope = scope'}
         in let sl = check_block env' sl in 
+        ignore (match (env.shape_vars, env'.shape_vars) with
+            Some(v), Some(v') -> ignore(v.num_translates <- v'.num_translates)
+          | _ -> ());
         scope'.variables <- List.rev scope'.variables;
         SBlock(sl)
       | Expr e -> SExpr(expr env e)
@@ -376,6 +397,35 @@ let check (globals, shapes, functions) =
            
       | If(p, b1) -> let e' = check_bool_expr env p in SIf(e', stmt env b1)
       | While(p, s) -> let e' = check_bool_expr env p in SWhile(e', stmt env s)
+      | Shape_render(s, sl) -> 
+        match func.fname with
+            "main" -> 
+              (try
+              let (t, _) = find_variable env.scope s in
+              match t with
+                  Shape(sname) -> let sd = shape_decl sname in 
+                    let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
+                                 env.functions sd.member_fs
+                    in
+                    (* Add in the translate function *)
+                    let function_decls = StringMap.add translate_fdecl.fname translate_fdecl function_decls in
+
+                    let shape_scope = {parent = Some(env.scope); variables = env.scope.variables @ sd.member_vs} in
+                    let shape_env_vars = {num_translates = 0; shape_type = sname; shape_inst = s} in
+                    let shape_env = {scope = shape_scope; functions = function_decls; shape_vars = Some(shape_env_vars)} in 
+                    let rec check_block env = function
+                        [Return _] -> raise (Failure "No return allowed!")
+                      | Return _ :: _ -> raise (Failure "No return allowed!")
+                      | s :: ss -> stmt env s :: check_block env ss
+                      | [] -> []
+                    in let sl = check_block shape_env sl in 
+                    let num_translates = (match shape_env.shape_vars with
+                        Some(v) -> v.num_translates
+                      | _ -> raise(Failure("Shape lost its environment variables!"))) in
+                    SShape_render(s, sname, num_translates, sl)
+                | _ -> raise(Failure("Attempted render definition for a non-shape variable " ^ s))
+              with Not_found -> raise(Failure("Undeclared identifier " ^ s)))
+          | _ -> raise(Failure("Render blocks can only be set in main()!"))
     in
 
     let l_scope = {parent = Some(g_env.scope); variables = func.formals @ func.locals} in
@@ -406,7 +456,7 @@ let check (globals, shapes, functions) =
     in
 
     let s_scope = {parent = Some(g_env.scope); variables = g_env.scope.variables @ shape.member_vs} in
-    let s_env = {scope = s_scope; functions = function_decls} in 
+    let s_env = {scope = s_scope; functions = function_decls; shape_vars = None} in 
     {ssname = shape.sname; spname = None; smember_vs = shape.member_vs;
       sconstruct = (let s_construct = check_function s_env shape.construct in 
         let s_construct = {s_construct with sfname = shape.sname ^ "__construct"} in
@@ -433,12 +483,28 @@ let check (globals, shapes, functions) =
   (* Check each individual function *)
 
   let g_scope = {parent = None; variables = globals} in
-  let g_env = {scope = g_scope; functions = function_decls} in
-  (globals, 
-    List.map (check_shape g_env) shapes,
-    List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
+  let g_env = {scope = g_scope; functions = function_decls; shape_vars = None} in 
+  let s_shapes = List.map (check_shape g_env) shapes in
+  let s_functions = List.map (function f -> let s_f = check_function g_env f in match s_f.styp with
     | Void -> s_f
     | _ -> let last_s = List.hd (List.rev s_f.sbody) in (match last_s with
       | SReturn(_) -> s_f
       | _ -> raise(Failure("Function must have return statement of type " ^ string_of_typ s_f.styp)))
-    ) functions)
+    ) functions in
+  let rec find_render c_m sstmt = 
+    (match sstmt with
+        SBlock(sl) -> List.fold_left find_render c_m sl
+      | SIf(_, sl) -> find_render c_m sl
+      | SWhile(_, sl) -> find_render c_m sl
+      | SShape_render(_, _, n, _) -> if n > c_m then n else c_m
+      | _ -> c_m)
+  in
+  let find_translates curr_max s_f = 
+    let b = s_f.sbody in List.fold_left find_render curr_max b
+  in
+  let max_translates = List.fold_left find_translates 0 s_functions in
+  (globals, 
+    s_shapes,
+    s_functions,
+    max_translates
+  )

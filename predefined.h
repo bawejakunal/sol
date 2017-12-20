@@ -14,8 +14,8 @@
 #include "SDL2_rotozoom.h"
 
 typedef struct {
-    int framerate;
-    long int frame_interval; // In nicroseconds
+    long int frame_interval; // In microseconds
+    int curr_frame;
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Event Event;
@@ -70,8 +70,12 @@ void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
     const double degree);
 
 /* translate a point */
-void translatePoint(int pt[2], const int displace[2]);
+void translatePoint(int pt[2], int* displaceX, int* displaceY, int sign, int maxFrame);
 
 /* translateCurve */
 void translateCurve(int start[2], int mid[2], int end[2],
-    const int displace[2]);
+    int* displaceX, int* displaceY, int maxFrame, int sign);
+
+/* Allocate space based on multiple translates */
+int* allocTranslateArrayX(int* indivDispX, int* times, int num, int* numFrames);
+int* allocTranslateArrayY(int* indivDispY, int* times, int num, int* numFrames);

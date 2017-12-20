@@ -40,6 +40,7 @@ rule token = parse
 | "construct"  { CONSTRUCT }
 | "draw"   { DRAW }
 | '.'      { DOT }
+| "render"  { RENDER }
 (*| "parent"  { PARENT }
 | "extends"  { EXTENDS }
 | "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
@@ -48,7 +49,6 @@ rule token = parse
 | "setFramerate"  { SETFRAMERATE }
 | "translate"  { TRANSLATE }
 | "rotate"  { ROTATE }
-| "render"  { RENDER }
 | "wait"  { WAIT }*)
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }

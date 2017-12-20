@@ -20,33 +20,34 @@ type sexpr_detail =
     | SLval of slvalue
     | SInst_shape of sshape_dec * sexpr list
     | SShape_fn of string * typ * sfunc_dec * sexpr list 
-
-and sexpr = sexpr_detail * typ
-
-and slvalue_detail = 
+and 
+  sexpr = sexpr_detail * typ
+and 
+  slvalue_detail = 
       SId of string         (* VDecl ? of bind * expr *)
     | SAccess of string * sexpr
     | SShape_var of string * slvalue
-
-and slvalue = slvalue_detail * typ 
-
-and stmt_detail =
+and 
+  slvalue = slvalue_detail * typ 
+and
+  stmt_detail =
       SBlock of stmt_detail list
     | SExpr of sexpr
     (* | SVDecl of bind * sexpr *)
     | SReturn of sexpr
     | SIf of sexpr * stmt_detail
     | SWhile of sexpr * stmt_detail
-
-and sfunc_dec = {
+    | SShape_render of string * string * int * stmt_detail list
+and 
+  sfunc_dec = {
     sfname    :    string;
     styp    :     typ;
     sformals    :    bind list;
     slocals    :    bind list;
     sbody    :    stmt_detail list;
 }
-
-and sshape_dec = {
+and 
+  sshape_dec = {
   ssname   : string;
   spname   :   string option; (*parent name*)
   smember_vs : bind list;
@@ -121,6 +122,8 @@ and string_of_sstmt = function
  | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ ";\n";
  | SIf(e, s) -> "if (" ^ string_of_sexpr e ^ ")\n" ^ string_of_sstmt s
  | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
+ | SShape_render(s, sname, num_t, stmts) -> sname ^ " " ^ s ^ ".render(" ^ string_of_int(num_t) ^ "){\n" ^ 
+     String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
 
 and string_of_svdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 
@@ -138,7 +141,7 @@ and string_of_sfdecl fdecl =
   "\n Draw: " ^ string_of_sfdecl sdecl.sdraw ^ 
   "\n Member functions: " ^ String.concat "" (List.map string_of_sfdecl sdecl.smember_fs)
 
-let string_of_sprogram (vars, shapes, funcs) =
+let string_of_sprogram (vars, shapes, funcs, _) =
  String.concat "" (List.map string_of_svdecl vars) ^ "\n" ^
  String.concat "\n" (List.map string_of_ssdecl shapes) ^ "\n" ^
  String.concat "\n" (List.map string_of_sfdecl funcs)

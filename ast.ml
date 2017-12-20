@@ -30,9 +30,7 @@ and
 	  Id of string
 	| Access of string * expr
 	| Shape_var of string * lvalue
-
-type bind = typ * string
-
+ 
 type stmt = 
 	  Block of stmt list
 	| Expr of expr
@@ -40,6 +38,9 @@ type stmt =
 	| Return of expr
 	| If of expr * stmt
 	| While of expr * stmt
+	| Shape_render of string * stmt list
+
+type bind = typ * string
 
 type func_dec = {
 	fname	:	string;
@@ -123,6 +124,7 @@ let rec string_of_stmt = function
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | Shape_render(s, stmts) -> s ^ "." ^ "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

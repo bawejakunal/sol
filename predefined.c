@@ -19,9 +19,7 @@ bool onInitSDL() {
         printf("%s \n", SDL_GetError());
         return 1;
     }
-    // Set default values for framerate
-    theGame.framerate = 30;
-    theGame.frame_interval = 33333;
+    theGame.curr_frame = 0;
     return true;
 }
 
@@ -51,6 +49,7 @@ void onRenderFinishSDL()
     SDL_RenderPresent(theGame.renderer);
     // Enforce frame rate by sleeping
     usleep(theGame.frame_interval);
+    theGame.curr_frame += 1;
 }
 
 int stopSDL()
@@ -72,6 +71,9 @@ int startSDL() {
 
     /* initialize frame rate manager */
     SDL_initFramerate(&fpsmanager);
+    // Set default values for framerate
+    setFramerate(30);
+    theGame.frame_interval = 33333;
 
     return 0;
 }
@@ -162,7 +164,6 @@ double cosine(double angle) {
  * returns 0 for sucess and -1 for error
  */
 int setFramerate(int rate) {
-    theGame.framerate = rate;
     theGame.frame_interval = 1e6 / rate;
     return SDL_setFramerate(&fpsmanager, (Uint32)rate);
 }
@@ -214,15 +215,78 @@ void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
 }
 
 /* translate a point by given displacement */
-void translatePoint(int pt[2], const int displace[2]) {
-    pt[0] += displace[0];
-    pt[1] += displace[1];
+void translatePoint(int pt[2], int* displaceX, int* displaceY, int sign, int maxFrame) {
+    pt[0] += (sign * displaceX[((theGame.curr_frame < maxFrame) ? theGame.curr_frame : maxFrame - 1)]);
+    pt[1] += (sign * displaceY[((theGame.curr_frame < maxFrame) ? theGame.curr_frame : maxFrame - 1)]);
 }
 
 /* translate a bezier curve control points */
 void translateCurve(int start[2], int mid[2], int end[2],
-    const int displace[2]) {
-    translatePoint(start, displace);
-    translatePoint(mid, displace);
-    translatePoint(end, displace);
+    int* displaceX, int* displaceY, int maxFrame, int sign) {
+    translatePoint(start, displaceX, displaceY, sign, maxFrame);
+    translatePoint(mid, displaceX, displaceY, sign, maxFrame);
+    translatePoint(end, displaceX, displaceY, sign, maxFrame);
+}
+
+int* allocTranslateArrayX(int* indivDispX, int* times, int num, int* numFrames) {
+    int totalSeconds = 0;
+    int i, j;
+    int frameRate = getFramerate();
+    int currTime, currFrames;
+    for(i = 0; i < num; i++)
+        totalSeconds += times[i];
+    *numFrames = totalSeconds * frameRate;
+    int* dispX = (int*) malloc((*numFrames) * sizeof(int));
+    // printf("%d\n", dispX);
+
+    float cumulX = 0.0;
+    int frameIndex = 0;
+
+    for(i = 0; i < num; i++) {
+        currTime = times[i];
+        currFrames = currTime * frameRate;
+        // printf("%d, %d : %d\n", indivDispX[i], currTime, num);
+        float dispPerFrameX = (float)indivDispX[i] / currFrames;
+        for(j = 0; j < currFrames; j++) {
+            cumulX += dispPerFrameX;
+            dispX[frameIndex] = (int) cumulX;
+            // printf("%d, ", (int)cumulX);
+            frameIndex += 1;
+        }
+        // printf("\n");
+    }
+    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulX, dispX[0], dispX);
+    return dispX;
+}
+
+int* allocTranslateArrayY(int* indivDispY, int* times, int num, int* numFrames) {
+    int totalSeconds = 0;
+    int i, j;
+    int frameRate = getFramerate();
+    int currTime, currFrames;
+    for(i = 0; i < num; i++)
+        totalSeconds += times[i];
+    *numFrames = totalSeconds * frameRate;
+    int* dispY = (int*) malloc((*numFrames) * sizeof(int));
+    // printf("%d\n", dispY);
+
+    float cumulY = 0.0;
+    int frameIndex = 0;
+
+    for(i = 0; i < num; i++) {
+        currTime = times[i];
+        currFrames = currTime * frameRate;
+        // printf("%d, %d : %d\n", indivDispY[i], currTime, num);
+        float dispPerFrameY = (float)indivDispY[i] / currFrames;
+        for(j = 0; j < currFrames; j++) {
+            cumulY += dispPerFrameY;
+            dispY[frameIndex] = (int) cumulY;
+            // printf("%d, ", (int)cumulY);
+            frameIndex += 1;
+        }
+        // printf("\n");
+    }
+    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulY, dispY[0], dispY);
+
+    return dispY;
 }
