@@ -13,7 +13,7 @@ type symbol_table = {
 
 type shape_variables = {
   mutable
-  num_translates: int;
+  num_movements: int;
   shape_type : string;
   shape_inst : string
 }
@@ -71,6 +71,9 @@ let check (globals, shapes, functions) =
 
   (* Define global declaration of translate *)
   let translate_fdecl = { ftype = Void; fname = "translate"; formals = [(Array(2, Int), "disp"); (Int, "t")];
+       locals = []; body = [] } in
+  (* Define global declaration of rotate *)
+  let rotate_fdecl = { ftype = Void; fname = "rotate"; formals = [(Float, "angle"); (Array(2, Int), "axis"); (Int, "t")];
        locals = []; body = [] } 
   in
 
@@ -268,12 +271,12 @@ let check (globals, shapes, functions) =
              and also because this detail is not needed when making a function call *)
             let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
               sbody = []} in 
-            (* Adding in sequence in which translate is called, along with a reference to the shape *)
-            let sactuals = (if fname = "translate" then (match env.shape_vars with
-                Some(v) -> v.num_translates <- v.num_translates + 1; 
-                  (SInt_literal(v.num_translates - 1), Int) :: 
+            (* Adding in sequence in which translate/rotate is called, along with a reference to the shape *)
+            let sactuals = (if (fname = "translate" || fname = "rotate") then (match env.shape_vars with
+                Some(v) -> v.num_movements <- v.num_movements + 1; 
+                  (SInt_literal(v.num_movements - 1), Int) :: 
                     (SLval(SId(v.shape_inst), Shape(v.shape_type)), Shape(v.shape_type)) :: sactuals
-              | _ -> raise(Failure("Translate called in non-render block!")))
+              | _ -> raise(Failure("Translate/Rotate called in non-render block!")))
             else (sactuals)) in
             SCall(s_fd, sactuals), fd.ftype
       | Shape_fn(s, fname, actuals) as call -> (try 
@@ -376,7 +379,7 @@ let check (globals, shapes, functions) =
         in let env' = {env with scope = scope'}
         in let sl = check_block env' sl in 
         ignore (match (env.shape_vars, env'.shape_vars) with
-            Some(v), Some(v') -> ignore(v.num_translates <- v'.num_translates)
+            Some(v), Some(v') -> ignore(v.num_movements <- v'.num_movements)
           | _ -> ());
         scope'.variables <- List.rev scope'.variables;
         SBlock(sl)
@@ -410,11 +413,12 @@ let check (globals, shapes, functions) =
                     let function_decls = List.fold_left (fun m fd -> StringMap.add fd.fname fd m)
                                  env.functions sd.member_fs
                     in
-                    (* Add in the translate function *)
+                    (* Add in the translate/rotate functions *)
                     let function_decls = StringMap.add translate_fdecl.fname translate_fdecl function_decls in
+                    let function_decls = StringMap.add rotate_fdecl.fname rotate_fdecl function_decls in
 
                     let shape_scope = {parent = Some(env.scope); variables = env.scope.variables @ sd.member_vs} in
-                    let shape_env_vars = {num_translates = 0; shape_type = sname; shape_inst = s} in
+                    let shape_env_vars = {num_movements = 0; shape_type = sname; shape_inst = s} in
                     let shape_env = {scope = shape_scope; functions = function_decls; shape_vars = Some(shape_env_vars)} in 
                     let rec check_block env = function
                         [Return _] -> raise (Failure "No return allowed!")
@@ -423,7 +427,7 @@ let check (globals, shapes, functions) =
                       | [] -> []
                     in let sl = List.rev (check_block shape_env (List.rev sl)) in 
                     let num_translates = (match shape_env.shape_vars with
-                        Some(v) -> v.num_translates
+                        Some(v) -> v.num_movements
                       | _ -> raise(Failure("Shape lost its environment variables!"))) in
                     SShape_render(s, sname, num_translates, sl)
                 | _ -> raise(Failure("Attempted render definition for a non-shape variable " ^ s))
@@ -502,12 +506,12 @@ let check (globals, shapes, functions) =
       | SShape_render(_, _, n, _) -> if n > c_m then n else c_m
       | _ -> c_m)
   in
-  let find_translates curr_max s_f = 
+  let find_movements curr_max s_f = 
     let b = s_f.sbody in List.fold_left find_render curr_max b
   in
-  let max_translates = List.fold_left find_translates 0 s_functions in
+  let max_movements = List.fold_left find_movements 0 s_functions in
   (globals, 
     s_shapes,
     s_functions,
-    max_translates
+    max_movements
   )
