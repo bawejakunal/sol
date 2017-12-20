@@ -264,10 +264,11 @@ let check (globals, shapes, functions) =
                 " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
              fd.formals actuals;
             let sactuals = List.map (fun a -> expr env a) actuals in
+            (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
+             and also because this detail is not needed when making a function call *)
             let s_fd = {sfname = fd.fname; styp = fd.ftype; sformals = fd.formals; slocals = fd.locals; 
               sbody = []} in 
-              (* Not converting the body to a list of stmt_details, to prevent recursive conversions, 
-              and also because this detail is not needed when making a function call *)
+            (* Adding in sequence in which translate is called, along with a reference to the shape *)
             let sactuals = (if fname = "translate" then (match env.shape_vars with
                 Some(v) -> v.num_translates <- v.num_translates + 1; 
                   (SInt_literal(v.num_translates - 1), Int) :: 
@@ -366,7 +367,7 @@ let check (globals, shapes, functions) =
 
     (* Verify a statement or throw an exception *)
     and stmt env = function
-	Block sl -> let rec check_block env = function
+	       Block sl -> let rec check_block env = function
            [Return _ as s] -> [stmt env s]
          | Return _ :: _ -> raise (Failure "nothing may follow a return")
          | s :: ss -> stmt env s :: check_block env ss
@@ -420,7 +421,7 @@ let check (globals, shapes, functions) =
                       | Return _ :: _ -> raise (Failure "No return allowed!")
                       | s :: ss -> stmt env s :: check_block env ss
                       | [] -> []
-                    in let sl = check_block shape_env sl in 
+                    in let sl = List.rev (check_block shape_env (List.rev sl)) in 
                     let num_translates = (match shape_env.shape_vars with
                         Some(v) -> v.num_translates
                       | _ -> raise(Failure("Shape lost its environment variables!"))) in
