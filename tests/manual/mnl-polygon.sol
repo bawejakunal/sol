@@ -1,40 +1,75 @@
-/*@author: Erik DYer*/
+/*@author: Kunal Baweja & Erik Dyer*/
 
 /* Test drawing an n sided polygon */ 
 
-shape Polygon{
-    int [2]start;
-    int sides;
-    int length;
+shape Spokes{
+    int [2]center;
+    float sides;
+    float radius;
     construct(int [2]s, int l, int n) {
-        start = s;
-        sides = n;
-	length = l;
+        center = s;
+        sides = intToFloat(n);
+        radius = intToFloat(l);
     }
 
     draw(){
-        int i;
+        float i;
+        int x;
+        int y;
         float degrees;
-        float radians;
-        int[] mid;
-        int[] end;
+        int[2] mid;
+        int[2] end;
 
-        i = 0
-        while(i < sides){
-            if(i == 0){
-                degrees = 0.0;
-            }
-            if(i != 0){
-                degrees = (180 - 360/n) * i;
-            }
-            x = floatToInt(length*cos(degrees));
-            y = floatToInt(length*sin(degrees));
-            
-            end = [x + start[0], y + start[1]];
-            mid[0] = (start[0] + end[0]) / 2;
-            mid[1] = (start[1] + end[1]) / 2;
-            drawCurve(start, mid, end, 100, [0,150,0]);
-            start = end;
+        i = 1.0;
+        while(i <= sides){
+            degrees = (360.0 * i)/sides;
+            x = floatToInt(radius * cosine(degrees));
+            y = floatToInt(radius * sine(degrees));
+
+            end[0] = x + center[0];
+            end[1] = y + center[1];
+            mid[0] = (center[0] + end[0]) / 2;
+            mid[1] = (center[1] + end[1]) / 2;
+            drawCurve(center, mid, end, 2, [150, 0, 0]);
+            i = i + 1.0;
+        }
+    }
+}
+
+shape Polygon{
+    int [2]center;
+    float sides;
+    float radius;
+    Spokes spks;
+
+    construct(int [2]s, int l, int n) {
+        center = s;
+        sides = intToFloat(n);
+        radius = intToFloat(l);
+        spks = shape Spokes(s, l, n);
+    }
+
+    draw(){
+        float i;
+        float degrees;
+        int[2] strt;
+        int[2] mid;
+        int[2] end;
+
+        degrees = 0.0;
+        strt[0] = center[0] + floatToInt(radius * cosine(degrees));
+        strt[1] = center[1] + floatToInt(radius * sine(degrees));
+
+        i = 1.0;
+        while(i <= sides){
+            degrees = (360.0 * i)/sides;
+            end[0] = center[0] + floatToInt(radius * cosine(degrees));
+            end[1] = center[1] + floatToInt(radius * sine(degrees));
+            mid[0] = (strt[0] + end[0]) / 2;
+            mid[1] = (strt[1] + end[1]) / 2;
+            drawCurve(strt, mid, end, 2, [0, 150, 0]);
+            strt = end;
+            i = i + 1.0;
         }
     }
 }
@@ -42,5 +77,5 @@ shape Polygon{
 
 func main() {
     Polygon p;
-    p = shape Polygon([2,2], 100, 5);
+    p = shape Polygon([320, 240], 120, 10);
 }
