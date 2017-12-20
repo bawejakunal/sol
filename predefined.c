@@ -200,8 +200,8 @@ void rotateCoordinate(float* x, float* y, const int axisX, const int axisY, cons
     // rotate and round off to nearest integers
     float temp_x = (*x);
     float temp_y = (*y);
-    temp_x = (temp_x * cos(_degree) - temp_y * sin(_degree));
-    temp_y = (temp_x * sin(_degree) + temp_y * cos(_degree));
+    temp_x = ((*x) * cos(_degree) - (*y) * sin(_degree));
+    temp_y = ((*x) * sin(_degree) + (*y) * cos(_degree));
     (*x) = temp_x;
     (*y) = temp_y;
 
@@ -272,35 +272,3 @@ void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles
         }
     }
 }
-
-// int* allocDispArrayY(int* indivDispY, int* times, double* angles, int num, int* numFrames) {
-//     int totalSeconds = 0;
-//     int i, j;
-//     int frameRate = getFramerate();
-//     int currTime, currFrames;
-//     for(i = 0; i < num; i++)
-//         totalSeconds += times[i];
-//     *numFrames = totalSeconds * frameRate;
-//     int* dispY = (int*) malloc((*numFrames) * sizeof(int));
-//     // printf("%d\n", dispY);
-
-//     float cumulY = 0.0;
-//     int frameIndex = 0;
-
-//     for(i = 0; i < num; i++) {
-//         currTime = times[i];
-//         currFrames = currTime * frameRate;
-//         // printf("%d, %d : %d\n", indivDispY[i], currTime, num);
-//         float dispPerFrameY = (float)indivDispY[i] / currFrames;
-//         for(j = 0; j < currFrames; j++) {
-//             cumulY += dispPerFrameY;
-//             dispY[frameIndex] = (int) cumulY;
-//             // printf("%d, ", (int)cumulY);
-//             frameIndex += 1;
-//         }
-//         // printf("\n");
-//     }
-//     // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulY, dispY[0], dispY);
-
-//     return dispY;
-// }

@@ -94,7 +94,6 @@ stmt_list:
 stmt:
     expr SEMI { Expr $1 }
   | RETURN SEMI { Return Noexpr }
-  | local_typ ID ASSIGN expr SEMI { VDecl(($1, $2), $4) }*/
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt { If($3, $5) }
