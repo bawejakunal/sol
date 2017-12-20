@@ -1,7 +1,7 @@
 
 \section{Introduction}
 %% Text of abstract
-SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. SOL uses \textit{point} (visual dot) and \texit{B\'ezier Curves} with three control points as the basic drawing controls provided to the programmer for defining shapes. As a lightweight object-oriented language, SOL allows for unlimited design opportunities and eases the burden of animation. In addition, SOL’s simplicity saves programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects.
+SOL is a simple language that allows programmers to create 2D animations with ease. Programmers will have the ability to define and create objects, known as shapes, and dictate where they appear, and how they move. SOL uses \textit{point} (visual dot) and \textit{B\'ezier Curves} with three control points as the basic drawing controls provided to the programmer for defining shapes. As a lightweight object-oriented language, SOL allows for unlimited design opportunities and eases the burden of animation. In addition, SOL’s simplicity saves programmers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects.
 \par
 
 \section{Conventions}
@@ -320,7 +320,7 @@ A statement in SOL refers to a complete instruction for a SOL program. All state
 \section{Internal Functions} \label{internal}
 SOL specifies a set of required/internal functions that must be defined for specific tasks such as drawing, rendering or as an entry point to the program, described below.
 
-    \subsection{\textit{main}}
+    \subsection{main}
     Every SOL program must contain a \texttt{main} function as this is the entrypoint of the program. The \texttt{main} function may declare and define variables or shape objects or call other functions written in the program. The \texttt{main} function does not take inputs as SOL programs do not depend on user input.\\
     Example:\\
     \begin{lstlisting}[style=sol]
@@ -333,76 +333,101 @@ SOL specifies a set of required/internal functions that must be defined for spec
     \end{lstlisting}
     \underline{Arguments}: None
 
-    \subsection{\textit{setFramerate}}
+    \subsection{setFramerate}
     Call \texttt{setFramerate} to specify frames per second to render on screen. The frame rate is specified as a \textit{positive integer argument} and returns \texttt{0} for success and \texttt{-1} to indicate failure. By default, frame rate is set to 30 frames per second for a SOL program.\\
     \underline{Arguments}: \texttt{rate (int)}\\
     \underline{Return}: \texttt{0 for success, -1 for failure}
 
-    \subsection{\textit{getFramerate}}
+    \subsection{getFramerate}
     Call \texttt{getFramerate} to get the current number of frames rendered per second as an \textit{integer}.\\
     \underline{Arguments}: \texttt{None}\\
     \underline{Return}: \texttt{frames per second (int)}
 
-    \subsection{\textit{consolePrint}}
+    \subsection{consolePrint}
     Prints a string to the console. Com]monly used to print error messages.\\
     \underline{Arguments}: \texttt{text (string)}
+
+    \subsection{round}
+    The \texttt{round} function accepts a \texttt{float} argument and returns the value rounded to nearest integer value, rounding halfway cases away from zero instead of to the nearest integer.\\
+    \underline{Argument}: \texttt{value (float)}\\
+    \underline{Return}: \texttt{result (float)}
+
+    \subsection{Trigonometric functions}
+    SOL provides two basic trignometric functions, \texttt{sine} and \texttt{cosine} which can be used to easily calculate coordinates for displaying objectes or other arithmetic calculations in SOL programs.
+
+        \subsubsection{\textit{sine}}
+        The \texttt{sine} function accepts an argument of type \texttt{float}, representing an \textit{angle} in \texttt{degrees} and returns
+        the \textit{sine} value.\\
+        \underline{Arguments}: \texttt{angle (float)}\\
+        \underline{Return}: \texttt{sine value (float)}
+
+
+        \subsubsection{\textit{cosine}}
+        The \texttt{cosine} function accepts an argument of type \texttt{float}, representing an \textit{angle} in \texttt{degrees} and returns
+        the \textit{cosine} value.\\
+        \underline{Arguments}: \texttt{angle (float)}\\
+        \underline{Return}: \texttt{cosine value (float)}
 
     \subsection{Type Conversion Functions}
     SOL provides following type conversion functions for converting expressions of a given type to an expression of another type.
 
-    \subsubsection{\textit{intToString}}
-    Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
-    \underline{Argument}: \texttt{src (int)}\\
-    \underline{Return}: value of type \texttt{string}
+        \subsubsection{\textit{intToString}}
+        Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (int)}\\
+        \underline{Return}: value of type \texttt{string}
 
-    \subsubsection{\textit{floatToString}}
-    Accepts an expression (\texttt{src}) of type \texttt{float} as the argument and returns the \texttt{string} representation of evaluated result.\\
-    \underline{Argument}: \texttt{src (float)}\\
-    \underline{Return}: value of type \texttt{string}
+        \subsubsection{\textit{floatToString}}
+        Accepts an expression (\texttt{src}) of type \texttt{float} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (float)}\\
+        \underline{Return}: value of type \texttt{string}
 
-    \subsubsection{\textit{charToString}}
-    Accepts an expression (\texttt{src}) of type \texttt{char} as the argument and returns the \texttt{string} representation of evaluated result.\\
-    \underline{Argument}: \texttt{src (char)}\\
-    \underline{Return}: value of type \texttt{string}
+        \subsubsection{\textit{charToString}}
+        Accepts an expression (\texttt{src}) of type \texttt{char} as the argument and returns the \texttt{string} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (char)}\\
+        \underline{Return}: value of type \texttt{string}
+
+        \subsubsection{\textit{intToFloat}}
+        Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{float} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (int)}\\
+        \underline{Return}: value of type \texttt{float}
+
+        \subsubsection{\textit{floatToInt}}
+        Accepts an expression (\texttt{src}) of type \texttt{float} as the argument and returns the \texttt{int} representation of evaluated result.\\
+        \underline{Argument}: \texttt{src (float)}\\
+        \underline{Return}: value of type \texttt{int}
 
 \section{Drawing Functions}
 The following set of functions are also a category of internal/required functions, which describe the drawing aspects for \texttt{shape} objects defined in a SOL program.
+
+    \subsection{\textit{drawCurve}}
+    \texttt{drawCurve} is one of the basic internal functions; it is used to draw a B\'ezier curve. SOL aims to define all possible shapes as a collection of B\'ezier curves. The function arguments in order are, the \textit{three control points} for the curve, a \textit{step size} to control smoothness of the curve, and the \textit{color} of curve (in RGB format).\\
+    \underline{Arguments}: \texttt{pt1 (int[2]), pt2 (int[2]), pt3 (int[2]), steps(int), color (int[3])}
 
     \subsection{\textit{drawPoint}}
     Draws a point at a specified coordinate in the specified color.\\
     \underline{Arguments}: \texttt{pt (int[2]), color (int[3])}
 
-    \subsection{\textit{drawCurve}}
-    \texttt{drawCurve} is one of the basic internal functions used to draw a B\'ezier curve. SOL defines all possible shapes as a collection of B\'ezier curves. The function arguments in order are, the \textit{three control points} for the curve, a \textit{step size} to define smoothness of curve, and the \textit{color} of curve in RGB format.\\
-    \underline{Arguments}: \texttt{pt1 (int[2]), pt2 (int[2]), pt3 (int[2]), steps(int), color (int[3])}
-
     \subsection{\textit{print}}
-    Displays horizontal text on the render screen at the coordinates specified by the user, in specified color.\\
+    Displays horizontal text on the render screen at the coordinates specified by the user, in the specified color.\\
     \underline{Arguments}: \texttt{pt (int[2]), text (string), color (int[3])}
 
     \subsection{\textit{draw}}
-    For every \texttt{shape} definition \texttt{draw} is a required function that must be defined by the programmer. The \texttt{draw} function does not accept any input arguments and is called internally to display the object on screen. The \texttt{drawCurve}, \texttt{drawPoint} and \texttt{print} functions calls can be used within the \texttt{draw} definition to describe the actual drawing of an object.\\
-    At runtime \texttt{draw} functions of all objects instantiated at runtime are called, to create the final scene rendering on screen.
+    For every \texttt{shape} definition, there must be a \texttt{draw} function defined by the programmer. The \texttt{draw} function does not accept any input arguments and is called internally to display the object on screen. The \texttt{drawCurve}, \texttt{drawPoint} and \texttt{print} functions calls can be used within the \texttt{draw} definition to describe the actual drawing of an object.\\
+    At runtime \texttt{draw} functions of all objects instantiated in the \texttt{main} function are called, to render the final scene.
 
 \section{Animation Functions} \label{animation}
 The following functions are used to animate the objects drawn in a SOL program.
 
     \subsection{\textit{translate}}
-    Displaces a \texttt{shape} by specifying a two-element array of integers, where the first element is the number of pixels along the horizontal axis and the second element along the vertical axis, over a specified time period in seconds.\\
+    Displaces a \texttt{shape} across a straight path by specifying a two-element array of relative displacements - the first element is the displacement in pixels along the horizontal axis and the second element along the vertical axis - over a specified time period (in seconds).\\
     \underline{Arguments}: \texttt{displace (int[2]), time (int)}
 
     \subsection{\textit{rotate}}
-    Rotate a \texttt{shape} around an axis point by a specified number of degrees over a time period in seconds.\\
+    Rotates the position of a \texttt{shape} around a specified axis point by a specified angle (in degrees), over a time period (in seconds).\\
     \underline{Arguments}: \texttt{axis (int[2]), angle (float), time (float)}
 
     \subsection{\textit{render}}
-    Specify the set of motions to be animated. This code-block can be defined for shapes that need to move or can be left undefined for non-moving shapes. Within this function, various \texttt{rotate} and \texttt{translate} calls can be made to move the shape. This should be specified in the \texttt{main} function.\\
-    \underline{Arguments:} None
-
-    \subsection{\textit{wait}}
-    Pauses animation for a specified amount of time in seconds. To be called in the \texttt{render} function.\\
-    \underline{Arguments}: \texttt{time (float)}
-
+    Specifies the set of motions to be animated. This code-block can be defined for shapes that need to move, or can be left undefined for static shapes. Within this block, various \texttt{rotate} and \texttt{translate} calls can be made to move the shape. This must be specified in the \texttt{main} function.\\
 
 \section{Classes} \label{classes}
 SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shape}s) which can be further animated using the animation functions described in Section \ref{animation}.
@@ -411,12 +436,12 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
     Similar to a class in C++; a \textit{shape} defines a particular 2-D shape as part of the drawing on screen. The name of a \textit{shape} must always start with an uppercase english alphabet.
 
     \subsubsection{Shape definition}
-    A \textit{shape} definition starts with the \texttt{shape} keyword, followed by the \textit{shape name},(Example: \texttt{Triangle}) and the definition within curly braces (\{\}) code block. \texit{Shape} definitions may optionally contain \textit{member variables}.\\
+    A \textit{shape} definition starts with the \texttt{shape} keyword, followed by the \textit{shape name},(Example: \texttt{Triangle}) and the definition within curly braces (\{\}) code block. \textit{Shape} definitions may optionally contain \textit{member variables}.\\
     
-    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword and \texttt{draw} function. The \texttt{construct} definition can optionally have \texit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe the screen display of the \textit{shape} object.\\
+    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword and \texttt{draw} function. The \texttt{construct} definition can optionally have \textit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe the screen display of the \textit{shape} object.\\
 
-    It is possible to define \textit{functions} in a shape definition. The \texit{member functions} are defined with the same rules as specified in section \ref{function}.\\
-    When \textit{member variables} are accessed within a member function, it is implied that the member variables belong to the current object that calls the function. If a \textit{member variable} or \textit{global variable} name is same as that of a \texit{local variable} or \textit{formal argument} in function definition, then the \textit{local variable} or \textit{formal argument} overshadows the other conflicting variable.\\
+    It is possible to define \textit{functions} in a shape definition. The \textit{member functions} are defined with the same rules as specified in section \ref{function}.\\
+    When \textit{member variables} are accessed within a member function, it is implied that the member variables belong to the current object that calls the function. If a \textit{member variable} or \textit{global variable} name is same as that of a \textit{local variable} or \textit{formal argument} in function definition, then the \textit{local variable} or \textit{formal argument} overshadows the other conflicting variable.\\
 
     Example:\\
     \begin{lstlisting}[style=sol]
@@ -456,8 +481,8 @@ SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shap
     \end{lstlisting}
 
     \subsubsection{Creating Shape Instances}
-    Actual instances for a \texit{shape} definition can be created, which represent the actual shapes rendered on the screen.\\
-    To instantiate an object for a shape, we first declare a variable of defined \textit{shape} (say \texttt{Triangle}) and then instantiate it by calling the \texit{constructor}.\\
+    Actual instances for a \textit{shape} definition can be created, which represent the actual shapes rendered on the screen.\\
+    To instantiate an object for a shape, we first declare a variable of defined \textit{shape} (say \texttt{Triangle}) and then instantiate it by calling the \textit{constructor}.\\
     Example:\\
     \begin{lstlisting}[style=sol]
         func main() {
