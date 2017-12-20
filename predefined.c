@@ -187,32 +187,36 @@ int print(const int pt[2], const char *text, const int color[3]) {
  * rotate a coordinate clockwise by degree
  * around the axis point
  */
-void rotateCoordinate(int pt[2], const int axis[2], const double degree) {
+void rotateCoordinate(float* x, float* y, const int axisX, const int axisY, const double degree) {
     // account for actual rotation to perform
     int _d = (int)(degree * 100);
     double _degree = _d / 100.0;
     _degree *= M_PI / 180.0;
 
     // translate back to origin
-    pt[0] -= axis[0];
-    pt[1] -= axis[1];
+    (*x) -= axisX;
+    (*y) -= axisY;
 
     // rotate and round off to nearest integers
-    pt[0] = (int)nearbyint(pt[0] * cos(_degree) - pt[1] * sin(_degree));
-    pt[1] = (int)nearbyint(pt[0] * sin(_degree) + pt[1] * cos(_degree));
+    float temp_x = (*x);
+    float temp_y = (*y);
+    temp_x = (temp_x * cos(_degree) - temp_y * sin(_degree));
+    temp_y = (temp_x * sin(_degree) + temp_y * cos(_degree));
+    (*x) = temp_x;
+    (*y) = temp_y;
 
     // translate point back
-    pt[0] += axis[0];
-    pt[1] += axis[1];
+    (*x) += axisX;
+    (*y) += axisY;
 }
 
-/* rotate a bezier curve control points */
-void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
-    const double degree) {
-    rotateCoordinate(start, axis, degree);
-    rotateCoordinate(mid, axis, degree);
-    rotateCoordinate(end, axis, degree);
-}
+// /* rotate a bezier curve control points */
+// void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
+//     const double degree) {
+//     rotateCoordinate(start, axis, degree);
+//     rotateCoordinate(mid, axis, degree);
+//     rotateCoordinate(end, axis, degree);
+// }
 
 /* translate a point by given displacement */
 void translatePoint(int pt[2], int* displaceX, int* displaceY, int maxFrame, int sign) {
@@ -230,65 +234,87 @@ void translateCurve(int start[2], int mid[2], int end[2],
     translatePoint(end, displaceX, displaceY, maxFrame, sign);
 }
 
-int* allocTranslateArrayX(int* indivDispX, int* times, int num, int* numFrames) {
+void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles, int num, int* numFrames, int** dispX, int** dispY) {
     int totalSeconds = 0;
     int i, j;
     int frameRate = getFramerate();
-    int currTime, currFrames;
+    int currTime, currFrames, xVal, yVal;
+    double currAngle;
     for(i = 0; i < num; i++)
         totalSeconds += times[i];
     *numFrames = totalSeconds * frameRate;
-    int* dispX = (int*) malloc((*numFrames) * sizeof(int));
+    (*dispX) = (int*) malloc((*numFrames) * sizeof(int));
+    (*dispY) = (int*) malloc((*numFrames) * sizeof(int));
     // printf("%d\n", dispX);
 
     float cumulX = 0.0;
-    int frameIndex = 0;
-
-    for(i = 0; i < num; i++) {
-        currTime = times[i];
-        currFrames = currTime * frameRate;
-        // printf("%d, %d : %d\n", indivDispX[i], currTime, num);
-        float dispPerFrameX = (float)indivDispX[i] / currFrames;
-        for(j = 0; j < currFrames; j++) {
-            cumulX += dispPerFrameX;
-            dispX[frameIndex] = (int) cumulX;
-            // printf("%d, ", (int)cumulX);
-            frameIndex += 1;
-        }
-        // printf("\n");
-    }
-    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulX, dispX[0], dispX);
-    return dispX;
-}
-
-int* allocTranslateArrayY(int* indivDispY, int* times, int num, int* numFrames) {
-    int totalSeconds = 0;
-    int i, j;
-    int frameRate = getFramerate();
-    int currTime, currFrames;
-    for(i = 0; i < num; i++)
-        totalSeconds += times[i];
-    *numFrames = totalSeconds * frameRate;
-    int* dispY = (int*) malloc((*numFrames) * sizeof(int));
-    // printf("%d\n", dispY);
-
     float cumulY = 0.0;
     int frameIndex = 0;
 
     for(i = 0; i < num; i++) {
         currTime = times[i];
         currFrames = currTime * frameRate;
-        // printf("%d, %d : %d\n", indivDispY[i], currTime, num);
-        float dispPerFrameY = (float)indivDispY[i] / currFrames;
-        for(j = 0; j < currFrames; j++) {
-            cumulY += dispPerFrameY;
-            dispY[frameIndex] = (int) cumulY;
-            // printf("%d, ", (int)cumulY);
-            frameIndex += 1;
+        currAngle = angles[i];
+        xVal = indivDispX[i];
+        yVal = indivDispY[i];
+        // If angle is not zero, perform rotation about the given point
+        if(currAngle != 0) {
+            double anglePerFrame = currAngle / currFrames;
+            for(j = 0; j < currFrames; j++) {
+                rotateCoordinate(&cumulX, &cumulY, xVal, yVal, anglePerFrame);
+                (*dispX)[frameIndex] = (int) cumulX;
+                (*dispY)[frameIndex] = (int) cumulY;
+                // printf("%d, ", (int)cumulX);
+                frameIndex += 1;
+            }
+        }
+        // Else, perform translation using the given point as a displacement value
+        else {
+            // printf("%d, %d : %d\n", indivDispX[i], currTime, num);
+            float dispPerFrameX = (float)xVal / currFrames;
+            float dispPerFrameY = (float)yVal / currFrames;
+            for(j = 0; j < currFrames; j++) {
+                cumulX += dispPerFrameX;
+                cumulY += dispPerFrameY;
+                (*dispX)[frameIndex] = (int) cumulX;
+                (*dispY)[frameIndex] = (int) cumulY;
+                // printf("%d, ", (int)cumulX);
+                frameIndex += 1;
+            }
         }
         // printf("\n");
     }
-    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulY, dispY[0], dispY);
-
-    return dispY;
+    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulX, dispX[0], dispX);
 }
+
+// int* allocDispArrayY(int* indivDispY, int* times, double* angles, int num, int* numFrames) {
+//     int totalSeconds = 0;
+//     int i, j;
+//     int frameRate = getFramerate();
+//     int currTime, currFrames;
+//     for(i = 0; i < num; i++)
+//         totalSeconds += times[i];
+//     *numFrames = totalSeconds * frameRate;
+//     int* dispY = (int*) malloc((*numFrames) * sizeof(int));
+//     // printf("%d\n", dispY);
+
+//     float cumulY = 0.0;
+//     int frameIndex = 0;
+
+//     for(i = 0; i < num; i++) {
+//         currTime = times[i];
+//         currFrames = currTime * frameRate;
+//         // printf("%d, %d : %d\n", indivDispY[i], currTime, num);
+//         float dispPerFrameY = (float)indivDispY[i] / currFrames;
+//         for(j = 0; j < currFrames; j++) {
+//             cumulY += dispPerFrameY;
+//             dispY[frameIndex] = (int) cumulY;
+//             // printf("%d, ", (int)cumulY);
+//             frameIndex += 1;
+//         }
+//         // printf("\n");
+//     }
+//     // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulY, dispY[0], dispY);
+
+//     return dispY;
+// }
