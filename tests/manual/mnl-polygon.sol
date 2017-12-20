@@ -5,10 +5,11 @@
 shape Polygon{
     int [2]start;
     int sides;
-
-    construct(int [2]s, int [2]l, int n) {
+    int length;
+    construct(int [2]s, int l, int n) {
         start = s;
-        int sides = n;
+        sides = n;
+	length = l;
     }
 
     draw(){
@@ -26,8 +27,8 @@ shape Polygon{
             if(i != 0){
                 degrees = (180 - 360/n) * i;
             }
-            x = floatToInt(l*cos(degrees));
-            y = floatToInt(l*sin(degrees));
+            x = floatToInt(length*cos(degrees));
+            y = floatToInt(length*sin(degrees));
             
             end = [x + start[0], y + start[1]];
             mid[0] = (start[0] + end[0]) / 2;
