@@ -1,4 +1,4 @@
-/*@author: Kunal Baweja*/
+/*@author: Erik Dyer and Kunal Baweja*/
 
 func main() {
     int [5]arr;
