@@ -36,6 +36,14 @@ void onRenderStartSDL();
 void onRenderFinishSDL();
 int stopSDL();
 
+/* type conversion statements */
+double intToFloat(int num);
+int floatToInt(double num);
+
+/* trigonometric functions */
+double sine(double angle);
+double cosine(double angle);
+
 /* Framerate functions */
 int setFramerate(int rate);
 int getFramerate();

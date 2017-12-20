@@ -137,6 +137,25 @@ bool drawCurve(const int start[2], const int mid[2], const int end[2],
     return res;
 }
 
+/* return double representation of int */
+double intToFloat(int num){
+    return (double)num;
+}
+
+/* return int representation of a double */
+int floatToInt(double num) {
+    return (int)num;
+}
+
+/* sine of angle accepted in degrees */
+double sine(double angle) {
+    return sin(angle * M_PI / 180.0);
+}
+
+/* cosine of angle accepted in degrees */
+double cosine(double angle) {
+    return cos(angle * M_PI / 180);
+}
 
 /* 
  * set frames per second (positive integer)
@@ -169,7 +188,7 @@ int print(const int pt[2], const char *text, const int color[3]) {
  */
 void rotateCoordinate(int pt[2], const int axis[2], const double degree) {
     // account for actual rotation to perform
-    int _d = ((int)(degree * 100)) % 36000;
+    int _d = (int)(degree * 100);
     double _degree = _d / 100.0;
     _degree *= M_PI / 180.0;
 

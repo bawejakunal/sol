@@ -95,13 +95,21 @@ let translate (globals, shapes, functions) =
   let stopSDL_t = L.var_arg_function_type i32_t [| |] in
   let stopSDL_func = L.declare_function "stopSDL" stopSDL_t the_module in
 
-  (* (* Declare the built-in intToFloat() function *)
+  (* Declare trignometric sine function which accepts angle in degrees *)
+  let sine_t = L.var_arg_function_type f32_t [|f32_t|] in
+  let sine_func = L.declare_function "sine" sine_t the_module in
+
+  (* Declare trignometric sine function which accepts angle in degrees *)
+  let cosine_t = L.var_arg_function_type f32_t [|f32_t|] in
+  let cosine_func = L.declare_function "cosine" cosine_t the_module in
+
+  (* Declare the built-in intToFloat() function *)
   let intToFloat_t = L.function_type f32_t [|i32_t|] in
   let intToFloat_func = L.declare_function "intToFloat" intToFloat_t the_module in
 
   (* Declare the built-in floatToInt() function *)
   let floatToInt_t = L.function_type i32_t [|f32_t|] in
-  let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in *)
+  let floatToInt_func = L.declare_function "floatToInt" floatToInt_t the_module in
 
   (* Declare the built-in sprintf() function, used by the *ToString functions *)
   let sprintf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t; L.pointer_type i8_t |] in
@@ -355,6 +363,10 @@ let translate (globals, shapes, functions) =
         | "print" -> L.build_call print_func (Array.of_list(actuals)) "print_result" builder
         | "setFramerate" -> L.build_call setFramerate_func (Array.of_list(actuals)) "" builder
         | "getFramerate" -> L.build_call getFramerate_func (Array.of_list(actuals)) "getFramerate_result" builder
+        | "intToFloat" -> L.build_call intToFloat_func (Array.of_list(actuals)) "intToFloat_func" builder
+        | "floatToInt" -> L.build_call floatToInt_func (Array.of_list(actuals)) "floatToInt_func" builder
+        | "sine" -> L.build_call sine_func (Array.of_list(actuals)) "sine_func" builder
+        | "cosine" -> L.build_call cosine_func (Array.of_list(actuals)) "cosine_func" builder 
         | _ -> let (fdef, fdecl), actuals = 
             (try StringMap.find f_name function_decls, actuals
             with Not_found -> 
