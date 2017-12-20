@@ -1,6 +1,6 @@
 /*@author: Kunal Baweja & Erik Dyer*/
 
-/* Test Triangle translate */
+/* James Bond Introduction */
 
 shape Polygon{
     int [2]center;

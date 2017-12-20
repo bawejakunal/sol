@@ -130,7 +130,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 \tableofcontents{}
 
 \chapter{Introduction}
-  SOL (Shape Oriented Language), is a domain specific programming language that allows programmers to create 2D animations with ease, through an object-oriented approach. Engineers, programmers, scientists and designers, through SOL, have the ability to define and create objects, known as Shapes, and dictate their appearance and movements on the screen. SOL\'s simplicity saves developers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. It compiles into LLVM IR bytecode, making it adaptable across different architectures. The produced LLVM IR bytecode can be translated further into assembly code and linked statically against a predefined library before compiling down into an executable for a specific architecture using the LLVM compiler and GCC compilers respectively. The predefined library used by SOL for graphic rendering has been built on top of SDL2, that abstracts away the lower level details for drawing and animating objects.
+  SOL (Shape Oriented Language), is a domain specific programming language that allows programmers to create 2D animations with ease, through an object-oriented approach. Engineers, programmers, scientists and designers, through SOL, have the ability to define and create objects, known as Shapes, and dictate their appearance and movements on the screen. In addition, SOL\'s simplicity saves developers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. It compiles into LLVM IR bytecode, making it adaptable across different architectures. The produced LLVM IR bytecode can be translated further into assembly code and linked statically against a predefined library before compiling down into an executable for a specific architecture using the LLVM compiler and GCC compilers respectively. The predefined library used by SOL for graphic rendering has been built on top of SDL2, that abstracts away the lower level details for drawing and animating objects.
 
   \section{Background}
   SOL takes its inspiration from the ease of programming in \textit{object-oriented paradigm} and the complexity of existing libraries/solutions for rendering graphics. It attempts to combine both of them and provide a language which allows developers to organize graphics into a collection of \textit{Shapes} (much like objects) which can be easily defined, created and interacted with to produce powerful images and/or animations at a fast paced development.\\
@@ -415,7 +415,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       }
     \end{lstlisting}
 
-    \item The next step is to create a collection of multiple \textit{DanceLine} instances, say \textit{DiscoBar}. Hence, we define a new \texttt{shape}, \textit{DiscoBars} that defines three variables of \texttt{shape} \textit{DanceLine}. In the constructor we instantiate the \textit{member variables} with different colored lines oscillating at different frequencies.\\
+    \item The next step is to create a collection of multiple \textit{DanceLine} instances, say \textit{DiscoBar}. Hence, we define a new \texttt{shape}, \textit{DiscoBars} that defines three variables of \texttt{shape} \textit{DanceLine}. In the constructor, we instantiate the \textit{member variables} with different colored lines oscillating at different frequencies.\\
 
     \begin{lstlisting}[style=sol, aboveskip=1pt]
       shape DiscoBars {
