@@ -77,5 +77,5 @@ shape Polygon{
 
 func main() {
     Polygon p;
-    p = shape Polygon([320, 240], 120, 10);
+    p = shape Polygon([320, 240], 120, 24);
 }
