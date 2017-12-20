@@ -80,6 +80,26 @@ let translate (globals, shapes, functions, max_translates) =
       | _ -> raise(Failure("Type of predicate is wrong!")))
   in
 
+  (* Helper function to recursively find all child shapes *)
+  let rec find_child_objs p_lst p_inst p_sname builder = 
+    let v_lst = (p_sname, p_inst) :: p_lst in
+    (* Look through the shape's member variables, to see if it has any other shape members *)
+    let sdef = shape_def p_sname in
+    List.fold_left (fun l (v_t, v_n) -> match v_t with
+        A.Shape(v_sname) -> (* Find reference to variable shape *)
+          let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+          let v_inst = L.build_struct_gep p_inst index "tmp" builder in
+          (v_sname, v_inst) :: (find_child_objs l v_inst v_sname builder)
+      | A.Array(size, A.Shape(v_sname)) -> 
+          let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+          let v_inst = L.build_struct_gep p_inst index "tmp" builder in
+          let ind_list = List.rev (List.fold_left 
+            (fun l i -> (L.build_gep v_inst [| L.const_int i32_t 0 ; L.const_int i32_t i |] "inst" builder) :: l) 
+            [] (range 0 (size - 1))) in
+          List.fold_left (fun l ind_inst -> find_child_objs l ind_inst v_sname builder) l ind_list
+      | _ -> l) v_lst sdef.S.smember_vs
+  in
+
   (* Instantiate global constants used for printing/comparisons, once *)
   let string_format_str = L.define_global "fmt" (L.const_stringz context "%s\n") the_module in
   let int_format_str = L.define_global "int_fmt" (L.const_stringz context "%d") the_module in
@@ -169,6 +189,11 @@ let translate (globals, shapes, functions, max_translates) =
     [|  L.pointer_type (L.array_type i32_t 2) ;  L.pointer_type (L.array_type i32_t 2) ; 
         L.pointer_type (L.array_type i32_t 2) ; L.pointer_type i32_t ; L.pointer_type i32_t ; i32_t ; i32_t |] in
   let translateCurve_func = L.declare_function "translateCurve" translateCurve_t the_module in
+
+  (* Declare the built-in translatePoint(), which translates a point by some displacement in SDL *)
+  let translatePoint_t = L.function_type  void_t
+    [|  L.pointer_type (L.array_type i32_t 2) ; L.pointer_type i32_t ; L.pointer_type i32_t ; i32_t ; i32_t |] in
+  let translatePoint_func = L.declare_function "translatePoint" translatePoint_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
@@ -381,13 +406,46 @@ let translate (globals, shapes, functions, max_translates) =
             let num_frames = L.build_load (lookup "__num_frames") "load_num_frames" builder in
             let translateArgs = List.rev (List.tl (List.tl (List.rev actuals))) in
             ignore(L.build_call translateCurve_func 
-              (Array.of_list(List.rev(L.const_int i32_t (1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev translateArgs) ))) "" builder);
+              (Array.of_list
+                (List.rev(L.const_int i32_t (1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev translateArgs) ))) 
+              "" builder);
             ignore(L.build_call drawCurve_func (Array.of_list(actuals)) "drawCurve_result" builder);
             (* Reverse the displacement *)
             L.build_call translateCurve_func 
-              (Array.of_list(List.rev(L.const_int i32_t (-1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev translateArgs) ))) "" builder
-        | "drawPoint" -> L.build_call drawPoint_func (Array.of_list(actuals)) "drawPoint_result" builder
-        | "print" -> L.build_call print_func (Array.of_list(actuals)) "print_result" builder
+              (Array.of_list
+                (List.rev(L.const_int i32_t (-1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev translateArgs) ))) 
+              "" builder
+        | "drawPoint" -> 
+        (* Add displacements to the actuals *)
+            let disp_final_x = L.build_load (lookup "__disp_x") "load_disp_final_x" builder in
+            let disp_final_y = L.build_load (lookup "__disp_y") "load_disp_final_y" builder in
+            let num_frames = L.build_load (lookup "__num_frames") "load_num_frames" builder in
+            let translateArgs = List.rev (List.tl (List.rev actuals)) in
+            ignore(L.build_call translatePoint_func 
+              (Array.of_list
+                (List.rev(L.const_int i32_t (1) :: num_frames :: disp_final_y :: disp_final_x :: translateArgs))) 
+              "" builder);
+            ignore(L.build_call drawPoint_func (Array.of_list(actuals)) "drawPoint_result" builder);
+            (* Reverse the displacement *)
+            L.build_call translatePoint_func 
+              (Array.of_list
+                (List.rev(L.const_int i32_t (-1) :: num_frames :: disp_final_y :: disp_final_x :: translateArgs))) 
+              "" builder
+        | "print" -> 
+            let disp_final_x = L.build_load (lookup "__disp_x") "load_disp_final_x" builder in
+            let disp_final_y = L.build_load (lookup "__disp_y") "load_disp_final_y" builder in
+            let num_frames = L.build_load (lookup "__num_frames") "load_num_frames" builder in
+            let translateArgs = List.rev (List.tl (List.tl (List.rev actuals))) in
+            ignore(L.build_call translatePoint_func 
+              (Array.of_list
+                (List.rev(L.const_int i32_t (1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev(translateArgs))))) 
+              "" builder);
+            ignore(L.build_call print_func (Array.of_list(actuals)) "print_result" builder);
+            (* Reverse the displacement *)
+            L.build_call translatePoint_func 
+              (Array.of_list
+                (List.rev(L.const_int i32_t (-1) :: num_frames :: disp_final_y :: disp_final_x :: (List.rev(translateArgs))))) 
+              "" builder;
         | "setFramerate" -> L.build_call setFramerate_func (Array.of_list(actuals)) "" builder
         | "getFramerate" -> L.build_call getFramerate_func (Array.of_list(actuals)) "getFramerate_result" builder
         | "intToFloat" -> L.build_call intToFloat_func (Array.of_list(actuals)) "intToFloat_func" builder
@@ -403,30 +461,34 @@ let translate (globals, shapes, functions, max_translates) =
             let act = List.tl act in
             let actuals = List.tl actuals in
             (* Extract the shape instance *)
-            let (shape_inst, sdecl) = (match List.hd act with
-                S.SLval(S.SId(n), _), A.Shape(sname) -> (lookup n, shape_def sname)
+            let (main_shape_inst, main_sname) = (match List.hd act with
+                S.SLval(S.SId(n), _), A.Shape(sname) -> (lookup n, sname)
               | _ -> raise(Failure("Incorrect first argument for translate!"))) in
             (* let act = List.tl act in *)
             let actuals = List.tl actuals in
-            let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
-            (* Get access to the correct elements to add in displacement and time values *)
-            let disp_ref_x = L.build_gep 
-              (L.build_struct_gep shape_inst start_index "disp_ref_x" builder) 
-              [| const_zero ; seq |] "disp_x_seq_ref" builder in
-            let disp_ref_y = L.build_gep 
-              (L.build_struct_gep shape_inst (start_index + 1) "disp_ref_y" builder) 
-              [| const_zero ; seq |] "disp_y_seq_ref" builder in
-            let time_ref = L.build_gep 
-              (L.build_struct_gep shape_inst (start_index + 2) "time_ref" builder) 
-              [| const_zero ; seq |] "disp_time_ref" builder in (* const_zero *)
-            (* Store values *)
-            ignore(L.build_store (L.build_load 
-              (L.build_gep (List.hd actuals) [| const_zero ; const_zero |] "disp_seq_ref" builder) 
-              "disp_val_x" builder ) disp_ref_x builder);
-            ignore(L.build_store (L.build_load 
-              (L.build_gep (List.hd actuals) [| const_zero ; L.const_int i32_t 1 |] "disp_seq_ref" builder) 
-              "disp_val_y" builder ) disp_ref_y builder);
-            L.build_store (List.hd (List.rev actuals)) time_ref builder
+            let child_shapes = find_child_objs [] main_shape_inst main_sname builder in
+            ignore(List.iter (fun (inst_sname, shape_inst) ->
+              let sdecl = shape_def inst_sname in
+              let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
+              (* Get access to the correct elements to add in displacement and time values *)
+              let disp_ref_x = L.build_gep 
+                (L.build_struct_gep shape_inst start_index "disp_ref_x" builder) 
+                [| const_zero ; seq |] "disp_x_seq_ref" builder in
+              let disp_ref_y = L.build_gep 
+                (L.build_struct_gep shape_inst (start_index + 1) "disp_ref_y" builder) 
+                [| const_zero ; seq |] "disp_y_seq_ref" builder in
+              let time_ref = L.build_gep 
+                (L.build_struct_gep shape_inst (start_index + 2) "time_ref" builder) 
+                [| const_zero ; seq |] "disp_time_ref" builder in (* const_zero *)
+              (* Store values *)
+              ignore(L.build_store (L.build_load 
+                (L.build_gep (List.hd actuals) [| const_zero ; const_zero |] "disp_seq_ref" builder) 
+                "disp_val_x" builder ) disp_ref_x builder);
+              ignore(L.build_store (L.build_load 
+                (L.build_gep (List.hd actuals) [| const_zero ; L.const_int i32_t 1 |] "disp_seq_ref" builder) 
+                "disp_val_y" builder ) disp_ref_y builder);
+              ignore(L.build_store (List.hd (List.rev actuals)) time_ref builder);
+            ) child_shapes); const_zero
         | _ -> let (fdef, fdecl), actuals = 
             (try StringMap.find f_name function_decls, actuals
             with Not_found -> 
@@ -560,33 +622,38 @@ let translate (globals, shapes, functions, max_translates) =
       	  let merge_bb = L.append_block context "merge" the_function in
       	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
       	  L.builder_at_end context merge_bb
-      | S.SShape_render(s, sname, num_t, sl) -> let shape_inst = lookup s in
-          let sdecl = shape_def sname in
+      | S.SShape_render(s, sname, num_t, sl) -> let main_shape_inst = lookup s in
+          let child_shapes = find_child_objs [] main_shape_inst sname builder in
           let builder = List.fold_left stmt builder sl in
-          (* Call the external functions for allocTranslateArray to get references to the displacements to perform, per frame *)
-          (* First get references to the correct data within the instance *)
-          let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
-          let disp_ref_x = L.build_gep 
-            (L.build_struct_gep shape_inst start_index "disp_ref_x" builder) 
-            [| const_zero ; const_zero|] "fst_disp_ref_x" builder in
-          let disp_ref_y = L.build_gep 
-            (L.build_struct_gep shape_inst (start_index + 1) "disp_ref_y" builder) 
-            [| const_zero ; const_zero|] "fst_disp_ref_y" builder in
-          let time_ref = L.build_gep 
-            (L.build_struct_gep shape_inst (start_index + 2) "time_ref" builder) 
-            [| const_zero ; const_zero|] "fst_time_ref" builder in
-          let disp_final_x_ref = (L.build_struct_gep shape_inst (start_index + 3) "disp_final_x" builder) in
-          let disp_final_y_ref = (L.build_struct_gep shape_inst (start_index + 4) "disp_final_y" builder) in
-          let num_frames = (L.build_struct_gep shape_inst (start_index + 5) "num_frames_ref" builder) in
-          ignore(L.build_store (L.build_call allocTranslateArrayX_func 
-            [| disp_ref_x ; time_ref ; L.const_int i32_t num_t ; num_frames |] 
-            "allocX_result" builder) disp_final_x_ref builder);
-          ignore(L.build_store (L.build_call allocTranslateArrayY_func 
-            [| disp_ref_y ; time_ref ; L.const_int i32_t num_t ; num_frames |] 
-            "allocY_result" builder) disp_final_y_ref builder);
-          (* let int_fmt_ptr = 
-              L.build_in_bounds_gep int_format_str [| const_zero ; const_zero |] "tmp" builder in 
-          ignore(L.build_call printf_func [| int_fmt_ptr ; L.build_load (num_frames) "num_frames_loaded" builder |] "" builder); *)
+          (* For each child shape *)
+          ignore(List.iter (fun (inst_sname, shape_inst) ->
+            (* Call the external functions for allocTranslateArray to get references to the displacements to perform, per frame *)
+            (* First get references to the correct data within the instance *)
+            let sdecl = shape_def inst_sname in
+            let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
+            (* ignore(print_string(inst_sname ^ " " ^ (string_of_int start_index) ^ "\n")); *)
+            let disp_ref_x = L.build_gep 
+              (L.build_struct_gep shape_inst start_index "disp_ref_x" builder) 
+              [| const_zero ; const_zero|] "fst_disp_ref_x" builder in
+            let disp_ref_y = L.build_gep 
+              (L.build_struct_gep shape_inst (start_index + 1) "disp_ref_y" builder) 
+              [| const_zero ; const_zero|] "fst_disp_ref_y" builder in
+            let time_ref = L.build_gep 
+              (L.build_struct_gep shape_inst (start_index + 2) "time_ref" builder) 
+              [| const_zero ; const_zero|] "fst_time_ref" builder in
+            let disp_final_x_ref = (L.build_struct_gep shape_inst (start_index + 3) "disp_final_x" builder) in
+            let disp_final_y_ref = (L.build_struct_gep shape_inst (start_index + 4) "disp_final_y" builder) in
+            let num_frames = (L.build_struct_gep shape_inst (start_index + 5) "num_frames_ref" builder) in
+            ignore(L.build_store (L.build_call allocTranslateArrayX_func 
+              [| disp_ref_x ; time_ref ; L.const_int i32_t num_t ; num_frames |] 
+              "allocX_result" builder) disp_final_x_ref builder);
+            ignore(L.build_store (L.build_call allocTranslateArrayY_func 
+              [| disp_ref_y ; time_ref ; L.const_int i32_t num_t ; num_frames |] 
+              "allocY_result" builder) disp_final_y_ref builder);
+            (* let int_fmt_ptr = 
+                L.build_in_bounds_gep int_format_str [| const_zero ; const_zero |] "tmp" builder in 
+            ignore(L.build_call printf_func [| int_fmt_ptr ; L.build_load (num_frames) "num_frames_loaded" builder |] "" builder); *)
+          ) child_shapes);
           builder
 
     in
@@ -598,32 +665,14 @@ let translate (globals, shapes, functions, max_translates) =
     let _ = match sfdecl.S.sfname with
         "main" -> 
         (* Find all shape objects within scope *)
-        let rec find_child_objs p_lst p_inst p_sname = 
-          let v_lst = (p_sname, p_inst) :: p_lst in
-          (* Look through the shape's member variables, to see if it has any other shape members *)
-          let sdef = shape_def p_sname in
-          List.fold_left (fun l (v_t, v_n) -> match v_t with
-              A.Shape(v_sname) -> (* Find reference to variable shape *)
-                let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
-                let v_inst = L.build_struct_gep p_inst index "tmp" builder in
-                (v_sname, v_inst) :: (find_child_objs l v_inst v_sname)
-            | A.Array(size, A.Shape(v_sname)) -> 
-                let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
-                let v_inst = L.build_struct_gep p_inst index "tmp" builder in
-                let ind_list = List.rev (List.fold_left 
-                  (fun l i -> (L.build_gep v_inst [| const_zero ; L.const_int i32_t i |] "inst" builder) :: l) 
-                  [] (range 0 (size - 1))) in
-                List.fold_left (fun l ind_inst -> find_child_objs l ind_inst v_sname) l ind_list
-            | _ -> l) v_lst sdef.S.smember_vs
-        in
         let final_objs = List.rev (List.fold_left (fun lst (t, n) -> match t with
             A.Shape(sname) -> let inst = lookup n in 
-              find_child_objs lst inst sname
+              find_child_objs lst inst sname builder
           | A.Array(size, A.Shape(sname)) -> let arr_inst = lookup n in
               let ind_list = List.rev (List.fold_left 
                 (fun l i -> (L.build_gep arr_inst [| const_zero ; L.const_int i32_t i |] "inst" builder) :: l) 
                 [] (range 0 (size - 1))) in
-              List.fold_left (fun l ind_inst -> find_child_objs l ind_inst sname) lst ind_list
+              List.fold_left (fun l ind_inst -> find_child_objs l ind_inst sname builder) lst ind_list
           | _ -> lst) 
         [] (List.rev sfdecl.S.slocals)) in
 

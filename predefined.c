@@ -215,7 +215,7 @@ void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
 }
 
 /* translate a point by given displacement */
-void translatePoint(int pt[2], int* displaceX, int* displaceY, int sign, int maxFrame) {
+void translatePoint(int pt[2], int* displaceX, int* displaceY, int maxFrame, int sign) {
     if (maxFrame > 0) {
         pt[0] += (sign * displaceX[((theGame.curr_frame < maxFrame) ? theGame.curr_frame : maxFrame - 1)]);
         pt[1] += (sign * displaceY[((theGame.curr_frame < maxFrame) ? theGame.curr_frame : maxFrame - 1)]);
@@ -225,9 +225,9 @@ void translatePoint(int pt[2], int* displaceX, int* displaceY, int sign, int max
 /* translate a bezier curve control points */
 void translateCurve(int start[2], int mid[2], int end[2],
     int* displaceX, int* displaceY, int maxFrame, int sign) {
-    translatePoint(start, displaceX, displaceY, sign, maxFrame);
-    translatePoint(mid, displaceX, displaceY, sign, maxFrame);
-    translatePoint(end, displaceX, displaceY, sign, maxFrame);
+    translatePoint(start, displaceX, displaceY, maxFrame, sign);
+    translatePoint(mid, displaceX, displaceY, maxFrame, sign);
+    translatePoint(end, displaceX, displaceY, maxFrame, sign);
 }
 
 int* allocTranslateArrayX(int* indivDispX, int* times, int num, int* numFrames) {
