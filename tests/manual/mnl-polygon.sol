@@ -10,7 +10,7 @@ shape Polygon{
     construct(int [2]s, int [2]l, int n) {
         start = s;
         int sides = n;
-        pi = 3.14159265
+        pi = 3.14159265;
     }
 
     draw(){
@@ -26,7 +26,7 @@ shape Polygon{
                 radians = 0.0;
             }
             if(i != 0){
-                degrees = 180 - 360/n;
+                degrees = (180 - 360/n) * i;
                 radians = degrees*pi/180;
             }
             x = floatToInt(l*cos(radians));
@@ -38,7 +38,6 @@ shape Polygon{
             drawCurve(start, mid, end, 100, [0,150,0]);
             start = end;
         }
-        
     }
 }
 
