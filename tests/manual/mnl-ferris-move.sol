@@ -93,6 +93,7 @@ shape Square {
 }
 
 shape FerrisWheel {
+    int frames;
     float radius;
     int sides;
     int [2]center;
@@ -112,6 +113,7 @@ shape FerrisWheel {
         center[1] = ctr[1] + 16;
         center[0] = ctr[0];
 
+        frames = 0;
         radius = intToFloat(r);
         sides = n;
         plgn = shape Polygon(ctr, r, n, 0.0, [160, 82, 45]);
@@ -134,7 +136,25 @@ shape FerrisWheel {
         Square tmp;
         float deg;
 
-        deg = 10.0;
+        deg = 0.0;
+
+        /* speed up */
+        if (frames <= 100) {
+            deg = intToFloat(frames / 10);
+            frames = frames + 2;
+        }
+
+        /* constant speed */
+        if (frames > 100 && frames <= 200) {
+            frames = frames + 1;
+            deg = 10.0;
+        }
+
+        /* decrease speed */
+        if (frames > 200 && frames <= 300) {
+            frames = frames + 2;
+            deg = intToFloat((300 - frames) / 10);
+        }
 
         plgn.theta = (plgn.theta + deg) % 360.0;
         spks.theta = (spks.theta + deg) % 360.0;
@@ -160,6 +180,9 @@ shape FerrisWheel {
             s[i] = tmp;
             i = i + 1;
         }
+
+        /* cheeky message */
+        print([240, 420], "JAVANGERS Amusement Park !", [209, 125, 99]);
     }
 }
 
