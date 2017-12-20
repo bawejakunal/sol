@@ -1,4 +1,4 @@
-/*@author: Kunal Baweja*/
+/* @author: Kunal Baweja */
 
 /* Describe a dancing line */ 
 

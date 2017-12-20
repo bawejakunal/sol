@@ -105,6 +105,10 @@ let translate (globals, shapes, functions, max_translates) =
   let cosine_t = L.var_arg_function_type f32_t [|f32_t|] in
   let cosine_func = L.declare_function "cosine" cosine_t the_module in
 
+  (* Declare trignometric sine function which accepts angle in degrees *)
+  let round_t = L.var_arg_function_type f32_t [|f32_t|] in
+  let round_func = L.declare_function "round" round_t the_module in
+
   (* Declare the built-in intToFloat() function *)
   let intToFloat_t = L.function_type f32_t [|i32_t|] in
   let intToFloat_func = L.declare_function "intToFloat" intToFloat_t the_module in
@@ -385,6 +389,7 @@ let translate (globals, shapes, functions, max_translates) =
         | "floatToInt" -> L.build_call floatToInt_func (Array.of_list(actuals)) "floatToInt_func" builder
         | "sine" -> L.build_call sine_func (Array.of_list(actuals)) "sine_func" builder
         | "cosine" -> L.build_call cosine_func (Array.of_list(actuals)) "cosine_func" builder 
+        | "round" -> L.build_call round_func (Array.of_list(actuals)) "round_func" builder 
         | "translate" -> 
             (* Extract the first actual - this is the sequence number with which to add to the list of displacements *)
             let seq = (match List.hd act with

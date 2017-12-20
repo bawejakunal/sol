@@ -1,4 +1,4 @@
-/*@author: Kunal Baweja & Erik Dyer*/
+/* @author: Kunal Baweja */
 
 /* Test drawing an n sided polygon */ 
 
@@ -132,9 +132,12 @@ shape FerrisWheel {
         float xn;
         float yn;
         Square tmp;
+        float deg;
 
-        plgn.theta = (plgn.theta + 10.0) % 360.0;
-        spks.theta = (spks.theta + 10.0) % 360.0;
+        deg = 10.0;
+
+        plgn.theta = (plgn.theta + deg) % 360.0;
+        spks.theta = (spks.theta + deg) % 360.0;
 
         i = 0;
         while (i < sides) {
@@ -144,13 +147,13 @@ shape FerrisWheel {
             tmp.plgn.center[1] = tmp.plgn.center[1] - center[1];
 
             /* rotate point*/
-            xn = intToFloat(tmp.plgn.center[0]) * cosine(10.0);
-            xn = xn - intToFloat(tmp.plgn.center[1]) * sine(10.0);
-            xn = xn + intToFloat(center[0]);
+            xn = intToFloat(tmp.plgn.center[0]) * cosine(deg);
+            xn = xn - intToFloat(tmp.plgn.center[1]) * sine(deg);
+            xn = round(xn + intToFloat(center[0]));
 
-            yn = intToFloat(tmp.plgn.center[0]) * sine(10.0);
-            yn = yn + intToFloat(tmp.plgn.center[1]) * cosine(10.0);
-            yn = yn + intToFloat(center[1]);
+            yn = intToFloat(tmp.plgn.center[0]) * sine(deg);
+            yn = yn + intToFloat(tmp.plgn.center[1]) * cosine(deg);
+            yn = round(yn + intToFloat(center[1]));
 
             tmp.plgn.center[0] = floatToInt(xn);
             tmp.plgn.center[1] = floatToInt(yn);
@@ -163,5 +166,5 @@ shape FerrisWheel {
 func main() {
     FerrisWheel p;
     p = shape FerrisWheel([320, 240], 120, 10);
-    setFramerate(10);
+    setFramerate(15);
 }
