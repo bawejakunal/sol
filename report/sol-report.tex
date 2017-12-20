@@ -149,7 +149,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
   \begin{enumerate}
     \item \textbf{Environment setup} - guide to setting up the SOL compiler and development environment
     \item \textbf{Language Quick Tour} - a bried descriptioin of basic components of language.
-    \item \textbf{Sample Program} - create and rotate a line about its midpoint
+    \item \textbf{Sample Program} - Create dancing line bars
   \end{enumerate}
 
   \section{Environment setup}
@@ -349,43 +349,112 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 
     Functions in SOL also support recursion. SOL also provides a number a of type conversion functions and built-in functions for displaying and animating shapes on screen and printing text on screen or console. Please refer to section \ref{internal} for detailed information, syntax on these functions.
 
-  \section{Rotate a Line around midpoint (Sample SOL program)}
-  The following program shows a simple example to define a line, create it and rotate it around its midpoint.
+  \section{Dancing Bars Tutorial (Sample SOL program)}
+  The following program shows a simple define a \textit{dancing} line and using this definition to create a set of colored bars, that oscillate on one endpoint, at a user given frequency.
   \begin{enumerate}
     \itemsep 0em
-    \item As SOL treats all animation as an interaction of \textit{shapes}, we first define a straight line as a \textit{shape} in SOL, define its \texttt{draw} function.\\
-      \begin{lstlisting}[style=sol]
-        shape Line {
-            int [2]start;
-            int [3]mid;
-            int [2]end;
+    \item As SOL treats all animation as an interaction of \textit{shapes}, we first define a thick line \textit{shape} in SOL, which can oscillate in length on one end.\\
+    The constructor accepts four main arguments: \texttt{start point}, \texttt{end point}, \texttt{color} and \texttt{frequency} of oscillation\\
+    We define its \texttt{draw} function based on these input arguments.\\
 
-            construct(int [2]s, int [2]e) {
-                start = s;
-                end = e;
-                mid[0] = (s[0] + e[0]) / 2;
-                mid[1] = (s[1] + e[1]) / 2;
-            }
+    \begin{lstlisting}[style=sol, aboveskip=1pt]
+      shape DanceLine {
+          int [2]start;
+          int [2]end;
+          int [3]color;
+          int freq;   /* oscillation frequency */
+          int cnt;
+          int d;      /* length change per iteration */
 
-          draw() {
-            /* draw red line */
-            drawCurve(start, mid, end, 100, [200, 0, 0]);
+          /* constructor */
+          construct(int [2]s, int [2]e, int[3]clr, int f) {
+              start = s;
+              end = e;
+              color = clr; 
+              freq = f;   
+              cnt = 0;    /* initial counter */
+              d = 2;  
           }
-        }
-      \end{lstlisting}
 
-    \item The next step is to create a line object and instantiate it within \texttt{main} function, which is the entry point to a SOL program.\\
-      \begin{lstlisting}[style=sol]
-        func main() {
-          Line l; /* declare a line shape */
+          /* drawing specification for single frame */
+          draw(){
+              int i;
+              int [2]s;   /* control points for drawCurve */
+              int [2]m;
+              int [2]e;
 
-          /* create a line with given end points */
-          l = shape Line([10,10], [100, 100]);
+              /* increment count on each frame */
+              cnt = cnt + 1;
 
-          /* rotate line here */
-        }
-      \end{lstlisting}
+              if (cnt > freq) {
+                  d = -d;     /* reverse direction */
+                  cnt = 0;    /* reset freq counter */
+              }
+
+              /* change object length on one end */
+              end[1] = end[1] + d;
+
+              s = start;  /* end points of line */
+              e = end;
+
+              /* draw 10 bezier curves for thickness */
+              i = 0;
+              while (i < 10) {
+                  s[0] = s[0] + 1;
+                  e[0] = e[0] + 1;
+
+                  /* bezier curve mid point */            
+                  m[0] = (s[0] + e[0]) / 2;
+                  m[1] = (s[1] + e[1]) / 2;
+
+                  /* draw straight bezier curve */
+                  drawCurve(s, m, e, 2, color);
+                  i = i + 1;
+              }
+          }
+      }
+    \end{lstlisting}
+
+    \item The next step is to create a collection of multiple \textit{DanceLine} instances, say \textit{DiscoBar}. Hence, we define a new \texttt{shape}, \textit{DiscoBars} that defines three variables of \texttt{shape} \textit{DanceLine}. In the constructor we instantiate, the \textit{member variables}, with different colored lines oscillating at different frequencies.\\
+
+    \begin{lstlisting}[style=sol, aboveskip=1pt]
+      shape DiscoBars {
+          DanceLine d1;   /* member variables */
+          DanceLine d2;
+          DanceLine d3;
+
+          construct () {
+              /* instantiate DanceLine member variables */
+              d1 = shape DanceLine([100,300], [100,252], [30,144,255], 20);
+              d2 = shape DanceLine([130,300], [130,202], [210,105,30], 40);
+              d3 = shape DanceLine([160,300], [160,132], [50,205,50], 80);
+          }
+
+          draw(){
+              /* empty draw function 
+               * draw functions of member variables
+               * are called implicitly
+               */
+          }
+      }
+    \end{lstlisting}
+  
+    \item As a final step, we need to create one object of \textit{DanceBards} shape in the \textit{main} function, which is the entry point to a SOL program. The SOL runtime will recursively call its \textit{draw} function and \texttt{draw} functions of its member variables at each frame, to display the osciallating lines.\\
+
+    \begin{lstlisting}[style=sol, aboveskip=1pt]
+      func main() {
+          DiscoBars bars;
+          bars = shape DiscoBars();
+      }
+    \end{lstlisting}
   \end{enumerate}
+
+  Your final output on screen should look like the image shown below, with the colored bars \textbf{oscillating in length, at their upper ends}, at different frequencies.\\
+  \begin{center}
+      \includegraphics[scale=1]{dancing-bars.png}\\
+      \caption{Fig 2.1 DiscoBars Tutorial}
+  \end{center}
+
 
 \chapter{Language Reference Manual} \label{lrm}
 

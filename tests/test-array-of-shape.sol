@@ -32,6 +32,7 @@ func main() {
 
     /* four lines to describe a square */
     Line [4]sq;
+    Line tmp;
     int i;
 
     /* describe four sides */
@@ -43,7 +44,8 @@ func main() {
     /* print end and midpoit of each side */
     i = 0;
     while (i < 4) {
-        sq[i].describe();
+        tmp = sq[i];
+        tmp.describe();
         i = i + 1;
     }
 }
