@@ -1,7 +1,11 @@
 /*@author: Kunal Baweja*/
 
 func main() {
-    if (1 == 1 && 2 == 2) {
+
+    int x;
+    x = 1;
+
+    if (x == 1 && x == 1) {
         consolePrint("AND");
     }
     if (1 == 1 || 1 == 0) {
