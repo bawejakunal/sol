@@ -210,14 +210,6 @@ void rotateCoordinate(float* x, float* y, const int axisX, const int axisY, cons
     (*y) += axisY;
 }
 
-// /* rotate a bezier curve control points */
-// void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
-//     const double degree) {
-//     rotateCoordinate(start, axis, degree);
-//     rotateCoordinate(mid, axis, degree);
-//     rotateCoordinate(end, axis, degree);
-// }
-
 /* translate a point by given displacement */
 void translatePoint(int pt[2], int* displaceX, int* displaceY, int maxFrame, int sign) {
     if (maxFrame > 0) {
@@ -245,7 +237,6 @@ void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles
     *numFrames = totalSeconds * frameRate;
     (*dispX) = (int*) malloc((*numFrames) * sizeof(int));
     (*dispY) = (int*) malloc((*numFrames) * sizeof(int));
-    // printf("%d\n", dispX);
 
     float cumulX = 0.0;
     float cumulY = 0.0;
@@ -264,13 +255,11 @@ void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles
                 rotateCoordinate(&cumulX, &cumulY, xVal, yVal, anglePerFrame);
                 (*dispX)[frameIndex] = (int) cumulX;
                 (*dispY)[frameIndex] = (int) cumulY;
-                // printf("%d, ", (int)cumulX);
                 frameIndex += 1;
             }
         }
         // Else, perform translation using the given point as a displacement value
         else {
-            // printf("%d, %d : %d\n", indivDispX[i], currTime, num);
             float dispPerFrameX = (float)xVal / currFrames;
             float dispPerFrameY = (float)yVal / currFrames;
             for(j = 0; j < currFrames; j++) {
@@ -278,13 +267,10 @@ void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles
                 cumulY += dispPerFrameY;
                 (*dispX)[frameIndex] = (int) cumulX;
                 (*dispY)[frameIndex] = (int) cumulY;
-                // printf("%d, ", (int)cumulX);
                 frameIndex += 1;
             }
         }
-        // printf("\n");
     }
-    // printf("%d, %d, %d, %d\n", frameIndex, (int) cumulX, dispX[0], dispX);
 }
 
 // int* allocDispArrayY(int* indivDispY, int* times, double* angles, int num, int* numFrames) {

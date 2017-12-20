@@ -1,3 +1,4 @@
+(* @authors: Aditya & Gergana *)
 (* Semantic checking for the SOL compiler *)
 
 open Ast
@@ -166,16 +167,7 @@ let check (globals, shapes, functions) =
 
     report_duplicate (fun n -> "duplicate local " ^ n ^ " in " ^ func.fname)
       (List.map snd func.locals);
-
-    (* Type of each variable (global, formal, or local *)
-    (* let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
-	StringMap.empty (globals @ func.formals @ func.locals )
-    in
-
-    let type_of_identifier s =
-      try StringMap.find s symbols
-      with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-    in *)
+    
     let map_op tup = match tup with
         (Add, Int) -> IAdd
       | (Sub, Int) -> ISub
@@ -260,7 +252,7 @@ let check (globals, shapes, functions) =
           if List.length actuals != List.length fd.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
-          else (* TODO: Add special case for checking type of actual array vs formal array *)
+          else 
             List.iter2 (fun (ft, _) e -> let _, et = expr env e in
               ignore (check_assign ft et 
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
@@ -288,7 +280,7 @@ let check (globals, shapes, functions) =
               if List.length actuals != List.length fd.formals then
                 raise (Failure ("expecting " ^ string_of_int
                  (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
-             else (* TODO: Add special case for checking type of actual array vs formal array *)
+             else 
                List.iter2 (fun (ft, _) e -> let _, et = expr env e in
                   ignore (check_assign ft et 
                     (Failure ("illegal actual argument found " ^ string_of_typ et ^
@@ -310,7 +302,7 @@ let check (globals, shapes, functions) =
          if List.length actuals != List.length sd.construct.formals then
            raise (Failure ("expecting " ^ string_of_int
              (List.length sd.construct.formals) ^ " arguments in " ^ string_of_sdecl sd))
-         else (* TODO: Add special case for checking type of actual array vs formal array *)
+         else 
            List.iter2 (fun (ft, _) e -> let _, et = expr env e in
               ignore (check_assign ft et 
                 (Failure ("illegal actual argument found " ^ string_of_typ et ^
@@ -348,19 +340,7 @@ let check (globals, shapes, functions) =
                 let shape_scope = {parent = Some(env.scope); variables = env.scope.variables @ sd.member_vs} in
                 let shape_env = {env with scope = shape_scope} in 
                 let (v_slval, val_typ) = (lval_expr shape_env v) in
-                ((SShape_var(s, v_slval), t), val_typ)
-                (* (match v_slval with
-                  SId(v_n), _ -> let (v_t, _) = try List.find (fun (_, n) -> n = v_n) sd.member_vs
-                    with Not_found -> raise(Failure("Member variable " ^ v_n ^ " not found in shape declaration " ^ sname)) in
-                  ((SShape_var(s, v_slval), t), val_typ)
-                | SAccess(id, _), _ -> let _ = try List.find (fun (_, n) -> n = id) sd.member_vs
-                    with Not_found -> raise(Failure("Member variable " ^ id ^ " not found in shape declaration " ^ sname)) in 
-                    ignore(print_string (string_of_typ val_typ));
-                  ((SShape_var(s, v_slval), t), val_typ) 
-                | SShape_var(member_s, _), _ -> let _ = try List.find (fun (_, n) -> n = member_s) sd.member_vs
-                    with Not_found -> raise(Failure("Member variable " ^ member_s ^ " not found in shape declaration " ^ sname)) in
-                  ((SShape_var(s, v_slval), t), val_typ) 
-                ) *)
+                ((SShape_var(s, v_slval), t), val_typ)              
             | _ -> raise(Failure("Attempted member variable access for a non-shape variable " ^ s))
           with Not_found -> raise(Failure("Undeclared identifier " ^ s))
     
@@ -384,19 +364,6 @@ let check (globals, shapes, functions) =
         scope'.variables <- List.rev scope'.variables;
         SBlock(sl)
       | Expr e -> SExpr(expr env e)
-      (* | VDecl(b, e) -> let _ = find_local env.scope (snd b) in 
-          env.scope.variables <- b :: env.scope.variables;
-          (* Check that the expression type is compatible with the type of the variable 
-            EXCEPT when the expression is a Noexpr
-          *)
-          let lt = fst b in
-          let e' = expr env e in
-          let rt = snd (e') in let _ = (match rt with
-          | Void -> lt
-          | _ -> check_assign lt rt "Assign" (Failure ("illegal assignment " ^ string_of_typ lt ^
-              " = " ^ string_of_typ rt ^ " in " ^ 
-              string_of_expr e))) in
-          SVDecl(b, e') *)
       | Return e -> let e', t = expr env e in if t = func.ftype then SReturn((e', t)) else
          raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
                          string_of_typ func.ftype ^ " in " ^ string_of_expr e))

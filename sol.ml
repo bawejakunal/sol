@@ -1,3 +1,4 @@
+(* @authors: Aditya & Gergana *)
 (* Top-level of the SOL compiler: scan & parse the input,
    check the resulting AST, generate LLVM IR, and dump the module *)
 

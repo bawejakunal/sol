@@ -1,3 +1,6 @@
+(* @authors: Aditya & Gergana *)
+(* AST *)
+
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | And | Or | Mod
 
 type unary_op = Not | Neg
@@ -34,7 +37,6 @@ and
 type stmt = 
 	  Block of stmt list
 	| Expr of expr
-	(* | VDecl of bind * expr *)
 	| Return of expr
 	| If of expr * stmt
 	| While of expr * stmt
@@ -120,7 +122,6 @@ let rec string_of_stmt = function
     Block(stmts) ->
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
-  (* | VDecl(id, expr) -> string_of_typ (fst id) ^ " " ^ snd id ^ ": " ^ string_of_expr expr *)
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
   | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s

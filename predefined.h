@@ -65,10 +65,6 @@ int print(const int pt[2], const char *text, const int color[3]);
 /* rotate a coordinate */
 void rotateCoordinate(float* x, float* y, const int axisX, const int axisY, const double degree);
 
-// /* rotate a curve */
-// void rotateCurve(int start[2], int mid[2], int end[2], const int axis[2],
-//     const double degree);
-
 /* translate a point */
 void translatePoint(int pt[2], int* displaceX, int* displaceY, int maxFrame, int sign);
 
@@ -78,4 +74,3 @@ void translateCurve(int start[2], int mid[2], int end[2],
 
 /* Allocate space based on multiple displacements */
 void allocDispArray(int* indivDispX, int* indivDispY, int* times, double* angles, int num, int* numFrames, int** dispX, int** dispY);
-// int* allocDispArrayY(int* indivDispY, int* times, double* angles, int num, int* numFrames);

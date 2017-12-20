@@ -1,16 +1,7 @@
+(* @authors: Aditya & Gergana *)
+
 (* Code generation: translate takes a semantically checked AST and
-produces LLVM IR
-
-LLVM tutorial: Make sure to read the OCaml version of the tutorial
-
-http://llvm.org/docs/tutorial/index.html
-
-Detailed documentation on the OCaml LLVM library:
-
-http://llvm.moe/
-http://llvm.moe/ocaml/
-
-*)
+produces LLVM IR*)
 
 module L = Llvm
 module A = Ast
@@ -30,7 +21,6 @@ let range a b =
   if a > b then List.rev (aux b a) else aux a b;;
 
 let translate (globals, shapes, functions, max_movements) =
-  (* ignore(print_string(string_of_int max_movements)); *)
   let context = L.global_context () in
   let the_module = L.create_module context "SOL"
   and i32_t  = L.i32_type   context
@@ -180,11 +170,6 @@ let translate (globals, shapes, functions, max_movements) =
     L.pointer_type (L.pointer_type i32_t) ; L.pointer_type (L.pointer_type i32_t) |] in
   let allocDispArray_func = L.declare_function "allocDispArray" allocDispArray_t the_module in
 
-  (* (* Declare the built-in allocTranslateArray(), which allocates space for displacements to shapes*)
-  let allocTranslateArrayY_t = L.function_type (L.pointer_type i32_t) 
-    [| L.pointer_type i32_t ; L.pointer_type i32_t; i32_t ; L.pointer_type i32_t|] in
-  let allocTranslateArrayY_func = L.declare_function "allocTranslateArrayY" allocTranslateArrayY_t the_module in *)
-
   (* Declare the built-in translateCurve(), which translates a curve by some displacement in SDL *)
   let translateCurve_t = L.function_type  void_t
     [|  L.pointer_type (L.array_type i32_t 2) ;  L.pointer_type (L.array_type i32_t 2) ; 
@@ -260,7 +245,6 @@ let translate (globals, shapes, functions, max_movements) =
   
   (* Fill in the body of the given function *)
   let build_function_body sfdecl member_vars = 
-    (* ignore(print_string (sfdecl.S.sfname ^ "\n")); *)
     let (the_function, _) = (try StringMap.find sfdecl.S.sfname function_decls 
       with Not_found -> raise(Failure("build_function_body Not_found!"))) in
     let builder = L.builder_at_end context (L.entry_block the_function) in
@@ -269,7 +253,6 @@ let translate (globals, shapes, functions, max_movements) =
     let _ = match sfdecl.S.sfname with
         "main" -> ignore(L.build_call startSDL_func [|  |] "startSDL" builder) 
       | _ -> () in
-    (* TODO: Consider storing the returned value somewhere, return that as an error *)
 
     let const_zero = L.const_int i32_t 0 in
     
@@ -303,10 +286,7 @@ let translate (globals, shapes, functions, max_movements) =
 
       let formals = (List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
           (Array.to_list (L.params the_function)) )
-      (* (* The only case where a mismatch occurs is for shape-member functions, when the first argument is the shape 
-      - in this case, ignore the first argument *)
-      with Invalid_argument("List.fold_left2") -> List.fold_left2 add_formal StringMap.empty sfdecl.S.sformals
-          (List.tl (Array.to_list (L.params the_function))) *) in
+      in
       List.fold_left add_local formals sfdecl.S.slocals in
 
     (* Return the value for a variable or formal argument *)
@@ -379,7 +359,7 @@ let translate (globals, shapes, functions, max_movements) =
           match t with
             A.Array(_) -> expr builder false (s_e, t)
           | _ -> expr builder true (s_e, t)) 
-        (List.rev act)) in (* Why reverse twice? *)
+        (List.rev act)) in 
       
       (match f_name with
           "consolePrint" -> let fmt_str_ptr = 
@@ -464,8 +444,7 @@ let translate (globals, shapes, functions, max_movements) =
             (* Extract the shape instance *)
             let (main_shape_inst, main_sname) = (match List.hd act with
                 S.SLval(S.SId(n), _), A.Shape(sname) -> (lookup n, sname)
-              | _ -> raise(Failure("Incorrect first argument for translate!"))) in
-            (* let act = List.tl act in *)
+              | _ -> raise(Failure("Incorrect first argument for translate!"))) in           
             let actuals = List.tl actuals in
             let child_shapes = find_child_objs [] main_shape_inst main_sname builder in
             ignore(List.iter (fun (inst_sname, shape_inst) ->
@@ -504,8 +483,7 @@ let translate (globals, shapes, functions, max_movements) =
             (* Extract the shape instance *)
             let (main_shape_inst, main_sname) = (match List.hd act with
                 S.SLval(S.SId(n), _), A.Shape(sname) -> (lookup n, sname)
-              | _ -> raise(Failure("Incorrect first argument for translate!"))) in
-            (* let act = List.tl act in *)
+              | _ -> raise(Failure("Incorrect first argument for translate!"))) in          
             let actuals = List.tl actuals in
             let child_shapes = find_child_objs [] main_shape_inst main_sname builder in
             ignore(List.iter (fun (inst_sname, shape_inst) ->
@@ -592,15 +570,7 @@ let translate (globals, shapes, functions, max_movements) =
         (* ignore(print_string "access"); *)
         let arr = lookup id in
         let idx' = expr builder true idx in
-        (* let arr_len = L.array_length (ltype_of_typ el_typ) in 
-        if (idx' < const_zero || idx' >= (L.const_int i32_t arr_len)) 
-          then raise(Failure("Attempted access out of array bounds"))
-          (* TODO: figure out how to check for access out of array bounds *)
-          else  *)L.build_gep arr [| const_zero ; idx' |] "tmp" builder
-        (*let id' = lookup id 
-        and idx' = expr builder idx in
-        if idx' < (expr builder (A.Int_literal 0)) || idx' > id'.(1) then raise(Failure("Attempted access out of array bounds"))
-        else L.const_int i32_t idx'*)
+          L.build_gep arr [| const_zero ; idx' |] "tmp" builder    
     | S.SShape_var(s, v), s_t -> 
         let rec resolve_shape_var obj var obj_type = 
           (* Find index of variable in the shape definition *)
@@ -629,16 +599,13 @@ let translate (globals, shapes, functions, max_movements) =
     let add_terminal builder f =
       match L.block_terminator (L.insertion_block builder) with
 	      Some _ -> ()
-      | None -> (* ignore(print_string "Found no return statement!");  *)ignore (f builder) in
+      | None -> ignore (f builder) in
 	
     (* Build the code for the given statement; return the builder for
        the statement's successor *)
     let rec stmt builder = function
 	      S.SBlock sl -> List.fold_left stmt builder sl
       | S.SExpr e -> ignore (expr builder true e); builder
-      (* | S.SVDecl ((t, n), e) -> let var = L.build_alloca (ltype_of_typ t) n builder in
-          let e' = expr builder e in
-          ignore(L.build_store e' var builder); builder *)
       | S.SReturn e -> ignore (match sfdecl.S.styp with
 	        A.Void -> L.build_ret_void builder
 	      | _ -> L.build_ret (expr builder true e) builder); builder
@@ -676,8 +643,7 @@ let translate (globals, shapes, functions, max_movements) =
             (* Call the external functions for allocTranslateArray to get references to the displacements to perform, per frame *)
             (* First get references to the correct data within the instance *)
             let sdecl = shape_def inst_sname in
-            let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
-            (* ignore(print_string(inst_sname ^ " " ^ (string_of_int start_index) ^ "\n")); *)
+            let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in            
             let disp_ref_x = L.build_gep 
               (L.build_struct_gep shape_inst start_index "disp_ref_x" builder) 
               [| const_zero ; const_zero|] "fst_disp_ref_x" builder in
@@ -695,13 +661,7 @@ let translate (globals, shapes, functions, max_movements) =
             let num_frames = (L.build_struct_gep shape_inst (start_index + 6) "num_frames_ref" builder) in
             ignore(L.build_call allocDispArray_func 
               [| disp_ref_x ; disp_ref_y ; time_ref ; angle_ref ; L.const_int i32_t num_t ; num_frames ; disp_final_x_ref ; disp_final_y_ref |] 
-              "" builder);
-            (* ignore(L.build_store (L.build_call allocTranslateArrayY_func 
-              [| disp_ref_y ; time_ref ; L.const_int i32_t num_t ; num_frames |] 
-              "allocY_result" builder) disp_final_y_ref builder); *)
-            (* let int_fmt_ptr = 
-                L.build_in_bounds_gep int_format_str [| const_zero ; const_zero |] "tmp" builder in 
-            ignore(L.build_call printf_func [| int_fmt_ptr ; L.build_load (num_frames) "num_frames_loaded" builder |] "" builder); *)
+              "" builder);            
           ) child_shapes);
           builder
 
@@ -766,10 +726,7 @@ let translate (globals, shapes, functions, max_movements) =
           ignore(L.build_ret (L.build_load stopSDL_ret "stopSDL_ret" builder) builder)
       | _ -> () in
 
-    (* Add a return if the last block falls off the end *)
-    (* add_terminal builder (match sfdecl.S.styp with
-        A.Void -> L.build_ret_void
-      | _ -> L.build_ret const_zero(* L.build_ret (L.const_int (ltype_of_typ t) 0) *)) *)
+    (* Add a return if the last block falls off the end *)    
     match sfdecl.S.styp with
         A.Void -> add_terminal builder L.build_ret_void
       | _ -> ()

@@ -1,3 +1,4 @@
+/* @authors: Aditya & Gergana */
 /* Ocamlyacc parser for SOL */
 
 %{
@@ -74,11 +75,6 @@ typ:
   | STRING { String }
   | SHAPE_ID { Shape($1) }
 
-/*formal_typ:
-    typ {$1}
-  | formal_typ LSQUARE RSQUARE { Array(0, $1) }*/
-/* Removing because we do not need variable length arrays as function formal parameters */
-
 local_typ:
     typ {$1}
   | local_typ LSQUARE INT_LITERAL RSQUARE { Array ($3, $1)}
@@ -98,18 +94,12 @@ stmt_list:
 stmt:
     expr SEMI { Expr $1 }
   | RETURN SEMI { Return Noexpr }
-  /*| vdecl { VDecl($1, Noexpr) }
   | local_typ ID ASSIGN expr SEMI { VDecl(($1, $2), $4) }*/
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt { If($3, $5) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
   | ID DOT RENDER ASSIGN LBRACE stmt_list RBRACE { Shape_render($1, List.rev $6) }
-
-/*expr_opt:*/
-    /* nothing */ /*{ Noexpr }
-  | expr          { $1 }*/
-/* Removed because only usage was for FOR statements */
 
 array_expr:
     expr    { [$1] }
@@ -142,7 +132,6 @@ expr:
   | ID DOT ID LPAREN actuals_opt RPAREN { Shape_fn($1, $3, $5) }
   | LPAREN expr RPAREN { $2 }
   | lvalue  { Lval($1) }
-  /* TODO: Include expression for typecasting */
 
 lvalue:
     ID    { Id($1) }
@@ -162,7 +151,7 @@ sdecl:
       { { sname = $2;
       pname = None;
       member_vs = List.rev $4;
-      construct = $5; (* NOTE: Make this optional later *)
+      construct = $5; 
       draw = $6;
       member_fs = $7;
       }

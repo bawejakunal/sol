@@ -1,8 +1,9 @@
+(* @authors: Aditya & Gergana *)
+(* SAST *)
 open Ast
 
 type sop = IAdd | ISub | IMult | IDiv | IEqual | INeq | ILess | ILeq | IGreater | IGeq | IAnd | IOr | IMod |
            FAdd | FSub | FMult | FDiv | FEqual | FNeq | FLess | FLeq | FGreater | FGeq | FMod
-(* I = integer, F = floats, may add strings *)
 
 type sunary_op = INot | INeg | FNeg
 
@@ -24,7 +25,7 @@ and
   sexpr = sexpr_detail * typ
 and 
   slvalue_detail = 
-      SId of string         (* VDecl ? of bind * expr *)
+      SId of string         
     | SAccess of string * sexpr
     | SShape_var of string * slvalue
 and 
@@ -33,7 +34,6 @@ and
   stmt_detail =
       SBlock of stmt_detail list
     | SExpr of sexpr
-    (* | SVDecl of bind * sexpr *)
     | SReturn of sexpr
     | SIf of sexpr * stmt_detail
     | SWhile of sexpr * stmt_detail
@@ -49,7 +49,7 @@ and
 and 
   sshape_dec = {
   ssname   : string;
-  spname   :   string option; (*parent name*)
+  spname   :   string option;
   smember_vs : bind list;
   sconstruct : sfunc_dec;
   sdraw    : sfunc_dec;
@@ -118,7 +118,6 @@ and string_of_sstmt = function
    SBlock(stmts) ->
      "{\n" ^ String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
  | SExpr(expr) -> string_of_sexpr expr ^ ";\n";
- (* | SVDecl(id, expr) -> string_of_typ (fst id) ^ " " ^ snd id ^ ": " ^ string_of_sexpr expr *)
  | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ ";\n";
  | SIf(e, s) -> "if (" ^ string_of_sexpr e ^ ")\n" ^ string_of_sstmt s
  | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s

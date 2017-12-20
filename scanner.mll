@@ -1,3 +1,4 @@
+(* @authors: Aditya & Gergana *)
 (* Ocamllex scanner for SOL *)
 
 { open Parser }
@@ -41,15 +42,6 @@ rule token = parse
 | "draw"   { DRAW }
 | '.'      { DOT }
 | "render"  { RENDER }
-(*| "parent"  { PARENT }
-| "extends"  { EXTENDS }
-| "main"   { MAIN }  (* Consider moving out when main needs to be a reserved keyword *)
-| "consolePrint"  { CONSOLEPRINT }
-| "length"  { LENGTH }
-| "setFramerate"  { SETFRAMERATE }
-| "translate"  { TRANSLATE }
-| "rotate"  { ROTATE }
-| "wait"  { WAIT }*)
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LITERAL(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) }
 | '''[^ '\\' ''' '"']?''' as lxm { CHAR_LITERAL(lxm.[1]) }
