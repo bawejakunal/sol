@@ -567,6 +567,98 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       \end{tabular}
     \end{center}
 
+\chapter{Test Plan}
+The SOL compiler was developed through a test driven development approach. 
+
+  \section{Sample Programs}
+  This section shows 3 sample programs written in SOL and corresponding LLVM IR code represtation generated for the source programs.
+    \subsection{Recursive function}
+    The following program shows a SOL program to print sum of natural numbers from 1 to \texttt{n}, where \texttt{n} is input to the program.
+
+    \subsubsection{series.sol}
+    \lstinputlisting[style=sol, aboveskip=2pt]{series.sol}
+
+    \subsubsection{series.ll}
+    \lstinputlisting[style=sol, aboveskip=2pt]{series.ll}
+
+    \subsection{Composite Shape Drawing}
+    The following program demonstrates construction of complex shapes in SOL. It defines two shapes, \texttt{Line} and \texttt{Rectangle}. The \texttt{Rectangle} shape definition uses 4 \texttt{Line} objects to demonstrate drawing of complex shapes by aggregating simpler shapes.
+
+    \subsubsection{composite-square.sol}
+    \lstinputlisting[style=sol, aboveskip=2pt]{composite-square.sol}
+
+    \subsubsection{composite-square.ll}
+    \lstinputlisting[style=sol, aboveskip=2pt]{composite-square.ll}
+
+  \section{Test Suite}
+    The test suite is divided into two major categories:
+    \begin{itemize}
+      \itemsep 0em
+      \item Automated Tests - run on Travis CI
+      \item Manual Tests - visually inspected for display correctness
+    \end{itemize}
+
+    \textbf{NOTE:} Please refer to \underline{Appendix \ref{test-suite}} for complete code listing of test cases.\\
+
+    Test cases were written based on the syntactic and semantic specifications of language mentioned in SOL Language Reference Manual (chapter \ref{lrm}). This acted as a reference point for the team and allowed us to stay as close to the LRM specifications as practically possible throughout the compiler development process.\\
+
+    The initial tests for each feature were written as \textit{functional tests} which would ensure the correct working of the feature once it was implemented and integrated into the compiler. Once the feature was integrated into compiler, it was put through the complete list of tests, automated, to ensure that the new changes did not adversely affect any of the previously implemented features and to verify that as part of the language, each individual feature works in a certain expected manner without any conflicts.\\
+
+    We tested the following major components of our language, crucial for SOL:
+    \begin{itemize}
+      \itemsep 0em
+      \item \textit{primitives} - The tests cover declaration and assignments of primitive variables extensively, through specific test cases for assignment, operations, declarations, scoping rules and static type checking.
+
+      \item \textit{Arrays} - Fixed size arrays of primitives are supported by SOL and hence we extensively tested for array declaration, assigning and accessing individual elements. SOL does not provide bounds checking, much like C and hence it is programmer's responsibility to ensure that.
+
+      \item \textit{Shapes} - Defining shapes for drawing and animation on screen is the basic feature of object-oriented paradigm supported by SOL. We tested defining, instantiating and animating shapes through multiple automated and manual test cases, for visual correctness of rendered drawings. This includes defining and creating complex shapes using simpler shape definitions.
+
+      \item \textit{Operations} - SOL allows basic arithmetic and logical operations on integers and floating point numbers and these have been tested with respect to order of precedence and associativity rules in an expression, alongside correctness of result output by each individual operation.
+
+      \item \textit{Functions} - SOL supports declaring functions, both standalone as well as member functions of a shape. These have been tested by checking for return types, values, recursion, expected number of arguments and argument types, syntactic correctness and expected failures in case of incorrect source programs.
+
+      \item \textit{Type Conversion} - SOL allows converting, \texttt{int}, \texttt{float} and \texttt{char} values to \texttt{string} through appropriate functions mentioned in the Language Reference Manual and tested via \texttt{consolePrint} and \texttt{print} function calls.
+
+      \item \textit{Drawing Function} - Three basic drawing functions are provided as built-ins by SOL for rendering text and shapes on screen. These have been tested through manual testcases, wherein a visual inspection of displayed content is required to ensure correctness.
+
+      \item \textit{Output Function} - Apart from the drawing functions mentioned above, the only output function provided is \texttt{consolePrint}} which outputs the \texttt{string} argument to standard output and tested by comparing the outputs against expected outputs of corresponding test programs.
+
+      \item \textit{Animation Function} - The \textit{translate} and \textit{rotate} functions are the basic components that allow a SOL programmer to animate objects and these have been tested for intended behaviour rigorously to account for intended and possible unintended side effects of the program written.
+  \end{itemize}
+
+  \section{Test Automation}
+    We used \textit{Travis CI} in conjunction with the \texttt{testall.sh} script (see \ref{test-suite}) for automatically running all test cases and checking outputs against the expected output from the compiled program or failure during compilation or runtime of program. Setting up Travis CI allowed us to run the complete regression test suite in a standardized development environment, for every code push to the github repository, without manual intervention and be notified in case of test failures.
+
+  \section{Manual Testing}
+    Testing shape display and animation correctness was not possible within \texit{Travis CI} environment as it does not support a display console for  testing. These test cases were written separately, in test files following tnaming pattern \texttt{mnl-*}, compiled and run using the same test script, although these required manual intervention for correctness of displayed graphics. Please see Appendix \ref{mnl-test} for manual test cases.
+
+  \section{Testing Responsibilities}
+  \begin{center}
+    {\renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|p{5cm}|p{8cm}|}
+      \hline
+      \textbf{Team member} & \textbf{Responsibilties}\\
+      \hline
+      Kunal Baweja (Tester) & Test Plan, Travis CI/Automation, Test environment setup, Writing regression \& unit tests\\
+      \hline
+      Erik Dyer (System Architect) & Writing regression \& unit tests\\
+      \hline
+    \end{tabular}
+  \end{center}
+
+\chapter{Lessons Learned}
+  
+  \section{Aditya Narayanmoorthy}
+
+  \section{Erik Dyer}
+    This semester I learned how important organization and communication is. I think one thing that was really good about our team is that we were very good about sticking to meeting frequently from the beginning. Having this organization from the beginning allowed us to avoid the \"who\'s free to meet when?\" dance and therefore build up an early momentum that was sustained throughout the semester.\\
+
+    I think that one piece of advice I'd give to future groups is to think about what kind of language you could build from before you take the class. Our group took several meetings before we decided what kind of language we wanted to have, and that\'s before we even got to the language details. Coming in with a language idea will definitely be helpful and save time.
+
+  \section{Gegana Alteva}
+    Building a compiler in a team has provided me with many lessons throughout the semester. My development experience is limited and while I had an understanding of what needed to be done, I was not sure how it should be done. I learned the importance of implementing our language vertically and how to prioritize components. My advice for future teams would be to prioritize what needs to be implemented by understanding what is absolutely needed for your language to work. There are many language design aspects that seem necessary, but in reality are just \"nice-to-have\"s. Had I done a better job of prioritizing and classifying what is and is not a \"nice-to-have\", we would have perhaps spent more time coding what was actually needed.
+
+  \section{Kunal Baweja}
 % Appendix code listings
 \begin{appendices}
 
