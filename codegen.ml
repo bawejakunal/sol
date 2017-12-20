@@ -396,7 +396,7 @@ let translate (globals, shapes, functions, max_translates) =
             let (shape_inst, sdecl) = (match List.hd act with
                 S.SLval(S.SId(n), _), A.Shape(sname) -> (lookup n, shape_def sname)
               | _ -> raise(Failure("Incorrect first argument for translate!"))) in
-            let act = List.tl act in
+            (* let act = List.tl act in *)
             let actuals = List.tl actuals in
             let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
             (* Get access to the correct elements to add in displacement and time values *)
@@ -655,7 +655,7 @@ let translate (globals, shapes, functions, max_translates) =
         body_bb merge_bb pred_builder);
         let builder = L.builder_at_end context merge_bb in
 
-        (* Free all allocated memory *)
+        (* (* Free all allocated memory *)
         List.iter (fun (n, o) -> 
           let sdecl = shape_def n in
           let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
@@ -663,7 +663,7 @@ let translate (globals, shapes, functions, max_translates) =
           let disp_y_ref = L.build_load (L.build_struct_gep o (start_index + 4) "disp_y" builder) "disp_y_load" builder in
           ignore(L.build_free disp_x_ref builder);
           ignore(L.build_free disp_y_ref builder);
-          ) final_objs;
+          ) final_objs; *)
 
         let stopSDL_ret = L.build_alloca i32_t "stopSDL_ret" builder in 
           ignore(L.build_store (L.build_call stopSDL_func [|  |] "stopSDL_ret" builder) stopSDL_ret builder); 
@@ -691,7 +691,9 @@ let translate (globals, shapes, functions, max_translates) =
     let shape_inst = 
       if sfdecl.S.sfname = construct_name 
       (* SPECIAL CASE: For the construct(), add creation of an object of the required type *)
-      then L.build_alloca stype inst_name builder
+      then let inst = L.build_alloca stype inst_name builder in
+        let maxFrameIndex = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) + 5 in
+        ignore(L.build_store (L.const_int i32_t 0) (L.build_struct_gep inst maxFrameIndex "num_frames" builder) builder); inst 
         (* In all other cases, return the first argument of the function *)
       else let inst = Array.get (L.params the_function) 0 in ignore(L.set_value_name inst_name inst); inst
     in

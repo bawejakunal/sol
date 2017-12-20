@@ -95,6 +95,7 @@ shape Square {
 shape FerrisWheel {
     float radius;
     int sides;
+    int [2]center;
     
     Polygon plgn;
     Spokes spks;
@@ -105,6 +106,7 @@ shape FerrisWheel {
         float degrees;
         int[2] strt;
 
+        center = ctr;
         radius = intToFloat(r);
         sides = n;
         plgn = shape Polygon(ctr, r, n, 0.0, [160, 82, 45]);
@@ -122,10 +124,34 @@ shape FerrisWheel {
 
     draw(){
         int i;
-        i = 0;
+        float xn;
+        float yn;
+        Square tmp;
 
         plgn.theta = (plgn.theta + 10.0) % 360.0;
         spks.theta = (spks.theta + 10.0) % 360.0;
+
+        i = 0;
+        while (i < sides) {
+            tmp = s[i];
+            /* translate back to origin */
+            tmp.plgn.center[0] = tmp.plgn.center[0] - center[0];
+            tmp.plgn.center[1] = tmp.plgn.center[1] - center[1];
+
+            /* rotate point*/
+            xn = intToFloat(tmp.plgn.center[0]) * cosine(10.0);
+            xn = xn - intToFloat(tmp.plgn.center[1]) * sine(10.0);
+            xn = xn + intToFloat(center[0]);
+
+            yn = intToFloat(tmp.plgn.center[0]) * sine(10.0);
+            yn = yn + intToFloat(tmp.plgn.center[1]) * cosine(10.0);
+            yn = yn + intToFloat(center[1]);
+
+            tmp.plgn.center[0] = floatToInt(xn);
+            tmp.plgn.center[1] = floatToInt(yn);
+            s[i] = tmp;
+            i = i + 1;
+        }
     }
 }
 
