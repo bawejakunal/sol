@@ -523,19 +523,32 @@ let translate (globals, shapes, functions) =
     let _ = match sfdecl.S.sfname with
         "main" -> 
         (* Find all shape objects within scope *)
+        let rec find_child_objs p_lst p_inst p_sname = 
+          let v_lst = (p_sname, p_inst) :: p_lst in
+          (* Look through the shape's member variables, to see if it has any other shape members *)
+          let sdef = shape_def p_sname in
+          List.fold_left (fun l (v_t, v_n) -> match v_t with
+              A.Shape(v_sname) -> (* Find reference to variable shape *)
+                let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+                let v_inst = L.build_struct_gep p_inst index "tmp" builder in
+                (v_sname, v_inst) :: (find_child_objs l v_inst v_sname)
+            | A.Array(size, A.Shape(v_sname)) -> 
+                let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
+                let v_inst = L.build_struct_gep p_inst index "tmp" builder in
+                let ind_list = List.rev (List.fold_left 
+                  (fun l i -> (L.build_gep v_inst [| const_zero ; L.const_int i32_t i |] "inst" builder) :: l) 
+                  [] (range 0 (size - 1))) in
+                List.fold_left (fun l ind_inst -> find_child_objs l ind_inst v_sname) l ind_list
+            | _ -> l) v_lst sdef.S.smember_vs
+        in
         let final_objs = List.rev (List.fold_left (fun lst (t, n) -> match t with
             A.Shape(sname) -> let inst = lookup n in 
-              let rec find_child_objs p_lst p_inst p_sname = 
-                let v_lst = (p_sname, p_inst) :: p_lst in
-                (* Look through the shape's member variables, to see if it has any other shape members *)
-                let sdef = shape_def p_sname in
-                List.fold_left (fun l (v_t, v_n) -> match v_t with
-                    A.Shape(v_sname) -> (* Find reference to variable shape *)
-                      let index = index_of (fun (_, member_var) -> v_n = member_var) sdef.S.smember_vs 0 in
-                      let v_inst = L.build_struct_gep p_inst index "tmp" builder in
-                      (v_sname, v_inst) :: (find_child_objs l v_inst v_sname)
-                  | _ -> l) v_lst sdef.S.smember_vs
-              in find_child_objs lst inst sname
+              find_child_objs lst inst sname
+          | A.Array(size, A.Shape(sname)) -> let arr_inst = lookup n in
+              let ind_list = List.rev (List.fold_left 
+                (fun l i -> (L.build_gep arr_inst [| const_zero ; L.const_int i32_t i |] "inst" builder) :: l) 
+                [] (range 0 (size - 1))) in
+              List.fold_left (fun l ind_inst -> find_child_objs l ind_inst sname) lst ind_list
           | _ -> lst) 
         [] (List.rev sfdecl.S.slocals)) in
 
