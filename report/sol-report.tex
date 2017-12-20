@@ -652,13 +652,22 @@ The SOL compiler was developed through a test driven development approach.
     \lstinputlisting[style=sol, aboveskip=2pt]{series.ll}
 
     \subsection{Composite Shape Drawing}
-    The following program demonstrates construction of complex shapes in SOL. It defines two shapes, \texttt{Line} and \texttt{Rectangle}. The \texttt{Rectangle} shape definition uses 4 \texttt{Line} objects to demonstrate drawing of complex shapes by aggregating simpler shapes.
+    The following program demonstrates construction of complex shapes in SOL. It defines two generic shapes, \texttt{Polygon} and \texttt{Spokes}. Further it uses \texttt{Polygon} to define a \texttt{Square} and defines a \texttt{FerrisWheel} shape using member variables of \texttt{Polygon}, \texttt{Square} and \texttt{Spokes} shapes. In the \texttt{draw} function of \texttt{FerrisWheel} we define the logic to draw the object at each frame, gradually speeding up the rotation speed, staying constant at that speed and then slowing down to a halt.
 
-    \subsubsection{composite-square.sol}
-    \lstinputlisting[style=sol, aboveskip=2pt]{composite-square.sol}
+    \subsubsection{ferris-wheel.sol}
+    \lstinputlisting[style=sol, aboveskip=2pt]{ferris-wheel.sol}
 
-    \subsubsection{composite-square.ll}
-    \lstinputlisting[style=sol, aboveskip=2pt]{composite-square.ll}
+    \subsubsection{ferris-wheel.ll}
+    \lstinputlisting[style=sol, aboveskip=2pt]{ferris-wheel.ll}
+
+    \subsection{Animating Shapes}
+    In this sample program, the introduction scene from \texit{James Bond} movie franchise is recreated, again defining two basic shapes, \texttt{Polygon} and \texttt{Line} and using these shapes to create circles for the screen and additionally define a \textit{Person} shape. For each of the objects created, a render block is defined which dictates the translation of individual objects.
+
+    \subsubsection{james-bond.sol}
+    \lstinputlisting[style=sol, aboveskip=2pt]{james-bond.sol}
+
+    \subsubsection{james-bond.ll}
+    \lstinputlisting[style=sol, aboveskip=2pt]{james-bond.ll}    
 
   \section{Test Suite}
     The test suite is divided into two major categories:
