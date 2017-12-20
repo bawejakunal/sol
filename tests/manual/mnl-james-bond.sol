@@ -66,11 +66,13 @@ shape Person {
     Line rleg;
     Line lhand;
     Line rhand;
+    int frames;
 
     construct(int[2] pos) {
         int [2]strt;
         int [2]end;
 
+        frames = 0;
         head = shape Polygon(pos, 12, 50, 0.0, [0, 0, 0]);
 
         strt[0] = pos[0];
@@ -97,7 +99,15 @@ shape Person {
         lhand = shape Line(strt, end);
     }
 
-    draw(){}
+    draw(){
+        if (frames < 120) {
+            frames = frames + 1;
+        }
+        if (frames >= 120) {
+            print([-200, 200], "The name is Bond. James Bond !",
+                [102, 102, 255]);
+        }
+    }
 }
 
 func main(){
@@ -106,16 +116,25 @@ func main(){
     Polygon c3;
     Person bond;
 
-    c1 = shape Polygon([50, 100], 40, 80, 30.0, [0,0,150]);
-    c2 = shape Polygon([50, 100], 40, 80, 30.0, [0,150,0]);
-    c3 = shape Polygon([50, 100], 40, 80, 30.0, [150,0,0]);
-    bond = shape Person([50, 80]);
+    c1 = shape Polygon([-50, 100], 40, 80, 30.0, [0,0,150]);
+    c2 = shape Polygon([-50, 100], 40, 80, 30.0, [0,150,0]);
+    c3 = shape Polygon([-50, 100], 40, 80, 30.0, [150,0,0]);
+    bond = shape Person([-50, 80]);
+
+
+    bond.render = {
+        translate([400, 0], 4);
+    }
 
     c1.render = {
-        translate([400, 0], 8);
+        translate([400, 0], 4);
     }
 
     c2.render = {
-        translate([200, 0], 4);
+        translate([200, 0], 2);
+    }
+
+    c3.render = {
+        translate([100, 0], 1);
     }
 }
