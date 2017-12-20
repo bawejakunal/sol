@@ -711,15 +711,30 @@ let translate (globals, shapes, functions, max_movements) =
         body_bb merge_bb pred_builder);
         let builder = L.builder_at_end context merge_bb in
 
-        (* (* Free all allocated memory *)
-        List.iter (fun (n, o) -> 
+        (* Free all allocated memory *)
+        let builder = List.fold_left (fun builder (n, o) -> 
           let sdecl = shape_def n in
           let start_index = (List.length sdecl.S.smember_vs) + (List.length sdecl.S.smember_fs) in
-          let disp_x_ref = L.build_load (L.build_struct_gep o (start_index + 3) "disp_x" builder) "disp_x_load" builder in
-          let disp_y_ref = L.build_load (L.build_struct_gep o (start_index + 4) "disp_y" builder) "disp_y_load" builder in
-          ignore(L.build_free disp_x_ref builder);
-          ignore(L.build_free disp_y_ref builder);
-          ) final_objs; *)
+          let num_frames_ref = (L.build_struct_gep o (start_index + 6) "num_frames" builder) in
+          let num_frames = L.build_load num_frames_ref "num_frames_load" builder in
+          (* Check if the number of frames is greater than zero - if so, de-allocate memory *)
+          let bool_val = L.build_icmp L.Icmp.Ne (num_frames) (L.const_int i32_t 0) "bool_val" builder in 
+          
+          let merge_bb = L.append_block context "merge" the_function in
+
+          let then_bb = L.append_block context "then" the_function in
+          let builder_body = L.builder_at_end context then_bb in
+          let disp_x_ref = L.build_load (L.build_struct_gep o (start_index + 4) "disp_x" builder_body) "disp_x_load" builder_body in
+          let disp_y_ref = L.build_load (L.build_struct_gep o (start_index + 5) "disp_y" builder_body) "disp_y_load" builder_body in
+          ignore(L.build_free disp_x_ref builder_body);
+          ignore(L.build_free disp_y_ref builder_body);
+          (* Reset frame numbers to zero *)
+          ignore(L.build_store const_zero num_frames_ref builder_body);
+          ignore(L.build_br merge_bb builder_body);
+
+          ignore (L.build_cond_br bool_val then_bb merge_bb builder);
+          L.builder_at_end context merge_bb;
+          ) builder final_objs in
 
         let stopSDL_ret = L.build_alloca i32_t "stopSDL_ret" builder in 
           ignore(L.build_store (L.build_call stopSDL_func [|  |] "stopSDL_ret" builder) stopSDL_ret builder); 
