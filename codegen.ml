@@ -71,6 +71,15 @@ let translate (globals, shapes, functions, max_translates) =
   let global_vars = StringMap.add "_Running" 
     (L.define_global "_Running" (L.const_int (L.i1_type context) 0) the_module) global_vars in
 
+  (* Helper function to resolve booleans depending on the result type *)
+  let conv_bool pred builder = 
+    let llty_str = L.string_of_lltype (L.type_of pred) in
+    (match llty_str with
+        "i32" -> (L.build_icmp L.Icmp.Ne pred (L.const_int i32_t 0) "tmp" builder)
+      | "i1" -> pred
+      | _ -> raise(Failure("Type of predicate is wrong!")))
+  in
+
   (* Instantiate global constants used for printing/comparisons, once *)
   let string_format_str = L.define_global "fmt" (L.const_stringz context "%s\n") the_module in
   let int_format_str = L.define_global "int_fmt" (L.const_stringz context "%d") the_module in
@@ -299,13 +308,9 @@ let translate (globals, shapes, functions, max_translates) =
 	    and e2' = expr builder true e2 in
         (match op with
           S.IAnd -> L.build_and 
-            (L.build_icmp L.Icmp.Ne e1' const_zero "tmp" builder) 
-            (L.build_icmp L.Icmp.Ne e2' const_zero "tmp" builder) 
-            "tmp" builder
+            (conv_bool e1' builder) (conv_bool e2' builder) "tmp" builder
         | S.IOr -> L.build_or 
-          (L.build_icmp L.Icmp.Ne e1' const_zero "tmp" builder) 
-          (L.build_icmp L.Icmp.Ne e2' const_zero"tmp" builder) 
-          "tmp" builder
+            (conv_bool e1' builder) (conv_bool e2' builder) "tmp" builder
         | _ ->  (match op with
             S.IAdd    -> L.build_add
           | S.ISub    -> L.build_sub
@@ -337,7 +342,7 @@ let translate (globals, shapes, functions, max_translates) =
 	    let e' = expr builder true e in
 	      (match op with
 	        S.INeg    -> L.build_neg e' "tmp" builder
-        | S.INot    -> L.build_icmp L.Icmp.Eq e' const_zero "tmp" builder
+        | S.INot    -> L.build_icmp L.Icmp.Eq (conv_bool (expr builder true e) builder) const_zero "tmp" builder
         | S.FNeg    -> L.build_fneg e' "tmp" builder)
       | S.SAssign (lval, s_e), _ -> let e' = expr builder true s_e in
 	                   ignore (L.build_store e' (lval_expr builder lval) builder); e'
@@ -530,15 +535,9 @@ let translate (globals, shapes, functions, max_translates) =
 	        A.Void -> L.build_ret_void builder
 	      | _ -> L.build_ret (expr builder true e) builder); builder
       | S.SIf (predicate, then_stmt) ->
-          let pred' = expr builder true predicate in 
-          let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
-          let bool_val = 
-            (match llty_str with
-                "i32" -> (L.build_icmp L.Icmp.Ne pred' const_zero "tmp" builder)
-              | "i1" -> pred'
-              | _ -> raise(Failure("Type of predicate is wrong!"))) in
-
-        	let merge_bb = L.append_block context "merge" the_function in
+          let bool_val = conv_bool (expr builder true predicate) builder in 
+          
+          let merge_bb = L.append_block context "merge" the_function in
 
         	let then_bb = L.append_block context "then" the_function in
         	add_terminal (stmt (L.builder_at_end context then_bb) then_stmt)
@@ -556,13 +555,7 @@ let translate (globals, shapes, functions, max_translates) =
       	    (L.build_br pred_bb);
 
       	  let pred_builder = L.builder_at_end context pred_bb in
-          let pred' = expr pred_builder true predicate in 
-          let llty_str = L.string_of_lltype (L.type_of pred') in (* TODO: Find a less hack-y way to do this! *)
-          let bool_val = 
-            (match llty_str with
-                "i32" -> (L.build_icmp L.Icmp.Ne pred' const_zero "tmp" pred_builder)
-              | "i1" -> pred'
-              | _ -> raise(Failure("Type of predicate is wrong!"))) in
+          let bool_val = conv_bool (expr pred_builder true predicate) builder in 
           
       	  let merge_bb = L.append_block context "merge" the_function in
       	  ignore (L.build_cond_br bool_val body_bb merge_bb pred_builder);
