@@ -29,34 +29,38 @@ SOL is a simple language that allows programmers to create 2D animations with ea
 
 \section{Lexical Conventions}
 
-This section describes the complete lexical conventions followed for a syntactically correct SOL program, forming various parts of the language.
+This section describes the complete lexical conventions followed for a syntactically-correct SOL program, forming various parts of the language.
 
     \subsection{\textit{Comments}}
     Comments in SOL start with character sequence \texttt{/*} and end at character sequence \texttt{*/}. They may extend over multiple lines and all characters following \texttt{/*} are ignored until an ending \texttt{*/} is encountered.
 
     \subsection{\textit{Identifiers}}\label{identifer}
-    In SOL, an identifier is a sequence of characters from the set of english alphabets, arabic numerals and underscore (\_). The first character of an identifier should always be a lower case english alphabet. Identifiers are case sensitive. Identifiers cannot be any of the reserved keywords mentioned in section \ref{keywords}.
+    In SOL, an identifier is a sequence of characters from the set of English alphabets, Arabic numerals and underscores (\_). The first character of an identifier should always be a lower case English alphabet. Identifiers are case sensitive. Identifiers cannot be any of the reserved keywords mentioned in section \ref{keywords}.
 
     \subsection{\textit{Keywords}} \label{keywords}
-    Keywords in SOL include data types, built-in functions, and control statements, and may not be used as identifiers as they are reserved.
+    Keywords in SOL include data types, built-in functions, and control statements, and may not be used as identifiers (as they are reserved).
 
         \begin{center}
             \begin{tabular}{ |c|c|c|c| } 
             \hline
                 int     & if            & main          & shape   \\ 
-                float   & while         & setFramerate  & \\ 
+                float   & while         & setFramerate  & draw	  \\ 
                 char    & func          & getFramerate  & \\
                 string  & construct     & print         & \\
                         & return        & consolePrint  & \\
                         &               & intToString   & \\
                         &               & floatToString & \\
                         &               & charToString  & \\
+                        &               & intToFloat    & \\
+                        &               & floatToInt    & \\
                         &               & render        & \\
-                        &               & wait          & \\
                         &               & drawPoint     & \\
                         &               & drawCurve     & \\
                         &               & translate     & \\
                         &               & rotate        & \\
+                        &               & sine			& \\
+                        &               & cosine		& \\
+                        &               & round			& \\
 
             \hline
             \end{tabular}
@@ -122,7 +126,7 @@ This section describes the complete lexical conventions followed for a syntactic
         \end{center}
 
         \subsubsection{\textit{Comparison Operators}}
-        The comparison operators are left associative binary operators for comparing values of operands defined as expressions. Please refer to section \ref{precedence} for precedence and associativity rules.
+        The comparison operators are left-associative binary operators for comparing values of operands defined as expressions. Please refer to section \ref{precedence} for precedence and associativity rules.
         \begin{center}
             \begin{tabular}{ |c|c| }
             \hline
@@ -181,7 +185,7 @@ This section describes the complete lexical conventions followed for a syntactic
     SOL expressions are evaluated with the following rules:
     \begin{enumerate}
         \itemsep0em
-        \item Expressions are evaluated from left to right as operators are left associative, unless stated otherwise.
+        \item Expressions are evaluated from left to right as operators are left-associative, unless stated otherwise.
 
         \item Expressions within parenthesis take highest precedence and are evaluated prior to substituting in outer expression.
         
@@ -215,7 +219,7 @@ This section describes the complete lexical conventions followed for a syntactic
     \begin{itemize}
         \itemsep0em
         \item \textit{int} - integer number
-        \item \textit{float} - floating point number
+        \item \textit{float} - floating-point number
         \item \textit{char} - a single character
         \item \textit{string} - string (ordered sequence of characters)
     \end{itemize}
@@ -240,11 +244,11 @@ This section describes the complete lexical conventions followed for a syntactic
     \end{lstlisting}
 
     \subsection{\textit{Constructor Declarators}}
-    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to function definitions with three additional constraints: 
+    Constructors are declared with the keyword: \texttt{construct}. Constructor definitions are similar to function definitions, with three additional constraints: 
     \begin{enumerate}
         \itemsep0em
         \item Constructors are defined inside the \textit{shape} definition
-        \item A constructor is defined with the \texttt{construct} keyword, followed by optional formal arguments, within parenthesis as a comma-separated list of variable declarations, similar to function definitions
+        \item A constructor is defined with the \texttt{construct} keyword, followed by optional formal arguments within parenthesis as a comma-separated list of variable declarations, similar to function definitions
         \item Constructors do not have a return type specified
     \end{enumerate}
     Example:\\
@@ -278,14 +282,14 @@ This section describes the complete lexical conventions followed for a syntactic
     \end{lstlisting}
 
 \section{Statements}
-A statement in SOL refers to a complete instruction for a SOL program. All statements are executed in order of sequence. The four types of statements are described in detail below:\\
+A statement in SOL refers to a complete instruction for a SOL program. All statements are executed in order sequential order. The four types of statements are described in detail below:\\
 
     \subsection{\textit{Expression Statement}}
     Expression statements are those statements that get evaluated and produce a result. This can be as simple as an assignment or a function call.\\
     Example: \texttt{x = 5; /* assign 5 to identifier x */}
 
     \subsection{\textit{If Statement}}
-    An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parenthesis; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
+    An \textit{if} statement is a conditional statement, that is specified with the \texttt{if} keyword followed by an \textit{expression} specified within a pair of parentheses; further followed by a block of code within curly braces. The code specified within the \texttt{if} block executes if the expression evaluates to a non-zero \textit{integer}.\\
     Example:\\
     \begin{lstlisting}[style=sol]
         int x;
@@ -344,16 +348,16 @@ SOL specifies a set of required/internal functions that must be defined for spec
     \underline{Return}: \texttt{frames per second (int)}
 
     \subsection{consolePrint}
-    Prints a string to the console. Com]monly used to print error messages.\\
+    Prints a string to the console. Commonly used to print error messages.\\
     \underline{Arguments}: \texttt{text (string)}
 
     \subsection{round}
-    The \texttt{round} function accepts a \texttt{float} argument and returns the value rounded to nearest integer value, rounding halfway cases away from zero instead of to the nearest integer.\\
+    The \texttt{round} function accepts a \texttt{float} argument and returns the value rounded to the nearest integer value, rounding halfway cases away from zero instead of to the nearest integer.\\
     \underline{Argument}: \texttt{value (float)}\\
     \underline{Return}: \texttt{result (float)}
 
     \subsection{Trigonometric functions}
-    SOL provides two basic trignometric functions, \texttt{sine} and \texttt{cosine} which can be used to easily calculate coordinates for displaying objectes or other arithmetic calculations in SOL programs.
+    SOL provides two basic trignometric functions, \texttt{sine} and \texttt{cosine} which can be used to easily calculate coordinates for displaying objects or other arithmetic calculations in SOL programs.
 
         \subsubsection{\textit{sine}}
         The \texttt{sine} function accepts an argument of type \texttt{float}, representing an \textit{angle} in \texttt{degrees} and returns
@@ -369,7 +373,7 @@ SOL specifies a set of required/internal functions that must be defined for spec
         \underline{Return}: \texttt{cosine value (float)}
 
     \subsection{Type Conversion Functions}
-    SOL provides following type conversion functions for converting expressions of a given type to an expression of another type.
+    SOL provides the following type conversion functions for converting expressions of a given type to an expression of another type.
 
         \subsubsection{\textit{intToString}}
         Accepts an expression (\texttt{src}) of type \texttt{int} as the argument and returns the \texttt{string} representation of evaluated result.\\
@@ -433,15 +437,15 @@ The following functions are used to animate the objects drawn in a SOL program.
 SOL follows an object-oriented paradigm for defining objects (drawn \texttt{shape}s) which can be further animated using the animation functions described in Section \ref{animation}.
 
     \subsection{\textit{shape}}
-    Similar to a class in C++; a \textit{shape} defines a particular 2-D shape as part of the drawing on screen. The name of a \textit{shape} must always start with an uppercase english alphabet.
+    Similar to a class in C++; a \textit{shape} defines a particular 2-D shape as part of the drawing on screen. The name of a \textit{shape} must always start with an uppercase English alphabet.
 
     \subsubsection{Shape definition}
     A \textit{shape} definition starts with the \texttt{shape} keyword, followed by the \textit{shape name},(Example: \texttt{Triangle}) and the definition within curly braces (\{\}) code block. \textit{Shape} definitions may optionally contain \textit{member variables}.\\
     
-    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword and \texttt{draw} function. The \texttt{construct} definition can optionally have \textit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe the screen display of the \textit{shape} object.\\
+    Every \textit{shape} must define a \textit{constructor} using \texttt{construct} keyword, and a \texttt{draw} function. The \texttt{construct} definition can optionally have \textit{formal arguments} as input parameters. The \texttt{draw} function does not accept any arguments and its definition can have multiple \texttt{drawPoint}, \texttt{drawCurve} and \texttt{print} function calls to describe the screen display of the \textit{shape} object.\\
 
     It is possible to define \textit{functions} in a shape definition. The \textit{member functions} are defined with the same rules as specified in section \ref{function}.\\
-    When \textit{member variables} are accessed within a member function, it is implied that the member variables belong to the current object that calls the function. If a \textit{member variable} or \textit{global variable} name is same as that of a \textit{local variable} or \textit{formal argument} in function definition, then the \textit{local variable} or \textit{formal argument} overshadows the other conflicting variable.\\
+    When \textit{member variables} are accessed within a member function, it is implied that the member variables belong to the current object that calls the function. If a \textit{member variable} or \textit{global variable} name is same as that of a \textit{local variable} or \textit{formal argument} in the function definition, then the \textit{local variable} or \textit{formal argument} overshadows the other conflicting variable.\\
 
     Example:\\
     \begin{lstlisting}[style=sol]
