@@ -21,15 +21,17 @@ Follow the below steps to install dependencies for SOL and compile `sol.native` 
 1. Install *LLVM* dev and runtime packages and *opam llvm bindings* package.  
      `./install-llvm.sh`
 
-2. Download *SDL GFX library* to support animation.  
+2. Add ``eval `opam config` `` to `~/.bashrc`.
+
+3. Download *SDL GFX library* to support animation.  
     `wget http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-1.0.3.tar.gz`
 
-3. Build and Install *SDL GFX* and dependencies including *SDL2*.  
+4. Build and Install *SDL GFX* and dependencies including *SDL2*.  
      `./install-sdl-gfx`
 
-4. Build the `sol.native` compiler  
+5. Build the `sol.native` compiler  
       `make clean all`
 
 ### Run Automated Tests
 1. Run `./testall.sh` to run the test cases in [tests](tests/) folder.  
-2. Test results can be seen on console `./testall.log` generated file.
+2. Test results can be seen on console or `testall.log` generated file.
