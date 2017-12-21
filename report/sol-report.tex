@@ -130,10 +130,10 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 \tableofcontents{}
 
 \chapter{Introduction}
-  SOL (Shape Oriented Language), is a domain specific programming language that allows programmers to create 2D animations with ease, through an object-oriented approach. Engineers, programmers, scientists and designers, through SOL, have the ability to define and create objects, known as Shapes, and dictate their appearance and movements on the screen. In addition, SOL\'s simplicity saves developers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. It compiles into LLVM IR bytecode, making it adaptable across different architectures. The produced LLVM IR bytecode can be translated further into assembly code and linked statically against a predefined library before compiling down into an executable for a specific architecture using the LLVM compiler and GCC compilers respectively. The predefined library used by SOL for graphic rendering has been built on top of SDL2, that abstracts away the lower level details for drawing and animating objects.
+  SOL (Shape Oriented Language) is a domain-specific programming language that allows programmers to create 2D animations with ease, through an object-oriented approach. Engineers, programmers, scientists and designers, through SOL, have the ability to define and create objects, known as Shapes, and dictate their appearance and movements on the screen. In addition, SOL\'s simplicity saves developers the trouble of learning complicated third-party animation tools, without sacrificing control over behavior of objects. It compiles into LLVM IR bytecode, making it adaptable across different architectures. The produced LLVM IR bytecode can be translated further into assembly code and linked statically against a predefined library before compiling down into an executable for a specific architecture using the LLVM compiler and GCC compilers respectively. The predefined library used by SOL for graphic rendering has been built on top of SDL2, which abstracts away the lower-level details for drawing and animating objects.
 
   \section{Background}
-  SOL takes its inspiration from the ease of programming in \textit{object-oriented paradigm} and the complexity of existing libraries/solutions for rendering graphics. It attempts to combine both of them and provide a language which allows developers to organize graphics into a collection of \textit{Shapes} (much like objects) which can be easily defined, created and interacted with to produce powerful images and/or animations at a fast paced development.\\
+  SOL takes its inspiration from the ease of programming in the \textit{object-oriented paradigm} and the complexity of existing libraries/solutions for rendering graphics. It attempts to combine both of these and provide a language which allows developers to organize graphics into a collection of \textit{Shapes} (much like objects), which can be easily defined, created and interacted with to produce powerful images and/or animations in a fast-paced development environment.\\
 
   SOL is commonly used to model various types of scientific data, but it can also be applicable in other domains, such as:
   \begin{enumerate}
@@ -145,48 +145,48 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
   \end{enumerate}
 
 \chapter{Language Tutorial}
-  This chapter provides a brief description of basic components of the language to guide programmers towards creating their first SOL! It has been divided into three parts:
+  This chapter provides a brief description of basic components of the language to guide programmers towards creating their first SOL program! It has been divided into three parts:
   \begin{enumerate}
     \item \textbf{Environment setup} - guide to setting up the SOL compiler and development environment
-    \item \textbf{Language Quick Tour} - a bried descriptioin of basic components of language.
+    \item \textbf{Language Quick Tour} - a brief description of basic components of the language
     \item \textbf{Sample Program} - Create dancing line bars
   \end{enumerate}
 
   \section{Environment setup}
-  SOL compiler has been developed and tested on Ubuntu 15.04 and Ubuntu 16.04 environments, and is capable of supporting others as well. It can work on multiple architectures as the LLVM IR bytecode can further be compiled into architecture specific executables. The environment setup tutorial assumes you have the latest version of SOL compile source code downloaded from our repository.
+  The SOL compiler has been developed and tested on Ubuntu 15.04 and Ubuntu 16.04 environments, and is capable of supporting others as well. It can work on multiple architectures as the LLVM IR bytecode can further be compiled into architecture-specific executables. The environment setup tutorial assumes you have the latest version of the SOL compiler source code downloaded from our repository.
 
     \subsection{Building SOL compiler (Ubuntu 15.04 or later version)}
     \begin{enumerate}
-      \item SOL compiler is written in OCaml. Download the source code from our github repository: \colorbox{lightgray}{{\href{https://github.com/bawejakunal/sol}{https://github.com/bawejakunal/sol}}}
+      \item The SOL compiler is written in OCaml. Download the source code from our github repository: \colorbox{lightgray}{{\href{https://github.com/bawejakunal/sol}{https://github.com/bawejakunal/sol}}}
 
-      \item Download and run the bash script below, which installs the latest compatible version of OCaml compiler and opam for *-nix OS environments.\\
+      \item Download and run the bash script below, which installs the latest compatible version of the OCaml compiler and opam for *-nix OS environments.\\
       \colorbox{lightgray}{{\href{https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh}{https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-ocaml.sh}}}
 
       \item Configure the opam environment for importing Ocaml packages\\
       \colorbox{lightgray}{\lstinline[style=bash]{eval `opam config env`}}
 
-      \item Install LLVM compiler toolchain and ocaml bindings, for the SOL compiler\\
+      \item Install the LLVM compiler toolchain and ocaml bindings, for the SOL compiler\\
       \colorbox{lightgray}{\lstinline[style=bash]{./install-llvm.sh}}
 
       \item Download and Install SDL2 and SDL2\_gfx libraries which are used by our predefined static library for graphics rendering.\\
         \colorbox{lightgray}{\lstinline[style=bash]{wget} \href{http://www.ferzkopp.net/Software/SDL2\_gfx/SDL2\_gfx-1.0.3.tar.gz}{http://www.ferzkopp.net/Software/SDL2\_gfx/SDL2\_gfx-1.0.3.tar.gz}}\\
         \colorbox{lightgray}{\lstinline[style=bash]{./install-sdl-gfx.sh}}
 
-      \item Build the SOL compiler as \texttt{sol.native} and the static graphic libarary as \texttt{predefined.o}\\
+      \item Build the SOL compiler as \texttt{sol.native} and the static graphic library as \texttt{predefined.o}\\
       \colorbox{lightgray}{\lstinline[style=bash]{make all}}
 
     \end{enumerate}
 
   \section{SOL Quick Tour}
-  This section provides a quick tour on the data types, data structures and the shape oriented programming paradigm provided by SOL, with examples. Towards the end we walk through the steps to generate an executable SOL program. For a detailed explanation of language syntax, semantics and built-in functions refer to chapter \ref{lrm}.
+  This section provides a quick tour of the data types, data structures and the shape-oriented programming paradigm provided by SOL, with examples. Towards the end we walk through the steps to generate an executable SOL program. For a detailed explanation of language syntax, semantics and built-in functions, refer to chapter \ref{lrm}.
 
     \subsection{Primitive data types}
-      All variables of primitive data types are declared starting with their type followed by an identification. SOL supports the following primitives:
+      All variables of primitive data types are declared starting with their type followed by an identifier. SOL supports the following primitives:
       \begin{enumerate}
         \itemsep 0em
         \item \texttt{int} - integers
-        \item \texttt{float} - double precision floating point number
-        \item \texttt{char} - single character from \texttt{ASCII} character set
+        \item \texttt{float} - double-precision floating-point numbers
+        \item \texttt{char} - single characters from the \texttt{ASCII} character set
         \item \texttt{string} - a sequence of one or more \texttt{ASCII} characters
       \end{enumerate}
       Example:\\
@@ -207,7 +207,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \subsection{Arrays and Shapes}
       SOL supports two complex data structures:
       \subsubsection{Array}
-        An array is a fixed size sequence of primitives or objects of a given \textit{shape}. Individual elements can be accessed within array by specifying indices as integers in range \texttt{0} to \texttt{1 less than array length}.\\
+        An array is a fixed-size sequence of primitives or objects of a given \textit{shape}. Individual elements can be accessed within an array by specifying indices as integers in the range \texttt{0} to \texttt{1 less than array length}.\\
         Example:\\
         \begin{lstlisting}[style=sol]
           func main() {
@@ -219,7 +219,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
         \end{lstlisting}
 
       \subsubsection{Shape}
-        A collection of one or more variables/arrays of \textit{primitives and/or shapes} which come together to describe a \textit{shape}. These variables are called \textit{member variables} of a shape. A shape definition can also contain function definitions, referred as \textit{member functions}.\\
+        A collection of one or more variables/arrays of \textit{primitives and/or shapes} which come together to describe a \textit{shape}. These variables are called the \textit{member variables} of the shape. A shape definition can also contain function definitions, referred to as \textit{member functions}.\\
         Example:\\
         \begin{lstlisting}[style=sol]
           class Line {
@@ -248,19 +248,19 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
         \end{lstlisting}
 
     \subsection{Operators}
-    SOL supports \texit{arithmetic operations, relational comparisons and logical operations}. For all binary operators described in this section, the operands are specified to the left and right, respectively, of the operator and \textit{both operands must be expressions of same data types}.\\
-    All logical operators accept \textit{boolean logic expressions},represented as \textit{integer expression} in SOL. Non-zero expressions correspond to \texttt{true} and a \texttt{zero} corresponds to \texttt{false}. 
+    SOL supports \texit{arithmetic operations, relational comparisons and logical operations}. For all binary operators described in this section, the operands are specified from left and right, respectively, of the operator, and \textit{both operands must be expressions of the same data type}.\\
+    All logical operators accept \textit{boolean logic expressions}, represented as \textit{integer expression} in SOL. Non-zero expressions correspond to \texttt{true} and a \texttt{zero} corresponds to \texttt{false}. 
 
     \begin{enumerate}
       \itemsep 0em
       \item \textit{Binary arithmetic operators}: \texttt{+, -, *, / \%}
       \item \textit{Relational operators (binary)}: \texttt{==, |=, >, >=, <, <=}
       \item \textit{Logical operators}: \texttt{\&\&, ||} \textit{(operands must be of type int)}
-      \item \textit{Logical not}: \texttt{!} \textit{(unary and right associative)}
-      \item \textit{Unary negation}: \texttt{-} \textit{(unary and right associative)}
+      \item \textit{Logical not}: \texttt{!} \textit{(unary and right-associative)}
+      \item \textit{Unary negation}: \texttt{-} \textit{(unary and right-associative)}
     \end{enumerate}
 
-    All expressions are evaluated left to right. Please refer to section \ref{precedence} for exact order of preference and associativity rules for each operator.\\
+    All expressions are evaluated from left to right. Please refer to section \ref{precedence} for the exact order of preference and associativity rules for each operator.\\
 
     Example:\\
     \begin{lstlisting}[style=sol]
@@ -299,10 +299,10 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \end{lstlisting} 
 
     \subsection{Control flow statements}
-    SOL program statements are executed in order, with the entry point being the main function. However, sometimes developers need to execute only a branch of source code (jump through some statements) or execute a portion of code repeatedly. SOL provides two control flow statements if and while for conditional branching and looping through a portion of code, respectively.
+    SOL program statements are executed in order, with the entry point being the main function. However, sometimes developers may need to execute only a branch of source code (jump through some statements) or execute a portion of code repeatedly. SOL provides two control flow statements - \textit{if) and \textit{while}, for conditional branching and looping through a portion of code, respectively.
 
       \subsubsection{if-statement}
-      An \textit {if statement block} allows to execute or skip a \texit{code branch} based on a \textit{logical expression}.\\
+      An \textit {if statement block} allow the execution or skipping of a \texit{code block} based on a \textit{logical expression}.\\
       Example:\\
       \begin{lstlisting}[style=sol]
         func main() {
@@ -315,7 +315,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       \end{lstlisting}
 
       \subsubsection{while-statement}
-      A \texit{while statement block} allows to execute a portion of source code repeatedly until a logical condition, in predicate, is no longer satisfied.
+      A \texit{while statement block} allows the execution of a portion of source code repeatedly until a logical condition ()the predicate) is no longer satisfied.
       \begin{lstlisting}[style=sol]
         func main() {
             int i;
@@ -328,7 +328,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       \end{lstlisting}
 
     \subsection{Functions in SOL}
-    In SOL functions can be defined as a way to abstract away and re-use a code lock, with a named representation. These are useful if a particular piece of code needs to be executed at multiple places in the program. Functions in SOL can be defined as stand alone functions or as \textit{member functions} of a \textit{shape} definition. Function definitions begin with the \texttt{func} keyword and they optionally accept arguments as input values and return a result, for which the result type needs to be indicated in the function definition. A function may return no value \textit{(void type)} in which case no return type needs to be mentioned during function definition. Please refer section \ref{function} for a detailed explanation of function definition syntax.\\
+    In SOL, functions can be defined as a way to abstract away and re-use a code lock, with a named representation. These are useful if a particular piece of code needs to be executed at multiple places in the program. Functions in SOL can be defined as stand-alone functions or as \textit{member functions} of a \textit{shape} definition. Function definitions begin with the \texttt{func} keyword and they optionally accept arguments as input values and return a result, for which the result type needs to be indicated in the function definition. A function may return no value \textit{(void type)} in which case no return type should to be mentioned in the function definition. Please refer section \ref{function} for a detailed explanation of the function definition syntax.\\
     
     Example:\\
     \begin{lstlisting}[style=sol]
@@ -347,14 +347,14 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       }
     \end{lstlisting}
 
-    Functions in SOL also support recursion. SOL also provides a number a of type conversion functions and built-in functions for displaying and animating shapes on screen and printing text on screen or console. Please refer to section \ref{internal} for detailed information, syntax on these functions.
+    Functions in SOL also support recursion. SOL also provides a number of type conversion functions and built-in functions for displaying and animating shapes on the screen, and printing text on the screen or the console. Please refer to section \ref{internal} for detailed information on, and the syntax of, these functions.
 
   \section{Dancing Bars Tutorial (Sample SOL program)}
-  The following program shows a simple definition of a \textit{dancing line} as a \textit{shape} and uses this definition to create a set of colored bars, that oscillate on one endpoint, at a given frequency.
+  The following program shows a simple definition of a \textit{dancing line} as a \textit{shape} and uses this definition to create a set of colored bars, that oscillate about one endpoint, at a given frequency.
   \begin{enumerate}
     \itemsep 0em
     \item As SOL treats all animation as an interaction of \textit{shapes}, we first define a thick line \textit{shape} in SOL, which can oscillate in length on one end.\\
-    The constructor accepts four main arguments: \texttt{start point}, \texttt{end point}, \texttt{color} and \texttt{frequency} of oscillation\\
+    The constructor accepts four main arguments: \texttt{start point}, \texttt{end point}, \texttt{color} and \texttt{frequency} of oscillation.\\
     We define its \texttt{draw} function based on these input arguments.\\
 
     \begin{lstlisting}[style=sol, aboveskip=1pt]
@@ -415,7 +415,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       }
     \end{lstlisting}
 
-    \item The next step is to create a collection of multiple \textit{DanceLine} instances, say \textit{DiscoBar}. Hence, we define a new \texttt{shape}, \textit{DiscoBars} that defines three variables of \texttt{shape} \textit{DanceLine}. In the constructor, we instantiate the \textit{member variables} with different colored lines oscillating at different frequencies.\\
+    \item The next step is to create a collection of multiple \textit{DanceLine} instances, say \textit{DiscoBar}. Hence, we define a new \texttt{shape}, \textit{DiscoBars} that defines three variables of \texttt{shape} \textit{DanceLine}. In the constructor, we instantiate the \textit{member variables} with different colored lines, oscillating at different frequencies.\\
 
     \begin{lstlisting}[style=sol, aboveskip=1pt]
       shape DiscoBars {
@@ -439,7 +439,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       }
     \end{lstlisting}
   
-    \item As a final step, we need to create one object of \textit{DanceBards} shape in the \textit{main} function, which is the entry point to a SOL program. The SOL runtime will recursively call its \textit{draw} function and \texttt{draw} functions of its member variables at each frame, to display the osciallating lines.\\
+    \item As a final step, we need to create one object of the \textit{DanceBars} shape in the \textit{main} function, which is the entry point of a SOL program. The SOL runtime will iteratively call its \textit{draw} function - and the \texttt{draw} functions of its member variables - for each frame, to display the oscillating lines.\\
 
     \begin{lstlisting}[style=sol, aboveskip=1pt]
       func main() {
@@ -463,46 +463,46 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 
 \chapter{Project Plan}
 
-  This chapter details the project development, testing process, timelines, milestones and roles and responsibilities of each team member.
+  This chapter details the project development, testing process, time-lines, milestones, and roles and responsibilities of each team member.
 
   \section{Project Development Process}
   Throughout the SOL compiler development process we tried to stick as closely as possible to in-lecture instructions and suggestions given by instructor, Prof. Stephen A. Edwards, and our project mentor Connor Abbott. The four major phases of project development are described in the following sections.
 
     \subsection{Planning}
-      Once the team decided on addressing easy animations through an object-oriented programming language, we quickly got down to listing as many features as we could think of with respect to a graphics animation. As Aditya Narayanamoorthy \textit{(Language Guru)} had taken a Computer Graphics course previously, he helped us pick out the most basic and necessary features for the language, such as using \textit{B\'ezier curves} to describe shapes in our language. We tried to narrow down the minimal number of language features that would allow a SOL programmer to describe, display and animate a shape on screen using SOL. In case of a disagreement on the features to be included, the final call was taken by the \textit{Language Guru}. All the decided features are detaile in the SOL Language Reference Manual (chapter \ref{lrm}), which every team member used as a reference point for the rest of the project development and testing phases.\\
+      Once the team decided on addressing easy animations through an object-oriented programming language, we quickly got down to listing as many features as we could think of with respect to graphics animation. As Aditya Narayanamoorthy \textit{(Language Guru)} had taken a Computer Graphics course previously, he helped us pick out the most basic and necessary features for the language, such as using \textit{B\'ezier curves} to describe shapes in our language. We tried to narrow down the minimal number of language features that would allow a SOL programmer to describe, display and animate a shape on screen using SOL. In case of a disagreement on the features to be included, the final call was taken by the \textit{Language Guru}. All the decided features are detailed in the SOL Language Reference Manual (chapter \ref{lrm}), which every team member used as a reference point for the rest of the project development and testing phases.\\
 
       In our planning phase we also decided on the software development process, including division of work based on each member's expertise, discussed time availabilities, tools and development environments to use, summarized below:
       \begin{enumerate}
         \itemsep 0em
         \item We scheduled two days per week for 3 hour long meetings for the team to work together on the project.
-        \item Chose Github as the version control system for our project, in conjunction with Slack for team communication.
+        \item WE chose Github as the version control system for our project, in conjunction with Slack for team communication.
       \end{enumerate}
 
     \subsection{Specfication}
-      For specifying the exact feature details, we required a lightweight graphics library, that would interface with the graphics backend and link well against the LLVM compiler output and develop a good understanding of its working. Erik, the systems architect, tried out a few graphics library and suggested using SDL2, primarily because of its ease of use for rendering simple graphics on screen and it's bindings of multiple languages including C, C++ and OCaml.\\
+      For specifying the exact feature details, we required a lightweight graphics library that would interface with the graphics back-end and link well against the LLVM compiler output, and develop a good understanding of its working. Erik, the systems architect, tried out a few graphics library and suggested using SDL2, primarily because of its ease of use for rendering simple graphics on screen, and its bindings to multiple languages including C, C++ and OCaml.\\
 
-      The next major specification step for SOL programming language, was to decide on how to represent and render shapes. Aditya, our Language Guru, suggested that all shapes can be expressed as a combination of B\'ezier curves and hence the basic units of drawing in SOL, available to a programmer should be the \texttt{drawPoint} and \texttt{drawCurve} functions to draw shapes, along with \texttt{translate} and \texttt{rotate} functions to animate the drawings in a 2D plane. To accomplish drawing B\'ezier curves, on top of SDL2, we chose the SDL2\_gfx library which was compiled and integrated into the development environment by Kunal and Erik.\\
+      The next major specification step for SOL was to decide on how to represent and render shapes. Aditya, our Language Guru, suggested that all shapes be expressed as a combination of B\'ezier curves and hence the basic units of drawing in SOL, available to a programmer should be the \texttt{drawPoint} and \texttt{drawCurve} functions to draw shapes, along with \texttt{translate} and \texttt{rotate} functions to animate the drawings io a 2D plane. To accomplish drawing B\'ezier curves, on top of SDL2, we chose the SDL2\_gfx library which was compiled and integrated into the development environment by Kunal and Erik.\\
 
-      Throughout the compiler development, we asked our mentor Connor Abbott for advice on how to prioritize  and implement features crucial for SOL, like fixed size arrays v/s dynamic arrays or advantages of using an SAST over a simple AST. During the development phase we also realized that some of the features that we had originally planned for SOL were not quite straightforward to implement, or differed from our initial understanding. This made us modify some specific components of the language, which we updated in the Language Reference Manual and testing suite, after consulting with our mentor.
+      Throughout the compiler development, we asked our mentor Connor Abbott for advice on how to prioritize  and implement features crucial for SOL, like fixed-size arrays v/s dynamic arrays, or advantages of using an SAST over a simple AST. During the development phase we also realized that some of the features that we had originally planned for SOL were not quite straightforward to implement, or differed from our initial understanding. This made us modify some specific components of the language, which we updated in the Language Reference Manual and testing suite, after consulting with our mentor.
 
     \subsection{Development and Testing}
-      We followed a \textit{test driven development} approach for SOL language as far as possible. Initially test cases were written based on the features mentioned in our programming language reference manual. Test cases were divided into two main categories, features that are allowed in SOL, such as integer addition, defining shapes etc and failure cases which check whether the compiler properly rejects syntactically or semantically incorrect programs. Each test case comprised of a basic SOL program source code that would test one particular feature or component of the language and compare the actual output against an standardized file containing expected output messages.\\
+      We followed a \textit{test-driven development} approach for SOL as far as possible. Initially test cases were written based on the features mentioned in our programming language reference manual. Test cases were divided into two main categories: features that are allowed in SOL, such as integer addition, defining shapes etc, and failure cases which check whether the compiler properly rejects syntactically or semantically incorrect programs. Each test case comprised of a basic SOL program source code that would test one particular feature or component of the language and compare the actual output against an standardized file containing expected output messages.\\
 
-      The compiler was built by integrating one feature at a time, end to end, starting at the scanner, all the way up to codegen phase and which would allow the compiler to support that feature alongside previously implemented features. Each feature implementation was tested against the test suite to ensure correct behaviour and also ensure that it does not breaks any of the previously implemented features, using the testing script and Travis CI builds that were triggered on each code push to our github repository.\\
-      Aditya and Gergana worked heavily on the compiler and met frequently outside of scheduled team meetings to pair-program and ensure on-time delivery of components.\\
+      The compiler was built by integrating one feature at a time, end to end, starting at the scanner, all the way up to the codegen phase. This would allow the compiler to support that feature alongside previously-implemented features. Each feature implementation was tested against the test suite to ensure correct behavior and also to ensure that it does not break any of the previously-implemented features, using the testing script and Travis CI builds that were triggered on each code push to our Github repository.\\
+      Aditya and Gergana worked heavily on the compiler and met frequently outside of scheduled team meetings to pair-program and ensure the on-time delivery of components.\\
 
       Towards the end of project development timeline, we also incorporated a manual testing component, as there is no way to ensure correct display of graphics within Travis CI environment. These tests can be run using the same test suite script, with manual inspection of displayed graphics to ensure correctness.\\
 
   \section{Programming Style Guide}
     \begin{itemize}
       \itemsep 0em
-      \item Most of our compiler source code is written in OCaml, we simply used the standard Ocaml programming guidelines as mentioned on the official tutorials page\\
+      \item Most of our compiler source code is written in OCaml; we simply used the standard Ocaml programming guidelines as mentioned on the official tutorials page\\
       \colorbox{lightgray}{\href{https://ocaml.org/learn/tutorials/guidelines.html}{https://ocaml.org/learn/tutorials/guidelines.html}}
 
-      \item To enforce OCaml style guides, Kunal set up the open sourced merlin linter and analyzer in sublime text editor\\
+      \item To enforce OCaml style guides, Kunal set up the open-sourced merlin linter and analyzer in sublime text editor\\
       \colorbox{lightgray}{\href{https://github.com/let-def/sublime-text-merlin}{https://github.com/let-def/sublime-text-merlin}}
 
-      \item A significant component of SOL compiler is the \textit{predefined.o} static library written in C (C99 standard) for which the C++ linter was used within sublime text.\\
+      \item A significant component of the SOL compiler is the \textit{predefined.o} static library written in C (C99 standard) for which the C++ linter was used within sublime text.\\
       \colorbox{lightgray}{\href{ https://github.com/SublimeLinter/SublimeLinter-cppcheck}{ https://github.com/SublimeLinter/SublimeLinter-cppcheck}}
 
       \item As a general rule of thumb, we tried to use descriptive variable names throughout our code, which helps the reader to easily understand the code.
@@ -568,7 +568,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \end{center}
 
   \section{Software Development Environment}
-    The following software development tools, libraries and dependencies were used for developing SOL compiler by the team.
+    The following software development tools, libraries and dependencies were used for developing the SOL compiler by the team.
     \begin{enumerate}
       \itemsep 0em
       \item Ubuntu \texttt{15.04} VM setup with ocaml compiler, opam, llvm toolchain, and ocaml Llvm module for llvm bindings.
@@ -581,10 +581,10 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \end{enumerate}
 
   \section {Project Logs}
-  Please see appendix \ref{git:log} for project logs in reverse chronological order of timeline.
+  Please see appendix \ref{git:log} for project logs in reverse chronological order.
 
 \chapter{Architectural Design}
-  We describe the compilation structure for a SOL program through SOL compiler in this chapter. This can be broken down into 3 phases:
+  We describe the compilation structure for a SOL program through the SOL compiler in this chapter. This can be broken down into 3 phases:
   \begin{enumerate}
     \itemsep 0em
 
@@ -600,18 +600,18 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
 
   \section{Interfaces between SOL Compiler components}
     \subsection{Scanner}
-      The scanner takes as input a \texttt{SOL(.sol) source program} and generates tokens for \textit{identifiers, keywords, operators, values, functions and shapes}, as specified by the lexical conventions for SOL in  Language Reference Manual (see chapter \ref{lrm}). It rejects a source program if it observes an invalid token, against the rules specified in \texttt{scanner.mll}
+      The scanner takes as input a \texttt{SOL(.sol) source program} and generates tokens for \textit{identifiers, keywords, operators, values, functions and shapes}, as specified by the lexical conventions for SOL in the Language Reference Manual (see chapter \ref{lrm}). It rejects a source program if it observes an invalid token, using the rules specified in \texttt{scanner.mll}
 
     \subsection{Parser}
-      The parser accepts the tokenized output from scanner and generates an abstract syntax tree (AST) based on SOL syntax. It rejects the source program if a syntactic error is seen due to which a valid AST can not be generated.
+      The parser accepts the tokenized output from the scanner and generates an abstract syntax tree (AST) based on SOL syntax. It rejects the source program if a syntactic error is seen (due to which a valid AST cannot be generated).
 
     \subsection{Semantic Checker}
-      The AST output from parser is passed to semantic checker to ensure semantic correctness of each program statement, including static type checking. Eg: An \texttt{int} variable can not be assigned a floating point value, per SOL specification. Such an assignment in SOL program will be semantically incorrect and rejected at the semantic checking phase.\\
-      The semantic checking phase associates semantic information to the AST nodes and produces a SAST, if the program passes the semantic check.
+      The AST output from parser is passed to the semantic checker to ensure semantic correctness of each program statement, including static type checking. Eg: An \texttt{int} variable cannot be assigned a floating point value, per SOL specification. Such an assignment in SOL program will be semantically incorrect and rejected at the semantic checking phase.\\
+      The semantic checking phase associates semantic information to the AST nodes and produces an SAST (Semantically-checked AST) if the program passes this phase.
 
     \subsection{Code Generation}
-    The code generator accepts the SAST generated after semantic checking and generates the LLVM IR code using the OCaml Llvm bindings. The SOL \textit{primitives, arrays, shapes, functions, member functions} are all mapped to corresponding LLVM primitives, arrays, structs and function definitions representations.\\
-    Once the LLVM IR code is generated successfully, the SOL compiler task is over. After this we use the LLVM compiler (\texttt{llc}) to convert the IR code to architecture specific assembly code. This is further compiled into an executable and statically linked against a predefined library, that interfaces with \texttt{SDL2} and \texttt{SDL2\_gfx}. 
+    The code generator accepts the SAST generated after semantic checking and generates the LLVM IR code using the OCaml Llvm bindings. The SOL \textit{primitives, arrays, shapes, functions, member functions} are all mapped to corresponding LLVM primitives, arrays, structs and function definition representations.\\
+    Once the LLVM IR code is generated successfully, the SOL compiler task is over. After this we use the LLVM compiler (\texttt{llc}) to convert the IR code to architecture-specific assembly code. This is further compiled into an executable and statically linked against a predefined library that interfaces with \texttt{SDL2} and \texttt{SDL2\_gfx}. 
 
     The compiler components were implemented by team members as listed below:
     \begin{center}
@@ -638,7 +638,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \end{center}
 
 \chapter{Test Plan}
-The SOL compiler was developed through a test driven development approach. 
+The SOL compiler was developed through a test-driven development approach. 
 
   \section{Sample Programs}
   This section shows 3 sample programs written in SOL and corresponding LLVM IR code represtation generated for the source programs.
@@ -661,7 +661,7 @@ The SOL compiler was developed through a test driven development approach.
     \lstinputlisting[style=sol, aboveskip=2pt]{ferris-wheel.ll}
 
     \subsection{Animating Shapes}
-    In this sample program, the introduction scene from \texit{James Bond} movie franchise is recreated, again defining two basic shapes, \texttt{Polygon} and \texttt{Line} and using these shapes to create circles for the screen and additionally define a \textit{Person} shape. For each of the objects created, a render block is defined which dictates the translation of individual objects.
+    In this sample program, the introduction scene from the \texit{James Bond} movie franchise is recreated, again by defining two basic shapes, \texttt{Polygon} and \texttt{Line}. These shapes are used to create circles for the screen and additionally define a \textit{Person} shape. For each of the objects created, a render block is defined which dictates the translation of individual objects.
 
     \subsubsection{james-bond.sol}
     \lstinputlisting[style=sol, aboveskip=2pt]{james-bond.sol}
@@ -677,39 +677,39 @@ The SOL compiler was developed through a test driven development approach.
       \item Manual Tests - visually inspected for display correctness
     \end{itemize}
 
-    \textbf{NOTE:} Please refer to \underline{Appendix \ref{test-suite}} for complete code listing of test cases.\\
+    \textbf{NOTE:} Please refer to \underline{Appendix \ref{test-suite}} for complete code listing of the test cases.\\
 
-    Test cases were written based on the syntactic and semantic specifications of language mentioned in SOL Language Reference Manual (chapter \ref{lrm}). This acted as a reference point for the team and allowed us to stay as close to the LRM specifications as practically possible throughout the compiler development process.\\
+    Test cases were written based on the syntactic and semantic specifications of the language mentioned in the SOL Language Reference Manual (chapter \ref{lrm}). This acted as a reference point for the team and allowed us to stay as close to the LRM specifications as practically possible throughout the compiler development process.\\
 
-    The initial tests for each feature were written as \textit{functional tests} which would ensure the correct working of the feature once it was implemented and integrated into the compiler. Once the feature was integrated into compiler, it was put through the complete list of tests, automated, to ensure that the new changes did not adversely affect any of the previously implemented features and to verify that as part of the language, each individual feature works in a certain expected manner without any conflicts.\\
+    The initial tests for each feature were written as \textit{functional tests} which would ensure the correct working of the feature once it was implemented and integrated into the compiler. Once the feature was integrated  the compiler, it was put through the complete list of tests (automated), to ensure that the new changes did not adversely affect any of the previously-implemented features, and to verify that as part of the language, each individual feature works in a certain expected manner without any conflicts.\\
 
     We tested the following major components of our language, crucial for SOL:
     \begin{itemize}
       \itemsep 0em
       \item \textit{primitives} - The tests cover declaration and assignments of primitive variables extensively, through specific test cases for assignment, operations, declarations, scoping rules and static type checking.
 
-      \item \textit{Arrays} - Fixed size arrays of primitives are supported by SOL and hence we extensively tested for array declaration, assigning and accessing individual elements. SOL does not provide bounds checking, much like C and hence it is programmer's responsibility to ensure that.
+      \item \textit{Arrays} - Fixed-size arrays of primitives are supported by SOL and hence we extensively tested for array declaration, assigning and accessing individual elements. SOL does not provide bounds checking, much like C and hence it is the programmer's responsibility to ensure this.
 
-      \item \textit{Shapes} - Defining shapes for drawing and animation on screen is the basic feature of object-oriented paradigm supported by SOL. We tested defining, instantiating and animating shapes through multiple automated and manual test cases, for visual correctness of rendered drawings. This includes defining and creating complex shapes using simpler shape definitions.
+      \item \textit{Shapes} - Defining shapes for drawing and animation on screen is the basic feature of the object-oriented paradigm supported by SOL. We tested defining, instantiating and animating shapes through multiple automated and manual test cases, for visual correctness of rendered drawings. This includes defining and creating complex shapes using simpler shape definitions.
 
-      \item \textit{Operations} - SOL allows basic arithmetic and logical operations on integers and floating point numbers and these have been tested with respect to order of precedence and associativity rules in an expression, alongside correctness of result output by each individual operation.
+      \item \textit{Operations} - SOL allows basic arithmetic and logical operations on integers and floating point numbers and these have been tested with respect to order of precedence and associativity rules in an expression, alongside correctness of the result outputted by each individual operation.
 
       \item \textit{Functions} - SOL supports declaring functions, both standalone as well as member functions of a shape. These have been tested by checking for return types, values, recursion, expected number of arguments and argument types, syntactic correctness and expected failures in case of incorrect source programs.
 
       \item \textit{Type Conversion} - SOL allows converting, \texttt{int}, \texttt{float} and \texttt{char} values to \texttt{string} through appropriate functions mentioned in the Language Reference Manual and tested via \texttt{consolePrint} and \texttt{print} function calls.
 
-      \item \textit{Drawing Function} - Three basic drawing functions are provided as built-ins by SOL for rendering text and shapes on screen. These have been tested through manual testcases, wherein a visual inspection of displayed content is required to ensure correctness.
+      \item \textit{Drawing Function} - Three basic drawing functions are provided as built-ins by SOL for rendering text and shapes on screen. These have been tested through manual test cases, wherein a visual inspection of displayed content is required to ensure correctness.
 
-      \item \textit{Output Function} - Apart from the drawing functions mentioned above, the only output function provided is \texttt{consolePrint}} which outputs the \texttt{string} argument to standard output and tested by comparing the outputs against expected outputs of corresponding test programs.
+      \item \textit{Output Function} - Apart from the drawing functions mentioned above, the only output function provided is \texttt{consolePrint}} which outputs the \texttt{string} argument to standard output; this is tested by comparing the outputs against expected outputs of the corresponding test programs.
 
-      \item \textit{Animation Function} - The \textit{translate} and \textit{rotate} functions are the basic components that allow a SOL programmer to animate objects and these have been tested for intended behaviour rigorously to account for intended and possible unintended side effects of the program written.
+      \item \textit{Animation Function} - The \textit{translate} and \textit{rotate} functions are the basic components that allow a SOL programmer to animate objects and these have been tested for intended behavior rigorously, to account for intended and possible unintended side-effects of the program written.
   \end{itemize}
 
   \section{Test Automation}
-    We used \textit{Travis CI} in conjunction with the \texttt{testall.sh} script (see \ref{test-suite}) for automatically running all test cases and checking outputs against the expected output from the compiled program or failure during compilation or runtime of program. Setting up Travis CI allowed us to run the complete regression test suite in a standardized development environment, for every code push to the github repository, without manual intervention and be notified in case of test failures.
+    We used \textit{Travis CI} in conjunction with the \texttt{testall.sh} script (see \ref{test-suite}) for automatically running all test cases and checking outputs against the expected output from the compiled program, or failure during compilation or runtime of the program. Setting up Travis CI allowed us to run the complete regression test suite in a standardized development environment, for every code push to the github repository, without manual intervention, and to be notified in case of test failures.
 
   \section{Manual Testing}
-    Testing shape display and animation correctness was not possible within \texit{Travis CI} environment as it does not support a display console for  testing. These test cases were written separately, in test files following tnaming pattern \texttt{mnl-*}, compiled and run using the same test script, although these required manual intervention for correctness of displayed graphics. Please see Appendix \ref{mnl-test} for manual test cases.
+    Testing shape display and animation correctness was not possible within \texit{Travis CI} environment as it does not support a display console for testing. These test cases were written separately, in test files following naming pattern \texttt{mnl-*}, compiled and run using the same test script, although these required manual intervention for correctness of displayed graphics. Please see Appendix \ref{mnl-test} for manual test cases.
 
   \section{Testing Responsibilities}
   \begin{center}
@@ -728,6 +728,9 @@ The SOL compiler was developed through a test driven development approach.
 \chapter{Lessons Learned}
   
   \section{Aditya Narayanmoorthy}
+    This was a great (though tough) experience as a course project, and I definitely learned a lot - both about compilers and about the importance of having a good team. I was lucky enough to get great teammates with whom I worked fairly regularly, and that helped a lot with integrating features smoothly, and making sure they work as they're supposed to.
+    
+    I'd advise future groups to keep ahead of the lectures in class - the sooner you get comfortable with OCaml, the faster you can implement the language that you want (especially if you don't have much experience with functional programming languages). Additionally, it helps to get comfortable with how LLVM and its OCaml implementation work - writing code in this can be cumbersome at times, but it's powerful enough to do a lot of things. Lastly, I would suggest prioritizing important language features early, as this helps getting clarity in your vision for the language.
 
   \section{Erik Dyer}
     This semester I learned how important organization and communication is. I think one thing that was really good about our team is that we were very good about sticking to meeting frequently from the beginning. Having this organization from the beginning allowed us to avoid the \"who\'s free to meet when?\" dance and therefore build up an early momentum that was sustained throughout the semester.\\
@@ -778,7 +781,7 @@ Code listing for compiler code. Author names are mentioned as first comment line
 
 \chapter{Environment Setup}
 
-The following scripts can be used for installing dependencies and setting up environment.
+The following scripts can be used for installing dependencies and setting up the environment.
 
     \section{install-llvm.sh}
     \lstinputlisting[style=bash]{../install-llvm.sh}
@@ -788,7 +791,7 @@ The following scripts can be used for installing dependencies and setting up env
 
 \chapter{Automated testing}\label{test-suite}
 
-The first two scripts are used for automated testing on Travis CI. For individual test cases, the author names are mentioned as first line of each test case.
+The first two scripts are used for automated testing on Travis CI. For individual test cases, the author names are mentioned as the first line of each test case.
 
     \section{.travis.yml}
     \lstinputlisting[style=bash]{../.travis.yml}
