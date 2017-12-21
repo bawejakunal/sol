@@ -16,6 +16,16 @@ declare void @onRenderFinishSDL(...)
 
 declare i32 @stopSDL(...)
 
+declare double @sine(double, ...)
+
+declare double @cosine(double, ...)
+
+declare double @round(double, ...)
+
+declare double @intToFloat(i32)
+
+declare i32 @floatToInt(double)
+
 declare i32 @sprintf(i8*, i8*, ...)
 
 declare i32 @drawCurve([2 x i32]*, [2 x i32]*, [2 x i32]*, i32, [3 x i32]*)
@@ -27,6 +37,12 @@ declare i32 @print([2 x i32]*, i8*, [3 x i32]*)
 declare void @setFramerate(i32)
 
 declare i32 @getFramerate()
+
+declare void @allocDispArray(i32*, i32*, i32*, double*, i32, i32*, i32**, i32**)
+
+declare void @translateCurve([2 x i32]*, [2 x i32]*, [2 x i32]*, i32*, i32*, i32, i32)
+
+declare void @translatePoint([2 x i32]*, i32*, i32*, i32, i32)
 
 define i32 @main() {
 entry:

@@ -588,11 +588,299 @@ while_body:                                       ; preds = %while
   br label %while
 
 merge:                                            ; preds = %while
+  %num_frames = getelementptr inbounds %Person, %Person* %bond, i32 0, i32 13
+  %num_frames_load = load i32, i32* %num_frames
+  %bool_val = icmp ne i32 %num_frames_load, 0
+  br i1 %bool_val, label %then, label %merge385
+
+merge385:                                         ; preds = %merge, %then
+  %num_frames386 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 11
+  %num_frames_load387 = load i32, i32* %num_frames386
+  %bool_val388 = icmp ne i32 %num_frames_load387, 0
+  br i1 %bool_val388, label %then390, label %merge389
+
+then:                                             ; preds = %merge
+  %disp_x = getelementptr inbounds %Person, %Person* %bond, i32 0, i32 11
+  %disp_x_load = load i32*, i32** %disp_x
+  %disp_y = getelementptr inbounds %Person, %Person* %bond, i32 0, i32 12
+  %disp_y_load = load i32*, i32** %disp_y
+  %0 = bitcast i32* %disp_x_load to i8*
+  tail call void @free(i8* %0)
+  %1 = bitcast i32* %disp_y_load to i8*
+  tail call void @free(i8* %1)
+  store i32 0, i32* %num_frames
+  br label %merge385
+
+merge389:                                         ; preds = %merge385, %then390
+  %num_frames395 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 11
+  %num_frames_load396 = load i32, i32* %num_frames395
+  %bool_val397 = icmp ne i32 %num_frames_load396, 0
+  br i1 %bool_val397, label %then399, label %merge398
+
+then390:                                          ; preds = %merge385
+  %disp_x391 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 9
+  %disp_x_load392 = load i32*, i32** %disp_x391
+  %disp_y393 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 10
+  %disp_y_load394 = load i32*, i32** %disp_y393
+  %2 = bitcast i32* %disp_x_load392 to i8*
+  tail call void @free(i8* %2)
+  %3 = bitcast i32* %disp_y_load394 to i8*
+  tail call void @free(i8* %3)
+  store i32 0, i32* %num_frames386
+  br label %merge389
+
+merge398:                                         ; preds = %merge389, %then399
+  %num_frames404 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 9
+  %num_frames_load405 = load i32, i32* %num_frames404
+  %bool_val406 = icmp ne i32 %num_frames_load405, 0
+  br i1 %bool_val406, label %then408, label %merge407
+
+then399:                                          ; preds = %merge389
+  %disp_x400 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 9
+  %disp_x_load401 = load i32*, i32** %disp_x400
+  %disp_y402 = getelementptr inbounds %Polygon, %Polygon* %tmp379, i32 0, i32 10
+  %disp_y_load403 = load i32*, i32** %disp_y402
+  %4 = bitcast i32* %disp_x_load401 to i8*
+  tail call void @free(i8* %4)
+  %5 = bitcast i32* %disp_y_load403 to i8*
+  tail call void @free(i8* %5)
+  store i32 0, i32* %num_frames395
+  br label %merge398
+
+merge407:                                         ; preds = %merge398, %then408
+  %num_frames413 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 9
+  %num_frames_load414 = load i32, i32* %num_frames413
+  %bool_val415 = icmp ne i32 %num_frames_load414, 0
+  br i1 %bool_val415, label %then417, label %merge416
+
+then408:                                          ; preds = %merge398
+  %disp_x409 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 7
+  %disp_x_load410 = load i32*, i32** %disp_x409
+  %disp_y411 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 8
+  %disp_y_load412 = load i32*, i32** %disp_y411
+  %6 = bitcast i32* %disp_x_load410 to i8*
+  tail call void @free(i8* %6)
+  %7 = bitcast i32* %disp_y_load412 to i8*
+  tail call void @free(i8* %7)
+  store i32 0, i32* %num_frames404
+  br label %merge407
+
+merge416:                                         ; preds = %merge407, %then417
+  %num_frames422 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 9
+  %num_frames_load423 = load i32, i32* %num_frames422
+  %bool_val424 = icmp ne i32 %num_frames_load423, 0
+  br i1 %bool_val424, label %then426, label %merge425
+
+then417:                                          ; preds = %merge407
+  %disp_x418 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 7
+  %disp_x_load419 = load i32*, i32** %disp_x418
+  %disp_y420 = getelementptr inbounds %Line, %Line* %tmp380, i32 0, i32 8
+  %disp_y_load421 = load i32*, i32** %disp_y420
+  %8 = bitcast i32* %disp_x_load419 to i8*
+  tail call void @free(i8* %8)
+  %9 = bitcast i32* %disp_y_load421 to i8*
+  tail call void @free(i8* %9)
+  store i32 0, i32* %num_frames413
+  br label %merge416
+
+merge425:                                         ; preds = %merge416, %then426
+  %num_frames431 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 9
+  %num_frames_load432 = load i32, i32* %num_frames431
+  %bool_val433 = icmp ne i32 %num_frames_load432, 0
+  br i1 %bool_val433, label %then435, label %merge434
+
+then426:                                          ; preds = %merge416
+  %disp_x427 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 7
+  %disp_x_load428 = load i32*, i32** %disp_x427
+  %disp_y429 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 8
+  %disp_y_load430 = load i32*, i32** %disp_y429
+  %10 = bitcast i32* %disp_x_load428 to i8*
+  tail call void @free(i8* %10)
+  %11 = bitcast i32* %disp_y_load430 to i8*
+  tail call void @free(i8* %11)
+  store i32 0, i32* %num_frames422
+  br label %merge425
+
+merge434:                                         ; preds = %merge425, %then435
+  %num_frames440 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 9
+  %num_frames_load441 = load i32, i32* %num_frames440
+  %bool_val442 = icmp ne i32 %num_frames_load441, 0
+  br i1 %bool_val442, label %then444, label %merge443
+
+then435:                                          ; preds = %merge425
+  %disp_x436 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 7
+  %disp_x_load437 = load i32*, i32** %disp_x436
+  %disp_y438 = getelementptr inbounds %Line, %Line* %tmp381, i32 0, i32 8
+  %disp_y_load439 = load i32*, i32** %disp_y438
+  %12 = bitcast i32* %disp_x_load437 to i8*
+  tail call void @free(i8* %12)
+  %13 = bitcast i32* %disp_y_load439 to i8*
+  tail call void @free(i8* %13)
+  store i32 0, i32* %num_frames431
+  br label %merge434
+
+merge443:                                         ; preds = %merge434, %then444
+  %num_frames449 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 9
+  %num_frames_load450 = load i32, i32* %num_frames449
+  %bool_val451 = icmp ne i32 %num_frames_load450, 0
+  br i1 %bool_val451, label %then453, label %merge452
+
+then444:                                          ; preds = %merge434
+  %disp_x445 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 7
+  %disp_x_load446 = load i32*, i32** %disp_x445
+  %disp_y447 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 8
+  %disp_y_load448 = load i32*, i32** %disp_y447
+  %14 = bitcast i32* %disp_x_load446 to i8*
+  tail call void @free(i8* %14)
+  %15 = bitcast i32* %disp_y_load448 to i8*
+  tail call void @free(i8* %15)
+  store i32 0, i32* %num_frames440
+  br label %merge443
+
+merge452:                                         ; preds = %merge443, %then453
+  %num_frames458 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 9
+  %num_frames_load459 = load i32, i32* %num_frames458
+  %bool_val460 = icmp ne i32 %num_frames_load459, 0
+  br i1 %bool_val460, label %then462, label %merge461
+
+then453:                                          ; preds = %merge443
+  %disp_x454 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 7
+  %disp_x_load455 = load i32*, i32** %disp_x454
+  %disp_y456 = getelementptr inbounds %Line, %Line* %tmp382, i32 0, i32 8
+  %disp_y_load457 = load i32*, i32** %disp_y456
+  %16 = bitcast i32* %disp_x_load455 to i8*
+  tail call void @free(i8* %16)
+  %17 = bitcast i32* %disp_y_load457 to i8*
+  tail call void @free(i8* %17)
+  store i32 0, i32* %num_frames449
+  br label %merge452
+
+merge461:                                         ; preds = %merge452, %then462
+  %num_frames467 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 9
+  %num_frames_load468 = load i32, i32* %num_frames467
+  %bool_val469 = icmp ne i32 %num_frames_load468, 0
+  br i1 %bool_val469, label %then471, label %merge470
+
+then462:                                          ; preds = %merge452
+  %disp_x463 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 7
+  %disp_x_load464 = load i32*, i32** %disp_x463
+  %disp_y465 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 8
+  %disp_y_load466 = load i32*, i32** %disp_y465
+  %18 = bitcast i32* %disp_x_load464 to i8*
+  tail call void @free(i8* %18)
+  %19 = bitcast i32* %disp_y_load466 to i8*
+  tail call void @free(i8* %19)
+  store i32 0, i32* %num_frames458
+  br label %merge461
+
+merge470:                                         ; preds = %merge461, %then471
+  %num_frames476 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 9
+  %num_frames_load477 = load i32, i32* %num_frames476
+  %bool_val478 = icmp ne i32 %num_frames_load477, 0
+  br i1 %bool_val478, label %then480, label %merge479
+
+then471:                                          ; preds = %merge461
+  %disp_x472 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 7
+  %disp_x_load473 = load i32*, i32** %disp_x472
+  %disp_y474 = getelementptr inbounds %Line, %Line* %tmp383, i32 0, i32 8
+  %disp_y_load475 = load i32*, i32** %disp_y474
+  %20 = bitcast i32* %disp_x_load473 to i8*
+  tail call void @free(i8* %20)
+  %21 = bitcast i32* %disp_y_load475 to i8*
+  tail call void @free(i8* %21)
+  store i32 0, i32* %num_frames467
+  br label %merge470
+
+merge479:                                         ; preds = %merge470, %then480
+  %num_frames485 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 9
+  %num_frames_load486 = load i32, i32* %num_frames485
+  %bool_val487 = icmp ne i32 %num_frames_load486, 0
+  br i1 %bool_val487, label %then489, label %merge488
+
+then480:                                          ; preds = %merge470
+  %disp_x481 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 7
+  %disp_x_load482 = load i32*, i32** %disp_x481
+  %disp_y483 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 8
+  %disp_y_load484 = load i32*, i32** %disp_y483
+  %22 = bitcast i32* %disp_x_load482 to i8*
+  tail call void @free(i8* %22)
+  %23 = bitcast i32* %disp_y_load484 to i8*
+  tail call void @free(i8* %23)
+  store i32 0, i32* %num_frames476
+  br label %merge479
+
+merge488:                                         ; preds = %merge479, %then489
+  %num_frames494 = getelementptr inbounds %Polygon, %Polygon* %c3, i32 0, i32 11
+  %num_frames_load495 = load i32, i32* %num_frames494
+  %bool_val496 = icmp ne i32 %num_frames_load495, 0
+  br i1 %bool_val496, label %then498, label %merge497
+
+then489:                                          ; preds = %merge479
+  %disp_x490 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 7
+  %disp_x_load491 = load i32*, i32** %disp_x490
+  %disp_y492 = getelementptr inbounds %Line, %Line* %tmp384, i32 0, i32 8
+  %disp_y_load493 = load i32*, i32** %disp_y492
+  %24 = bitcast i32* %disp_x_load491 to i8*
+  tail call void @free(i8* %24)
+  %25 = bitcast i32* %disp_y_load493 to i8*
+  tail call void @free(i8* %25)
+  store i32 0, i32* %num_frames485
+  br label %merge488
+
+merge497:                                         ; preds = %merge488, %then498
+  %num_frames503 = getelementptr inbounds %Polygon, %Polygon* %c2, i32 0, i32 11
+  %num_frames_load504 = load i32, i32* %num_frames503
+  %bool_val505 = icmp ne i32 %num_frames_load504, 0
+  br i1 %bool_val505, label %then507, label %merge506
+
+then498:                                          ; preds = %merge488
+  %disp_x499 = getelementptr inbounds %Polygon, %Polygon* %c3, i32 0, i32 9
+  %disp_x_load500 = load i32*, i32** %disp_x499
+  %disp_y501 = getelementptr inbounds %Polygon, %Polygon* %c3, i32 0, i32 10
+  %disp_y_load502 = load i32*, i32** %disp_y501
+  %26 = bitcast i32* %disp_x_load500 to i8*
+  tail call void @free(i8* %26)
+  %27 = bitcast i32* %disp_y_load502 to i8*
+  tail call void @free(i8* %27)
+  store i32 0, i32* %num_frames494
+  br label %merge497
+
+merge506:                                         ; preds = %merge497, %then507
+  %num_frames512 = getelementptr inbounds %Polygon, %Polygon* %c1, i32 0, i32 11
+  %num_frames_load513 = load i32, i32* %num_frames512
+  %bool_val514 = icmp ne i32 %num_frames_load513, 0
+  br i1 %bool_val514, label %then516, label %merge515
+
+then507:                                          ; preds = %merge497
+  %disp_x508 = getelementptr inbounds %Polygon, %Polygon* %c2, i32 0, i32 9
+  %disp_x_load509 = load i32*, i32** %disp_x508
+  %disp_y510 = getelementptr inbounds %Polygon, %Polygon* %c2, i32 0, i32 10
+  %disp_y_load511 = load i32*, i32** %disp_y510
+  %28 = bitcast i32* %disp_x_load509 to i8*
+  tail call void @free(i8* %28)
+  %29 = bitcast i32* %disp_y_load511 to i8*
+  tail call void @free(i8* %29)
+  store i32 0, i32* %num_frames503
+  br label %merge506
+
+merge515:                                         ; preds = %merge506, %then516
   %stopSDL_ret = alloca i32
-  %stopSDL_ret385 = call i32 (...) @stopSDL()
-  store i32 %stopSDL_ret385, i32* %stopSDL_ret
-  %stopSDL_ret386 = load i32, i32* %stopSDL_ret
-  ret i32 %stopSDL_ret386
+  %stopSDL_ret521 = call i32 (...) @stopSDL()
+  store i32 %stopSDL_ret521, i32* %stopSDL_ret
+  %stopSDL_ret522 = load i32, i32* %stopSDL_ret
+  ret i32 %stopSDL_ret522
+
+then516:                                          ; preds = %merge506
+  %disp_x517 = getelementptr inbounds %Polygon, %Polygon* %c1, i32 0, i32 9
+  %disp_x_load518 = load i32*, i32** %disp_x517
+  %disp_y519 = getelementptr inbounds %Polygon, %Polygon* %c1, i32 0, i32 10
+  %disp_y_load520 = load i32*, i32** %disp_y519
+  %30 = bitcast i32* %disp_x_load518 to i8*
+  tail call void @free(i8* %30)
+  %31 = bitcast i32* %disp_y_load520 to i8*
+  tail call void @free(i8* %31)
+  store i32 0, i32* %num_frames512
+  br label %merge515
 }
 
 define %Person* @Person__construct([2 x i32]* %pos) {
@@ -982,3 +1270,5 @@ while_body:                                       ; preds = %while
 merge:                                            ; preds = %while
   ret void
 }
+
+declare void @free(i8*)
