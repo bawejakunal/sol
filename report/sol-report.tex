@@ -248,7 +248,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
         \end{lstlisting}
 
     \subsection{Operators}
-    SOL supports \texit{arithmetic operations, relational comparisons and logical operations}. For all binary operators described in this section, the operands are specified from left and right, respectively, of the operator, and \textit{both operands must be expressions of the same data type}.\\
+    SOL supports \textit{arithmetic operations, relational comparisons and logical operations}. For all binary operators described in this section, the operands are specified from left and right, respectively, of the operator, and \textit{both operands must be expressions of the same data type}.\\
     All logical operators accept \textit{boolean logic expressions}, represented as \textit{integer expression} in SOL. Non-zero expressions correspond to \texttt{true} and a \texttt{zero} corresponds to \texttt{false}. 
 
     \begin{enumerate}
@@ -299,10 +299,10 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
     \end{lstlisting} 
 
     \subsection{Control flow statements}
-    SOL program statements are executed in order, with the entry point being the main function. However, sometimes developers may need to execute only a branch of source code (jump through some statements) or execute a portion of code repeatedly. SOL provides two control flow statements - \textit{if) and \textit{while}, for conditional branching and looping through a portion of code, respectively.
+    SOL program statements are executed in order, with the entry point being the main function. However, sometimes developers may need to execute only a branch of source code (jump through some statements) or execute a portion of code repeatedly. SOL provides two control flow statements - \texttt{if} and \texttt{while}, for conditional branching and looping through a portion of code, respectively.
 
       \subsubsection{if-statement}
-      An \textit {if statement block} allow the execution or skipping of a \texit{code block} based on a \textit{logical expression}.\\
+      An \textit{if statement block} allow the execution or skipping of a \textit{code block} based on a \textit{logical expression}.\\
       Example:\\
       \begin{lstlisting}[style=sol]
         func main() {
@@ -315,7 +315,7 @@ Kunal Baweja           & \texttt{kb2896}  & \textit{Tester}
       \end{lstlisting}
 
       \subsubsection{while-statement}
-      A \texit{while statement block} allows the execution of a portion of source code repeatedly until a logical condition ()the predicate) is no longer satisfied.
+      A \texttt{while} statement block allows the execution of a portion of source code repeatedly until a logical condition ()the predicate) is no longer satisfied.
       \begin{lstlisting}[style=sol]
         func main() {
             int i;
@@ -661,7 +661,7 @@ The SOL compiler was developed through a test-driven development approach.
     \lstinputlisting[style=sol, aboveskip=2pt]{ferris-wheel.ll}
 
     \subsection{Animating Shapes}
-    In this sample program, the introduction scene from the \texit{James Bond} movie franchise is recreated, again by defining two basic shapes, \texttt{Polygon} and \texttt{Line}. These shapes are used to create circles for the screen and additionally define a \textit{Person} shape. For each of the objects created, a render block is defined which dictates the translation of individual objects.
+    In this sample program, the introduction scene from the \textit{James Bond} movie franchise is recreated, again by defining two basic shapes, \texttt{Polygon} and \texttt{Line}. These shapes are used to create circles for the screen and additionally define a \textit{Person} shape. For each of the objects created, a render block is defined which dictates the translation of individual objects.
 
     \subsubsection{james-bond.sol}
     \lstinputlisting[style=sol, aboveskip=2pt]{james-bond.sol}
@@ -709,7 +709,7 @@ The SOL compiler was developed through a test-driven development approach.
     We used \textit{Travis CI} in conjunction with the \texttt{testall.sh} script (see \ref{test-suite}) for automatically running all test cases and checking outputs against the expected output from the compiled program, or failure during compilation or runtime of the program. Setting up Travis CI allowed us to run the complete regression test suite in a standardized development environment, for every code push to the github repository, without manual intervention, and to be notified in case of test failures.
 
   \section{Manual Testing}
-    Testing shape display and animation correctness was not possible within \texit{Travis CI} environment as it does not support a display console for testing. These test cases were written separately, in test files following naming pattern \texttt{mnl-*}, compiled and run using the same test script, although these required manual intervention for correctness of displayed graphics. Please see Appendix \ref{mnl-test} for manual test cases.
+    Testing shape display and animation correctness was not possible within \textit{Travis CI} environment as it does not support a display console for testing. These test cases were written separately, in test files following naming pattern \texttt{mnl-*}, compiled and run using the same test script, although these required manual intervention for correctness of displayed graphics. Please see Appendix \ref{mnl-test} for manual test cases.
 
   \section{Testing Responsibilities}
   \begin{center}
